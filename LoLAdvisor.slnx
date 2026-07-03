@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LoLAdvisor.App/LoLAdvisor.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj" />
+  </Folder>
+</Solution>

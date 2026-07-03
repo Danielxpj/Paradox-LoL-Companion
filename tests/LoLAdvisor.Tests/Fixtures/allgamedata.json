@@ -1,0 +1,67 @@
+{
+  "activePlayer": {
+    "summonerName": "Faker",
+    "level": 6,
+    "currentGold": 1450.5,
+    "championStats": {
+      "currentHealth": 820.0,
+      "maxHealth": 1100.0,
+      "resourceValue": 250.0,
+      "resourceMax": 400.0,
+      "attackDamage": 68.0,
+      "abilityPower": 90.0,
+      "armor": 45.0,
+      "magicResist": 32.0,
+      "moveSpeed": 340.0
+    }
+  },
+  "allPlayers": [
+    {
+      "summonerName": "Faker",
+      "championName": "Ahri",
+      "rawChampionName": "game_character_displayname_Ahri",
+      "level": 6,
+      "team": "ORDER",
+      "position": "MIDDLE",
+      "isDead": false,
+      "isBot": false,
+      "respawnTimer": 0.0,
+      "scores": { "kills": 3, "deaths": 1, "assists": 2, "creepScore": 78, "wardScore": 4.5 },
+      "items": [
+        { "itemID": 1056, "count": 1, "displayName": "Doran's Ring", "price": 400, "slot": 0, "consumable": false },
+        { "itemID": 3020, "count": 1, "displayName": "Sorcerer's Shoes", "price": 1100, "slot": 1, "consumable": false }
+      ]
+    },
+    {
+      "summonerName": "Chovy",
+      "championName": "Zed",
+      "rawChampionName": "game_character_displayname_Zed",
+      "level": 6,
+      "team": "CHAOS",
+      "position": "MIDDLE",
+      "isDead": true,
+      "isBot": false,
+      "respawnTimer": 8.0,
+      "scores": { "kills": 1, "deaths": 3, "assists": 1, "creepScore": 64, "wardScore": 2.0 },
+      "items": [
+        { "itemID": 3134, "count": 1, "displayName": "Serrated Dirk", "price": 1100, "slot": 0, "consumable": false }
+      ]
+    }
+  ],
+  "events": {
+    "Events": [
+      { "EventID": 0, "EventName": "GameStart", "EventTime": 0.0 },
+      { "EventID": 1, "EventName": "MinionsSpawning", "EventTime": 65.0 },
+      { "EventID": 2, "EventName": "FirstBlood", "EventTime": 182.0, "Recipient": "Faker" },
+      { "EventID": 3, "EventName": "DragonKill", "EventTime": 330.0, "KillerName": "Faker", "DragonType": "Fire", "Stolen": "False", "Assisters": ["Keria"] },
+      { "EventID": 4, "EventName": "ChampionKill", "EventTime": 300.5, "KillerName": "Faker", "VictimName": "Chovy", "Assisters": [] }
+    ]
+  },
+  "gameData": {
+    "gameMode": "CLASSIC",
+    "gameTime": 600.0,
+    "mapName": "Map11",
+    "mapNumber": 11,
+    "mapTerrain": "Default"
+  }
+}

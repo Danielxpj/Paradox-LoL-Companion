@@ -1,0 +1,17 @@
+## .NET / Visual Studio
+bin/
+obj/
+*.user
+.vs/
+
+## Rider
+.idea/
+
+## Build / test artifacts
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.log
+
+## Claude Code / editor local state
+.claude/

@@ -1,0 +1,73 @@
+{
+  // Advice rules config. Editable copy: %LocalAppData%\LoLAdvisor\advisor-config.json
+  "gold": {
+    "componentGold": 1300,
+    "legendaryGold": 3000
+  },
+  "csPerMinute": {
+    "target": 7.0,
+    "minMinutes": 2.0
+  },
+  "objectives": {
+    "dragonFirstSpawn": 300,
+    "dragonRespawn": 300,
+    "baronFirstSpawn": 1200,
+    "baronRespawn": 360,
+    "soonThreshold": 30
+  },
+  "items": {
+    "minCompletedItemGold": 1100,
+    "minFinishedBootsGold": 900,
+    "maxRecommendations": 3,
+    "sustainTags": ["LifeSteal", "SpellVamp", "Omnivamp"],
+    "excludeItemTags": ["Boots", "Trinket", "GoldPer"],
+
+    // Description-text detection (en + es keywords, in case the catalog language changes).
+    "grievousWoundsKeywords": ["Grievous", "Heridas graves", "% de Heridas"],
+    "cleanseKeywords": ["crowd control debuffs", "debilitaciones de control", "pérdida de control"],
+    "shieldBreakerKeywords": ["Shield Reaver", "Rompeescudos"],
+
+    // Champion knowledge (keys = Data Dragon text id, e.g. "MonkeyKing").
+    "healerChampions": ["Aatrox", "Briar", "DrMundo", "Fiora", "Illaoi", "Kayn", "Maokai", "Nami",
+                        "Seraphine", "Sona", "Soraka", "Swain", "Sylas", "Vladimir", "Warwick", "Yuumi", "Zac"],
+    "shieldChampions": ["Camille", "Janna", "Karma", "Lulu", "Orianna", "Riven", "Sett", "Shen"],
+    "heavyCcChampions": ["Alistar", "Amumu", "Ashe", "Leona", "Lissandra", "Malzahar", "Maokai", "Morgana",
+                         "Nautilus", "Rakan", "Rell", "Sejuani", "Skarner", "Thresh", "Zoe"],
+    "suppressionChampions": ["Malzahar", "Skarner", "Urgot", "Warwick"],
+
+    // Corrections to the damage profile inferred from info/tags (values: Physical / Magical / Mixed).
+    "damageProfileOverrides": {
+      "Gwen": "Magical",
+      "Diana": "Magical",
+      "Fizz": "Magical",
+      "Sylas": "Magical",
+      "Kennen": "Magical",
+      "Kaisa": "Mixed"
+    },
+    // Archetypes: Marksman / Mage / AdAssassin / AdFighter / ApFighter / Tank / Enchanter.
+    "archetypeOverrides": {},
+
+    // Build detection from your real inventory (tank Garen, AP Janna...). The champion's
+    // default archetype gets this much "gold" of head start; buy enough off-meta items
+    // and the advisor follows your build (recomputed every tick, so re-building works).
+    "detectBuildFromItems": true,
+    "buildDetectionPriorGold": 1200,
+
+    // Threat analysis thresholds.
+    "sustainThreshold": 0.25,
+    "armorStackThreshold": 150,
+    "mrStackThreshold": 120,
+    "skewedDamageShare": 0.62,
+    "burstThreshold": 1.6,
+    "ccCountForMercs": 2,
+
+    // ARAM (map 12): constant fights and buy-on-respawn economy.
+    "aramSustainThresholdFactor": 0.6,
+    "aramAffordabilityBoost": 1.25
+  },
+  "mayhem": {
+    // ARAM: Mayhem — queue ids (from the LCU) and the levels that unlock augment picks.
+    "queueIds": [2400],
+    "pickLevels": [7, 11, 15]
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "activePlayer": {
+    "summonerName": "TuInvocador",
+    "riotId": "TuInvocador#LAS",
+    "level": 11,
+    "currentGold": 1450.5,
+    "championStats": {
+      "currentHealth": 1240.0,
+      "maxHealth": 1610.0,
+      "resourceValue": 420.0,
+      "resourceMax": 640.0,
+      "attackDamage": 74.0,
+      "abilityPower": 145.0,
+      "armor": 52.0,
+      "magicResist": 38.0,
+      "moveSpeed": 355.0
+    }
+  },
+  "allPlayers": [
+    {
+      "summonerName": "TuInvocador",
+      "riotId": "TuInvocador#LAS",
+      "championName": "Ahri",
+      "rawChampionName": "game_character_displayname_Ahri",
+      "level": 11,
+      "team": "ORDER",
+      "position": "MIDDLE",
+      "isDead": false,
+      "scores": { "kills": 4, "deaths": 2, "assists": 5, "creepScore": 132, "wardScore": 6.5 },
+      "items": [
+        { "itemID": 1058, "count": 1, "displayName": "Needlessly Large Rod", "price": 1250, "slot": 0 },
+        { "itemID": 1052, "count": 1, "displayName": "Amplifying Tome", "price": 400, "slot": 1 }
+      ]
+    },
+    {
+      "summonerName": "AliadoJungla",
+      "championName": "Lee Sin",
+      "rawChampionName": "game_character_displayname_LeeSin",
+      "level": 10,
+      "team": "ORDER",
+      "position": "JUNGLE",
+      "isDead": false,
+      "scores": { "kills": 2, "deaths": 3, "assists": 6, "creepScore": 118, "wardScore": 14.0 },
+      "items": []
+    },
+    {
+      "summonerName": "AliadoTop",
+      "championName": "Garen",
+      "rawChampionName": "game_character_displayname_Garen",
+      "level": 11,
+      "team": "ORDER",
+      "position": "TOP",
+      "isDead": false,
+      "scores": { "kills": 1, "deaths": 2, "assists": 2, "creepScore": 140, "wardScore": 3.0 },
+      "items": []
+    },
+    {
+      "summonerName": "AliadoAdc",
+      "championName": "Ashe",
+      "rawChampionName": "game_character_displayname_Ashe",
+      "level": 9,
+      "team": "ORDER",
+      "position": "BOTTOM",
+      "isDead": false,
+      "scores": { "kills": 3, "deaths": 1, "assists": 4, "creepScore": 150, "wardScore": 5.0 },
+      "items": []
+    },
+    {
+      "summonerName": "AliadoSup",
+      "championName": "Lulu",
+      "rawChampionName": "game_character_displayname_Lulu",
+      "level": 9,
+      "team": "ORDER",
+      "position": "UTILITY",
+      "isDead": false,
+      "scores": { "kills": 0, "deaths": 2, "assists": 9, "creepScore": 20, "wardScore": 28.0 },
+      "items": []
+    },
+    {
+      "summonerName": "RivalMid",
+      "championName": "Zed",
+      "rawChampionName": "game_character_displayname_Zed",
+      "level": 12,
+      "team": "CHAOS",
+      "position": "MIDDLE",
+      "isDead": true,
+      "respawnTimer": 18.0,
+      "scores": { "kills": 7, "deaths": 2, "assists": 2, "creepScore": 145, "wardScore": 2.0 },
+      "items": [
+        { "itemID": 3142, "count": 1, "displayName": "Youmuu's Ghostblade", "price": 2800, "slot": 0 },
+        { "itemID": 3047, "count": 1, "displayName": "Plated Steelcaps", "price": 1200, "slot": 1 }
+      ]
+    },
+    {
+      "summonerName": "RivalJungla",
+      "championName": "Warwick",
+      "rawChampionName": "game_character_displayname_Warwick",
+      "level": 10,
+      "team": "CHAOS",
+      "position": "JUNGLE",
+      "isDead": false,
+      "scores": { "kills": 6, "deaths": 1, "assists": 7, "creepScore": 110, "wardScore": 8.0 },
+      "items": [
+        { "itemID": 1053, "count": 1, "displayName": "Vampiric Scepter", "price": 900, "slot": 0 }
+      ]
+    },
+    {
+      "summonerName": "RivalTop",
+      "championName": "Malphite",
+      "rawChampionName": "game_character_displayname_Malphite",
+      "level": 11,
+      "team": "CHAOS",
+      "position": "TOP",
+      "isDead": false,
+      "scores": { "kills": 1, "deaths": 2, "assists": 4, "creepScore": 125, "wardScore": 2.5 },
+      "items": [
+        { "itemID": 1029, "count": 1, "displayName": "Chain Vest", "price": 800, "slot": 0 },
+        { "itemID": 3068, "count": 1, "displayName": "Sunfire Aegis", "price": 2700, "slot": 1 }
+      ]
+    },
+    {
+      "summonerName": "RivalAdc",
+      "championName": "Jinx",
+      "rawChampionName": "game_character_displayname_Jinx",
+      "level": 10,
+      "team": "CHAOS",
+      "position": "BOTTOM",
+      "isDead": false,
+      "scores": { "kills": 3, "deaths": 3, "assists": 3, "creepScore": 160, "wardScore": 4.0 },
+      "items": []
+    },
+    {
+      "summonerName": "RivalSup",
+      "championName": "Leona",
+      "rawChampionName": "game_character_displayname_Leona",
+      "level": 9,
+      "team": "CHAOS",
+      "position": "UTILITY",
+      "isDead": false,
+      "scores": { "kills": 0, "deaths": 4, "assists": 7, "creepScore": 18, "wardScore": 22.0 },
+      "items": [
+        { "itemID": 1029, "count": 1, "displayName": "Chain Vest", "price": 800, "slot": 0 }
+      ]
+    }
+  ],
+  "events": {
+    "Events": [
+      { "EventID": 0, "EventName": "GameStart", "EventTime": 0.0 },
+      { "EventID": 1, "EventName": "MinionsSpawning", "EventTime": 65.0 },
+      { "EventID": 2, "EventName": "FirstBlood", "EventTime": 182.0 },
+      { "EventID": 3, "EventName": "DragonKill", "EventTime": 330.0, "KillerName": "RivalJungla", "DragonType": "Fire", "Stolen": "False" },
+      { "EventID": 4, "EventName": "ChampionKill", "EventTime": 300.5, "KillerName": "TuInvocador", "VictimName": "RivalMid" },
+      { "EventID": 5, "EventName": "DragonKill", "EventTime": 610.0, "KillerName": "AliadoJungla", "DragonType": "Ocean", "Stolen": "False" },
+      { "EventID": 6, "EventName": "TurretKilled", "EventTime": 640.0, "KillerName": "RivalMid" }
+    ]
+  },
+  "gameData": {
+    "gameMode": "CLASSIC",
+    "gameTime": 900.0,
+    "mapName": "Map11",
+    "mapNumber": 11,
+    "mapTerrain": "Default"
+  }
+}
