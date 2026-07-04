@@ -54,8 +54,12 @@ public class OpggResponseParserTests
         var core = stats.ItemPriorFor(3142);   // Youmuu's — en el core set
         Assert.NotNull(core);
         Assert.Equal(0.17, core!.Value.PickRate, 2);
+        Assert.True(core.Value.IsCore);
+        Assert.True(core.Value.Play > 1000);
         var late = stats.ItemPriorFor(6694);   // Serylda — candidato de 4.º item
         Assert.NotNull(late);
+        Assert.False(late!.Value.IsCore);
+        Assert.True(late.Value.Play > 0);
         Assert.Null(stats.ItemPriorFor(9999));
     }
 

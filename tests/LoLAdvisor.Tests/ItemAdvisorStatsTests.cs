@@ -28,6 +28,10 @@ public class ItemAdvisorStatsTests
           "4002":{"name":"Pure AP Item","gold":{"total":2900,"sell":2030,"purchasable":true},
                   "tags":["SpellDamage"],"maps":{"11":true,"12":true},
                   "from":["1026"],"depth":2,
+                  "stats":{"FlatMagicDamageMod":60}},
+          "4005":{"name":"Other AP Item","gold":{"total":2900,"sell":2030,"purchasable":true},
+                  "tags":["SpellDamage"],"maps":{"11":true,"12":true},
+                  "from":["1026"],"depth":2,
                   "stats":{"FlatMagicDamageMod":60}}}}
         """);
 
@@ -134,6 +138,44 @@ public class ItemAdvisorStatsTests
         var advisor = new ItemAdvisor(catalog, config);
         var plan = advisor.Advise(State(), BuildArchetype.Mage, StatsWith(4003))!;
         Assert.Equal("Buyable Form", plan.Recommendations[0].Item.Name);
+    }
+
+    [Fact]
+    public void Core_item_prior_outweighs_late_item_prior()
+    {
+        // Escenario real (Ahri, parche 16.13.1): el pick del SET núcleo es la
+        // probabilidad de un combo de 3 items (~0.11) mientras que un candidato
+        // tardío es un item suelto (~0.31). Sin corregir la escala, Rabadon (4.º
+        // opcional) recibía 5× el bono de los items del core real.
+        var stats = new ChampionBuildStats
+        {
+            ChampionKey = "TestChamp",
+            GameMode = "ranked",
+            Position = "mid",
+            CoreItems = new ItemSetStats(new[] { 4005 }, PickRate: 0.11, Play: 10750, Win: 5609),
+            LateItems = new[] { new ItemSetStats(new[] { 4002 }, PickRate: 0.31, Play: 12759, Win: 7525) },
+        };
+        var advisor = new ItemAdvisor(Catalog());
+        var plan = advisor.Advise(State(), BuildArchetype.Mage, stats)!;
+        // Ambos items son AP puro idéntico: el prior decide el orden y el core manda.
+        Assert.Equal("Other AP Item", plan.Recommendations[0].Item.Name);
+    }
+
+    [Fact]
+    public void Tiny_sample_prior_is_ignored()
+    {
+        // Un candidato con 150 partidas es ruido: no debe sumar bono ni razón.
+        var stats = new ChampionBuildStats
+        {
+            ChampionKey = "TestChamp",
+            GameMode = "ranked",
+            Position = "mid",
+            LateItems = new[] { new ItemSetStats(new[] { 4002 }, PickRate: 0.31, Play: 150, Win: 95) },
+        };
+        var advisor = new ItemAdvisor(Catalog());
+        var plan = advisor.Advise(State(), BuildArchetype.Mage, stats)!;
+        Assert.DoesNotContain(plan.Recommendations,
+            r => r.Reasons.Any(reason => reason.Contains("builds")));
     }
 
     [Fact]

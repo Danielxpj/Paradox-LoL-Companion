@@ -39,14 +39,17 @@ public sealed class ChampionBuildStats
     /// <summary>
     /// Prior de un item: primero el core build (la señal fuerte), luego los candidatos
     /// tardíos. <c>null</c> si el item no aparece en las builds del campeón.
+    /// Trae la fuente y la muestra porque están en ESCALAS distintas: el pick del
+    /// core es la probabilidad de un combo de 3 items (~0.05–0.35) y el de un
+    /// candidato tardío es de un item suelto (~0.1–0.5); el scoring los pondera aparte.
     /// </summary>
-    public (double PickRate, double WinRate)? ItemPriorFor(int itemId)
+    public (double PickRate, double WinRate, int Play, bool IsCore)? ItemPriorFor(int itemId)
     {
         if (CoreItems is { } core && core.ItemIds.Contains(itemId))
-            return (core.PickRate, core.WinRate);
+            return (core.PickRate, core.WinRate, core.Play, true);
         foreach (var set in LateItems)
             if (set.ItemIds.Contains(itemId))
-                return (set.PickRate, set.WinRate);
+                return (set.PickRate, set.WinRate, set.Play, false);
         return null;
     }
 }

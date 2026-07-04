@@ -34,12 +34,24 @@ public sealed class ItemAdvisor
     private const double HardEngageMag = 1.5;
     private const double LifestealDevalMag = 0.6;
     // Prior estadístico (OP.GG): magnitud del bono por "esto es lo que compran los
-    // jugadores de tu campeón". Rampa sobre el pick rate del SET de build (los sets
-    // completos rondan 0.05–0.35, no confundir con pick rate por item), escalada
-    // ±25 % por win rate. Calibrado para reforzar el fit sin aplastar counters.
+    // jugadores de tu campeón", escalada ±25 % por win rate. Calibrado para
+    // reforzar el fit sin aplastar counters (bono máximo = 2.5 × 1.25 = 3.125).
     private const double StatCoreMag = 2.5;
+    // Core: estar en el set núcleo ES la señal — el pick del SET (probabilidad de
+    // un combo de 3 items, ~0.05–0.35 en datos reales) solo gradúa qué tan fijo
+    // es el meta, por eso arranca de un piso alto en vez de cero.
+    private const double StatCoreFloor = 0.6;
     private const double StatPickFoot = 0.05;
     private const double StatPickShoulder = 0.30;
+    // Candidatos tardíos (4.º/5.º item): pick de item SUELTO (~0.1–0.5, escala
+    // distinta al set) con rampa propia y factor < 1 — son opciones, no "la build".
+    private const double StatLatePickFoot = 0.08;
+    private const double StatLatePickShoulder = 0.40;
+    private const double StatLateFactor = 0.85;
+    // Confianza por muestra: los slots tardíos bajan a ~1.5k partidas con win
+    // rates ruidosos; por debajo del pie el prior es ruido y no aporta.
+    private const double StatPlayFoot = 300;
+    private const double StatPlayShoulder = 2500;
     private const double StatWinFoot = 0.48;
     private const double StatWinShoulder = 0.54;
     /// <summary>μ mínimo para que una regla aporte bono y emita razón (evita ruido sub-umbral).</summary>
@@ -435,7 +447,15 @@ public sealed class ItemAdvisor
         double statBonus = 0;
         if (stats is not null && PriorFor(item, stats) is { } prior)
         {
-            var mu = Fuzzy.Ramp(prior.PickRate, StatPickFoot, StatPickShoulder)
+            // Core y tardíos se ponderan aparte: sus pick rates están en escalas
+            // distintas (combo de 3 items vs. item suelto) — ver constantes.
+            var pickMu = prior.IsCore
+                ? StatCoreFloor + (1 - StatCoreFloor)
+                    * Fuzzy.Ramp(prior.PickRate, StatPickFoot, StatPickShoulder)
+                : StatLateFactor
+                    * Fuzzy.Ramp(prior.PickRate, StatLatePickFoot, StatLatePickShoulder);
+            var mu = pickMu
+                   * Fuzzy.Ramp(prior.Play, StatPlayFoot, StatPlayShoulder)
                    * (0.75 + 0.5 * Fuzzy.Ramp(prior.WinRate, StatWinFoot, StatWinShoulder));
             if (mu > MuGate)
             {
@@ -478,7 +498,8 @@ public sealed class ItemAdvisor
     /// (Muramana) mientras el catálogo recomienda la forma comprable (Manamune);
     /// el mapa de la config traduce la evolución al item recomendable.
     /// </summary>
-    private (double PickRate, double WinRate)? PriorFor(StaticItem item, ChampionBuildStats stats)
+    private (double PickRate, double WinRate, int Play, bool IsCore)? PriorFor(
+        StaticItem item, ChampionBuildStats stats)
     {
         if (stats.ItemPriorFor(item.Id) is { } direct)
             return direct;
