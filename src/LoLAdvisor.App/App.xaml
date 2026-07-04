@@ -3,47 +3,375 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:LoLAdvisor.App">
     <Application.Resources>
-        <!-- Paleta (estilo Data Studio / Looker) -->
-        <SolidColorBrush x:Key="PageBg" Color="#F5F6F8" />
-        <SolidColorBrush x:Key="CardBg" Color="#FFFFFF" />
-        <SolidColorBrush x:Key="CardBorder" Color="#E4E7EB" />
-        <SolidColorBrush x:Key="TextPrimary" Color="#202124" />
-        <SolidColorBrush x:Key="TextMuted" Color="#5F6368" />
-        <SolidColorBrush x:Key="ConsoleBg" Color="#1E1F22" />
-        <SolidColorBrush x:Key="ConsoleFg" Color="#D6D8DC" />
 
-        <!-- Tarjeta base -->
+        <!-- ============================================================
+             TEMA "HEXTECH HUD": oscuro, en el lenguaje visual de LoL.
+             Pensado para mirarse de reojo en segunda pantalla: fondos
+             azul-noche, acentos dorado/cian, texto grande y jerarquía
+             obvia. Todos los colores viven aquí y en Theme/Palette.cs.
+             ============================================================ -->
+
+        <!-- Fondos (de más profundo a más elevado) -->
+        <SolidColorBrush x:Key="PageBg" Color="#0A1018" />
+        <SolidColorBrush x:Key="CardBg" Color="#111A26" />
+        <SolidColorBrush x:Key="CardBgHover" Color="#162231" />
+        <SolidColorBrush x:Key="HeaderBg" Color="#0D141F" />
+        <SolidColorBrush x:Key="ConsoleBg" Color="#070B11" />
+
+        <!-- Bordes -->
+        <SolidColorBrush x:Key="CardBorder" Color="#1E2C3D" />
+        <SolidColorBrush x:Key="CardBorderStrong" Color="#31445C" />
+        <SolidColorBrush x:Key="GoldBorder" Color="#6B5A36" />
+
+        <!-- Texto -->
+        <SolidColorBrush x:Key="TextPrimary" Color="#EAF2FA" />
+        <SolidColorBrush x:Key="TextMuted" Color="#8CA3BC" />
+        <SolidColorBrush x:Key="TextFaint" Color="#5A6F86" />
+        <SolidColorBrush x:Key="ConsoleFg" Color="#7FD1C0" />
+
+        <!-- Acentos -->
+        <SolidColorBrush x:Key="Gold" Color="#C8AA6E" />
+        <SolidColorBrush x:Key="GoldBright" Color="#F0E6D2" />
+        <SolidColorBrush x:Key="Cyan" Color="#0AC8B9" />
+        <SolidColorBrush x:Key="Amber" Color="#E8A33D" />
+        <SolidColorBrush x:Key="Danger" Color="#E84057" />
+        <SolidColorBrush x:Key="Info" Color="#5383E8" />
+
+        <!-- Tipografías: Bahnschrift (DIN táctico, incluida en Windows) para
+             display/números; Segoe UI para cuerpo; Cascadia/Consolas en consola. -->
+        <FontFamily x:Key="DisplayFont">Bahnschrift SemiBold, Bahnschrift, Segoe UI</FontFamily>
+        <FontFamily x:Key="DisplayFontCondensed">Bahnschrift SemiCondensed, Bahnschrift, Segoe UI</FontFamily>
+        <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
+
+        <!-- ===================== Bloques base ===================== -->
+
+        <!-- Tarjeta base: panel plano oscuro con borde fino (sin sombras). -->
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBg}" />
             <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="16" />
             <Setter Property="Margin" Value="6" />
-            <Setter Property="Effect">
+        </Style>
+
+        <!-- Tarjeta destacada: borde dorado tenue (para lo accionable). -->
+        <Style x:Key="GoldCard" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="BorderBrush" Value="{StaticResource GoldBorder}" />
+        </Style>
+
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFontCondensed}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+            <Setter Property="TextBlock.FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="CardValue" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+        </Style>
+
+        <!-- Rótulo de sección: dorado, mayúsculas espaciadas (jerarquía a golpe de vista). -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource Gold}" />
+            <Setter Property="Margin" Value="10,18,0,6" />
+            <Setter Property="Typography.Capitals" Value="AllSmallCaps" />
+            <Setter Property="TextBlock.FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- Píldora de estado del header (fondo hundido). -->
+        <Style x:Key="StatusPill" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource PageBg}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="10,4" />
+        </Style>
+
+        <!-- ===================== Controles ===================== -->
+
+        <!-- Botón: plano oscuro, borde que se ilumina en dorado al pasar. -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#16233370" />
+            <Setter Property="Foreground" Value="{StaticResource GoldBright}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderStrong}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFontCondensed}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="12" ShadowDepth="1" Direction="270" Opacity="0.10" Color="#000000" />
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Gold}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardBgHover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#0D141F" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource CardBorder}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
-        <Style x:Key="CardTitle" TargetType="TextBlock">
+        <!-- Botón primario (dorado sólido) para la acción principal de una tarjeta. -->
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#C8AA6E" />
+            <Setter Property="Foreground" Value="#0A1018" />
+            <Setter Property="BorderBrush" Value="#C8AA6E" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F0E6D2" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#F0E6D2" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#A98C50" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- CheckBox / RadioButton: texto claro sobre fondo oscuro. -->
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- ComboBox: template propio mínimo (el chrome por defecto es blanco). -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardBgHover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="Background" Value="{StaticResource CardBg}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderStrong}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd" Background="{StaticResource CardBg}"
+                                                BorderBrush="{StaticResource CardBorderStrong}"
+                                                BorderThickness="1" CornerRadius="4">
+                                            <Path HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                  Margin="0,0,10,0" Data="M0,0 L4,4 L8,0"
+                                                  Stroke="{StaticResource Gold}" StrokeThickness="1.5" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Gold}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="10,0,26,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource CardBorderStrong}"
+                                        BorderThickness="1" CornerRadius="4" MinWidth="{TemplateBinding ActualWidth}"
+                                        Margin="0,2,0,0">
+                                    <ScrollViewer MaxHeight="240">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Pestañas: subrayado dorado en la activa, sin cajas grises. -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd" Background="Transparent" Padding="16,8,16,6"
+                                BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,4,0">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Gold}" />
+                                <Setter Property="Foreground" Value="{StaticResource GoldBright}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsSelected" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- DataGrid oscuro (tabla de jugadores). -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource Gold}" />
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFontCondensed}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CardBgHover}" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
-        <Style x:Key="CardValue" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="30" />
-            <Setter Property="FontWeight" Value="Bold" />
+        <!-- ToolTips legibles sobre oscuro. -->
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="#162231" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderStrong}" />
+            <Setter Property="Padding" Value="10,6" />
         </Style>
 
-        <Style x:Key="SectionHeader" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
-            <Setter Property="Margin" Value="10,4,0,8" />
+        <!-- GridSplitter (divisor de la consola). -->
+        <Style TargetType="GridSplitter">
+            <Setter Property="Background" Value="{StaticResource CardBorder}" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource GoldBorder}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Scrollbars finas y oscuras (solo el pulgar, sin flechas). -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="{StaticResource CardBorderStrong}"
+                                                        CornerRadius="4" Margin="1" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Width" Value="Auto" />
+                    <Setter Property="Height" Value="8" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="Transparent">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                        <Track.Thumb>
+                                            <Thumb>
+                                                <Thumb.Template>
+                                                    <ControlTemplate TargetType="Thumb">
+                                                        <Border Background="{StaticResource CardBorderStrong}"
+                                                                CornerRadius="4" Margin="1" />
+                                                    </ControlTemplate>
+                                                </Thumb.Template>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Fuente global -->

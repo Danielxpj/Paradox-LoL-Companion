@@ -1,5 +1,7 @@
 using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using LoLAdvisor.App.ViewModels;
 
@@ -12,6 +14,26 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        SourceInitialized += OnSourceInitialized;
+    }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+    /// <summary>Barra de título nativa en oscuro (DWMWA_USE_IMMERSIVE_DARK_MODE) para que
+    /// no desentone con el tema; si el SO no lo soporta, se ignora sin romper nada.</summary>
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        try
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            var dark = 1;
+            DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
+        }
+        catch
+        {
+            // Windows sin soporte del atributo: la barra queda clara, nada más.
+        }
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

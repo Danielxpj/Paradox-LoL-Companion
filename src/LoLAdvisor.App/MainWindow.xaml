@@ -5,13 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LoLAdvisor.App"
         mc:Ignorable="d"
-        Title="LoL Advisor" Height="760" Width="1180" MinHeight="640" MinWidth="1000"
+        Title="LoL Advisor" Height="780" Width="1220" MinHeight="640" MinWidth="1000"
         Background="{StaticResource PageBg}">
     <DockPanel>
 
         <!-- ================= HEADER ================= -->
-        <Border DockPanel.Dock="Top" Background="{StaticResource CardBg}" BorderBrush="{StaticResource CardBorder}"
-                BorderThickness="0,0,0,1" Padding="18,12">
+        <Border DockPanel.Dock="Top" Background="{StaticResource HeaderBg}"
+                BorderBrush="{StaticResource GoldBorder}" BorderThickness="0,0,0,1" Padding="20,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -19,38 +19,57 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
+                <!-- Marca + contexto actual (Idle / In game / Champ Select) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="LoL Advisor" FontSize="20" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
-                    <Border Background="{StaticResource PageBg}" CornerRadius="12" Padding="10,3" Margin="14,0,0,0">
-                        <TextBlock Text="{Binding ContextLabel}" Foreground="{StaticResource TextMuted}"
+                    <TextBlock Text="LOL" FontFamily="{StaticResource DisplayFont}" FontSize="22"
+                               Foreground="{StaticResource Gold}" VerticalAlignment="Center" />
+                    <TextBlock Text="ADVISOR" FontFamily="{StaticResource DisplayFont}" FontSize="22"
+                               Foreground="{StaticResource GoldBright}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    <Border Style="{StaticResource StatusPill}" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ContextLabel}" Foreground="{StaticResource Cyan}"
+                                   FontFamily="{StaticResource DisplayFontCondensed}" FontSize="13"
                                    FontWeight="SemiBold" VerticalAlignment="Center" />
                     </Border>
                 </StackPanel>
 
+                <!-- Estado de conexiones + acciones -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Estado Live Client -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,18,0" VerticalAlignment="Center">
-                        <Ellipse Width="10" Height="10" Fill="{Binding LiveStatusBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="Live Client:" Margin="6,0,4,0" Foreground="{StaticResource TextMuted}" />
-                        <TextBlock Text="{Binding LiveStatusText}" Foreground="{StaticResource TextPrimary}" />
-                    </StackPanel>
-                    <!-- Estado LCU -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,18,0" VerticalAlignment="Center">
-                        <Ellipse Width="10" Height="10" Fill="{Binding LcuStatusBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="LCU:" Margin="6,0,4,0" Foreground="{StaticResource TextMuted}" />
-                        <TextBlock Text="{Binding LcuStatusText}" Foreground="{StaticResource TextPrimary}" />
-                    </StackPanel>
-                    <Button Content="Check for updates" Command="{Binding CheckUpdatesCommand}"
-                            Padding="10,4" Margin="0,0,14,0" VerticalAlignment="Center"
+                    <Border Style="{StaticResource StatusPill}" Margin="0,0,10,0"
+                            ToolTip="Connection to the running game (Live Client Data API)">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="9" Height="9" Fill="{Binding LiveStatusBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="Game" Margin="7,0,5,0" Foreground="{StaticResource TextMuted}"
+                                       FontSize="12" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LiveStatusText}" Foreground="{StaticResource TextPrimary}"
+                                       FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatusPill}" Margin="0,0,14,0"
+                            ToolTip="Connection to the LoL client (champ select, queue info, runes)">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="9" Height="9" Fill="{Binding LcuStatusBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="Client" Margin="7,0,5,0" Foreground="{StaticResource TextMuted}"
+                                       FontSize="12" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LcuStatusText}" Foreground="{StaticResource TextPrimary}"
+                                       FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Button Content="Update data" Command="{Binding CheckUpdatesCommand}"
+                            Margin="0,0,14,0" VerticalAlignment="Center"
                             ToolTip="Checks whether a newer version of the game data (Data Dragon) is available" />
-                    <CheckBox Content="Replay mode" IsChecked="{Binding ReplayMode}" VerticalAlignment="Center" />
-                    <ComboBox SelectedIndex="{Binding ReplayScenarioIndex}" Margin="8,0,0,0"
-                              VerticalAlignment="Center" MinWidth="130"
-                              ToolTip="Replay scenario">
-                        <ComboBoxItem Content="Rift" />
-                        <ComboBoxItem Content="ARAM: Mayhem" />
-                    </ComboBox>
+                    <Border Background="{StaticResource PageBg}" BorderBrush="{StaticResource CardBorder}"
+                            BorderThickness="1" CornerRadius="4" Padding="10,4">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Content="Replay" IsChecked="{Binding ReplayMode}" VerticalAlignment="Center"
+                                      ToolTip="Demo mode: feeds a recorded game so you can explore the app without LoL running" />
+                            <ComboBox SelectedIndex="{Binding ReplayScenarioIndex}" Margin="10,0,0,0"
+                                      VerticalAlignment="Center" MinWidth="130" Height="26"
+                                      ToolTip="Replay scenario">
+                                <ComboBoxItem Content="Rift" />
+                                <ComboBoxItem Content="ARAM: Mayhem" />
+                            </ComboBox>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
@@ -60,435 +79,420 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="220" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition x:Name="ConsoleRow" Height="200" MinHeight="120" />
+                <RowDefinition x:Name="ConsoleRow" Height="180" MinHeight="120" />
             </Grid.RowDefinitions>
 
             <!-- Divisor arrastrable entre el dashboard y la consola. -->
-            <GridSplitter x:Name="ConsoleSplitter" Grid.Row="1" Height="6" HorizontalAlignment="Stretch"
-                          Background="{StaticResource CardBorder}" ResizeBehavior="PreviousAndNext"
-                          ResizeDirection="Rows" Cursor="SizeNS"
+            <GridSplitter x:Name="ConsoleSplitter" Grid.Row="1" Height="5" HorizontalAlignment="Stretch"
+                          ResizeBehavior="PreviousAndNext" ResizeDirection="Rows" Cursor="SizeNS"
                           ToolTip="Drag to resize the console" />
 
-        <Border Grid.Row="2" Background="{StaticResource ConsoleBg}">
-            <DockPanel>
-                <Grid DockPanel.Dock="Top" Margin="12,8">
-                    <TextBlock Text="Raw data console" Foreground="{StaticResource ConsoleFg}"
-                               FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="{Binding PauseLabel}" Command="{Binding PauseConsoleCommand}"
-                                Padding="10,3" Margin="4,0" />
-                        <Button Content="Clear" Command="{Binding ClearConsoleCommand}" Padding="10,3" Margin="4,0" />
-                        <Button Content="Save" Command="{Binding SaveConsoleCommand}" Padding="10,3" Margin="4,0" />
-                        <Button x:Name="ToggleConsoleButton" Content="Hide" Click="OnToggleConsole"
-                                Padding="10,3" Margin="12,0,0,0"
-                                ToolTip="Show or hide the console log" />
-                    </StackPanel>
-                </Grid>
-                <ListBox x:Name="ConsoleList" ItemsSource="{Binding ConsoleLines}"
-                         Background="Transparent" Foreground="{StaticResource ConsoleFg}"
-                         BorderThickness="0" FontFamily="Consolas" FontSize="12"
-                         VirtualizingPanel.IsVirtualizing="False"
-                         ScrollViewer.CanContentScroll="False"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="Padding" Value="0" />
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                </ListBox>
-            </DockPanel>
-        </Border>
+            <Border Grid.Row="2" Background="{StaticResource ConsoleBg}">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="14,8">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="●" Foreground="{StaticResource Cyan}" FontSize="10"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="RAW DATA CONSOLE" Foreground="{StaticResource TextFaint}"
+                                       FontFamily="{StaticResource DisplayFontCondensed}" FontSize="12"
+                                       FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="{Binding PauseLabel}" Command="{Binding PauseConsoleCommand}"
+                                    Padding="10,2" Margin="4,0" FontSize="12" />
+                            <Button Content="Clear" Command="{Binding ClearConsoleCommand}" Padding="10,2" Margin="4,0" FontSize="12" />
+                            <Button Content="Save" Command="{Binding SaveConsoleCommand}" Padding="10,2" Margin="4,0" FontSize="12" />
+                            <Button x:Name="ToggleConsoleButton" Content="Hide" Click="OnToggleConsole"
+                                    Padding="10,2" Margin="12,0,0,0" FontSize="12"
+                                    ToolTip="Show or hide the console log" />
+                        </StackPanel>
+                    </Grid>
+                    <ListBox x:Name="ConsoleList" ItemsSource="{Binding ConsoleLines}"
+                             Background="Transparent" Foreground="{StaticResource ConsoleFg}"
+                             BorderThickness="0" FontFamily="{StaticResource MonoFont}" FontSize="12"
+                             Margin="14,0,0,4"
+                             VirtualizingPanel.IsVirtualizing="False"
+                             ScrollViewer.CanContentScroll="False"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Padding" Value="0" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </DockPanel>
+            </Border>
 
-        <!-- ================= CENTRO: pestañas ================= -->
-        <TabControl Grid.Row="0" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent"
-                    BorderThickness="0" Margin="8">
+            <!-- ================= CENTRO: pestañas ================= -->
+            <TabControl Grid.Row="0" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent"
+                        BorderThickness="0" Margin="12,6,12,0">
 
-            <!-- PESTAÑA PARTIDA -->
-            <TabItem Header="Match">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
+                <!-- PESTAÑA PARTIDA -->
+                <TabItem Header="MATCH">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,4,0,16">
 
-                        <!-- ===== ASESOR DE ITEMS (feature principal, ancho completo) ===== -->
-                        <TextBlock Text="Item advisor" Style="{StaticResource SectionHeader}" />
-                        <Border Style="{StaticResource Card}" Padding="16,12">
-                            <StackPanel>
-                                <TextBlock Text="{Binding ThreatSummary}" FontSize="15" FontWeight="SemiBold"
-                                           TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ThreatSummary}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <!-- Aviso de tienda abierta (ARAM: solo se compra muerto). -->
-                                <TextBlock Text="{Binding ShopAlertLine}" FontSize="14" FontWeight="Bold"
-                                           TextWrapping="Wrap" Foreground="#D97706" Margin="0,6,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ShopAlertLine}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <!-- Compra inicial sugerida (arranque de ARAM). -->
-                                <TextBlock Text="{Binding StarterLine}" FontSize="14" FontWeight="SemiBold"
-                                           TextWrapping="Wrap" Foreground="#16A34A" Margin="0,6,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding StarterLine}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <!-- Selector de build: Auto (detección automática) o un rol forzado por el jugador. -->
-                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                    <TextBlock Text="Build:" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextMuted}"
-                                               VerticalAlignment="Center" Margin="0,0,10,0" />
-                                    <ItemsControl ItemsSource="{Binding BuildRoles}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <RadioButton GroupName="BuildRole" Content="{Binding Label}"
-                                                             IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                             FontSize="13" Margin="0,2,14,2" VerticalAlignment="Center"
-                                                             Foreground="{StaticResource TextPrimary}" />
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                                <TextBlock Text="{Binding ItemPanelHint}" FontSize="14" TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextMuted}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ItemPanelHint}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-                        </Border>
-                        <ItemsControl ItemsSource="{Binding ItemRecos}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource Card}" Padding="16,14">
-                                        <StackPanel>
-                                            <!-- Barra de acento: verde = te alcanza ya, ámbar = juntando oro. -->
-                                            <Border Height="4" CornerRadius="2" Background="{Binding AffordBrush}"
-                                                    Margin="0,0,0,10" />
-                                            <!-- Insignia de prioridad: categoría (por qué) + match relativo al top. -->
-                                            <DockPanel Margin="0,0,0,8">
-                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Priority}" FontSize="12"
-                                                           FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding CategoryLabel}" FontSize="12" FontWeight="Bold"
-                                                           Foreground="{Binding CategoryBrush}" />
-                                            </DockPanel>
-                                            <DockPanel>
-                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Cost}" FontSize="14"
-                                                           Foreground="{StaticResource TextMuted}" Margin="8,0,0,0"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="Bold"
-                                                           Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
-                                            </DockPanel>
-                                            <TextBlock Text="{Binding AffordText}" FontSize="13" FontWeight="SemiBold"
-                                                       Foreground="{Binding AffordBrush}" TextWrapping="Wrap"
-                                                       Margin="0,8,0,0" />
-                                            <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
-                                                       Foreground="{StaticResource TextMuted}" Margin="0,6,0,0" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Border Padding="16,10">
-                            <Border.Style>
-                                <Style TargetType="Border" BasedOn="{StaticResource Card}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding BootsLine}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="{Binding BootsLine}" FontSize="13" TextWrapping="Wrap"
-                                       Foreground="{StaticResource TextPrimary}" />
-                        </Border>
-                        <!-- Items que conviene vender (ya no pegan con la build). -->
-                        <Border Padding="16,10">
-                            <Border.Style>
-                                <Style TargetType="Border" BasedOn="{StaticResource Card}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SellLine}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="{Binding SellLine}" FontSize="13" TextWrapping="Wrap"
-                                       Foreground="#D97706" />
-                        </Border>
-
-                        <!-- ===== RUNAS Y SKILLS — página más popular (OP.GG) ===== -->
-                        <Border Padding="16,10">
-                            <Border.Style>
-                                <Style TargetType="Border" BasedOn="{StaticResource Card}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding RunesLine}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <StackPanel>
-                                <TextBlock Text="Runes &amp; skills (most popular for your champion)"
-                                           FontSize="12" FontWeight="Bold" Foreground="#94A3B8"
-                                           Margin="0,0,0,4" />
-                                <TextBlock Text="{Binding RunesLine}" FontSize="13" TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextPrimary}" />
-                                <TextBlock Text="{Binding SkillOrderLine}" FontSize="13"
-                                           TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Foreground="{StaticResource TextPrimary}" />
-                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                    <Button Content="Apply runes" Command="{Binding ApplyRunesCommand}"
-                                            Padding="12,4" />
-                                    <TextBlock Text="{Binding RunesStatus}" FontSize="12"
-                                               Foreground="#94A3B8" VerticalAlignment="Center"
-                                               Margin="10,0,0,0" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- ===== ARAM: MAYHEM — tracker de picks de augment y guía ===== -->
-                        <StackPanel>
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding MayhemStatus}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <TextBlock Text="Mayhem — augments" Style="{StaticResource SectionHeader}" />
+                            <!-- ===== ASESOR DE ITEMS (feature principal, ancho completo) ===== -->
+                            <TextBlock Text="ITEM ADVISOR" Style="{StaticResource SectionHeader}" Margin="10,6,0,6" />
                             <Border Style="{StaticResource Card}" Padding="16,12">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding MayhemStatus}" FontSize="14" FontWeight="SemiBold"
-                                               TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" />
-                                    <TextBlock Text="{Binding MayhemPickNow}" FontSize="14" FontWeight="Bold"
-                                               TextWrapping="Wrap" Foreground="#D97706" Margin="0,6,0,0">
+                                    <TextBlock Text="{Binding ThreatSummary}" FontSize="15" FontWeight="SemiBold"
+                                               TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding MayhemPickNow}" Value="">
+                                                    <DataTrigger Binding="{Binding ThreatSummary}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding MayhemGuidance}" FontSize="13" TextWrapping="Wrap"
-                                               Foreground="{StaticResource TextMuted}" Margin="0,8,0,0" />
+                                    <!-- Aviso de tienda abierta (ARAM: solo se compra muerto). -->
+                                    <TextBlock Text="{Binding ShopAlertLine}" FontSize="14" FontWeight="Bold"
+                                               TextWrapping="Wrap" Foreground="{StaticResource Amber}" Margin="0,6,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ShopAlertLine}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <!-- Compra inicial sugerida (arranque de ARAM). -->
+                                    <TextBlock Text="{Binding StarterLine}" FontSize="14" FontWeight="SemiBold"
+                                               TextWrapping="Wrap" Foreground="{StaticResource Cyan}" Margin="0,6,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StarterLine}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <!-- Selector de build: Auto (detección automática) o un rol forzado por el jugador. -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <TextBlock Text="Build:" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource Gold}"
+                                                   VerticalAlignment="Center" Margin="0,0,12,0" />
+                                        <ItemsControl ItemsSource="{Binding BuildRoles}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <RadioButton GroupName="BuildRole" Content="{Binding Label}"
+                                                                 IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                                 FontSize="13" Margin="0,2,16,2" VerticalAlignment="Center" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding ItemPanelHint}" FontSize="14" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,6,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ItemPanelHint}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
-                        </StackPanel>
-
-                        <TextBlock Text="Summary" Style="{StaticResource SectionHeader}" />
-                        <!-- UniformGrid sin anchos fijos: las tarjetas se reparten el ancho
-                             disponible y crecen al maximizar la ventana. -->
-                        <ItemsControl ItemsSource="{Binding Scorecards}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><UniformGrid Columns="6" /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource Card}">
-                                        <StackPanel>
-                                            <Border Height="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,0,10" />
-                                            <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" />
-                                            <TextBlock Style="{StaticResource CardValue}" Text="{Binding Value}" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- Dragón/Barón: solo en la Grieta; en ARAM la sección desaparece. -->
-                        <StackPanel>
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ShowObjectives}" Value="False">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <TextBlock Text="Objectives (estimated)" Style="{StaticResource SectionHeader}" />
-                            <!-- Mismas celdas que el Resumen (6 columnas) para mantener el ritmo visual. -->
-                            <ItemsControl ItemsSource="{Binding Objectives}">
+                            <ItemsControl ItemsSource="{Binding ItemRecos}">
                                 <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate><UniformGrid Columns="6" Rows="1" /></ItemsPanelTemplate>
+                                    <ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource Card}">
+                                        <Border Style="{StaticResource Card}" Padding="16,14">
                                             <StackPanel>
-                                                <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Label}" />
-                                                <TextBlock FontSize="24" FontWeight="Bold" Foreground="{Binding Accent}"
-                                                           Text="{Binding Clock}" />
-                                                <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}"
-                                                           Text="{Binding Detail}" />
+                                                <!-- Barra de acento: cian = te alcanza ya, ámbar = juntando oro. -->
+                                                <Border Height="3" CornerRadius="2" Background="{Binding AffordBrush}"
+                                                        Margin="0,0,0,10" />
+                                                <!-- Insignia de prioridad: categoría (por qué) + match relativo al top. -->
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Priority}" FontSize="12"
+                                                               FontWeight="SemiBold" Foreground="{StaticResource TextFaint}"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding CategoryLabel}" FontSize="12" FontWeight="Bold"
+                                                               FontFamily="{StaticResource DisplayFontCondensed}"
+                                                               Foreground="{Binding CategoryBrush}" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Cost}" FontSize="14"
+                                                               FontFamily="{StaticResource DisplayFont}"
+                                                               Foreground="{StaticResource Gold}" Margin="8,0,0,0"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="Bold"
+                                                               Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
+                                                </DockPanel>
+                                                <TextBlock Text="{Binding AffordText}" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{Binding AffordBrush}" TextWrapping="Wrap"
+                                                           Margin="0,8,0,0" />
+                                                <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
+                                                           Foreground="{StaticResource TextMuted}" Margin="0,6,0,0" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </StackPanel>
+                            <Border Padding="16,10">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BootsLine}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding BootsLine}" FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{StaticResource TextPrimary}" />
+                            </Border>
+                            <!-- Items que conviene vender (ya no pegan con la build). -->
+                            <Border Padding="16,10">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SellLine}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding SellLine}" FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{StaticResource Amber}" />
+                            </Border>
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="1*" />
-                            </Grid.ColumnDefinitions>
+                            <!-- ===== RUNAS Y SKILLS — página más popular (OP.GG) ===== -->
+                            <Border Padding="16,12">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource GoldCard}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RunesLine}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="RUNES &amp; SKILLS — MOST POPULAR FOR YOUR CHAMPION"
+                                               FontFamily="{StaticResource DisplayFontCondensed}"
+                                               FontSize="12" FontWeight="Bold" Foreground="{StaticResource Gold}"
+                                               Margin="0,0,0,6" />
+                                    <TextBlock Text="{Binding RunesLine}" FontSize="13" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextPrimary}" />
+                                    <TextBlock Text="{Binding SkillOrderLine}" FontSize="13"
+                                               TextWrapping="Wrap" Margin="0,4,0,0"
+                                               Foreground="{StaticResource TextPrimary}" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Content="Apply runes" Command="{Binding ApplyRunesCommand}"
+                                                Style="{StaticResource PrimaryButton}" Padding="14,5" />
+                                        <TextBlock Text="{Binding RunesStatus}" FontSize="12"
+                                                   Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"
+                                                   Margin="12,0,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
 
-                            <!-- Tabla de jugadores -->
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Players" Style="{StaticResource SectionHeader}" />
-                                <Border Style="{StaticResource Card}">
-                                    <DataGrid ItemsSource="{Binding Players}" AutoGenerateColumns="False"
-                                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="None"
-                                              Background="Transparent" BorderThickness="0" RowBackground="Transparent"
-                                              CanUserAddRows="False" HorizontalScrollBarVisibility="Disabled">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Champion" Binding="{Binding Champion}" Width="*" />
-                                            <DataGridTextColumn Header="Summoner" Binding="{Binding Summoner}" Width="*" />
-                                            <DataGridTextColumn Header="Lvl" Binding="{Binding Level}" Width="Auto" />
-                                            <DataGridTextColumn Header="KDA" Binding="{Binding Kda}" Width="Auto" />
-                                            <DataGridTextColumn Header="CS" Binding="{Binding Cs}" Width="Auto" />
-                                            <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="2*" />
-                                        </DataGrid.Columns>
-                                    </DataGrid>
+                            <!-- ===== ARAM: MAYHEM — tracker de picks de augment y guía ===== -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding MayhemStatus}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="MAYHEM — AUGMENTS" Style="{StaticResource SectionHeader}" />
+                                <Border Style="{StaticResource Card}" Padding="16,12">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding MayhemStatus}" FontSize="14" FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" />
+                                        <TextBlock Text="{Binding MayhemPickNow}" FontSize="14" FontWeight="Bold"
+                                                   TextWrapping="Wrap" Foreground="{StaticResource Amber}" Margin="0,6,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MayhemPickNow}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding MayhemGuidance}" FontSize="13" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource TextMuted}" Margin="0,8,0,0" />
+                                    </StackPanel>
                                 </Border>
                             </StackPanel>
 
-                            <!-- Feed de consejos -->
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Advice" Style="{StaticResource SectionHeader}" />
-                                <ItemsControl ItemsSource="{Binding Advice}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Style="{StaticResource Card}" Padding="12">
-                                                <!-- DockPanel (no StackPanel horizontal): el texto toma el ancho
-                                                     restante de la tarjeta y ajusta el wrap al redimensionar. -->
-                                                <DockPanel>
-                                                    <Border DockPanel.Dock="Left" Width="4" CornerRadius="2"
-                                                            Background="{Binding Severity}" Margin="0,0,10,0" />
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Category}" Style="{StaticResource CardTitle}" />
-                                                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap"
-                                                                   Foreground="{StaticResource TextPrimary}" />
-                                                    </StackPanel>
-                                                </DockPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <!-- PESTAÑA CHAMP SELECT -->
-            <TabItem Header="Champ Select">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-
-                        <!-- ===== ASESOR DE BANCA (ARAM): mejor intercambio para equilibrar ===== -->
-                        <StackPanel>
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding BenchVerdict}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <TextBlock Text="Bench advisor" Style="{StaticResource SectionHeader}" />
-                            <Border Style="{StaticResource Card}" Padding="16,12">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding BenchVerdict}" FontSize="16" FontWeight="Bold"
-                                               TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" />
-                                    <TextBlock Text="{Binding BenchSummary}" FontSize="13" Margin="0,8,0,0"
-                                               TextWrapping="Wrap" Foreground="{StaticResource TextMuted}" />
-                                    <TextBlock Text="{Binding BenchLine}" FontSize="13" Margin="0,2,0,0"
-                                               TextWrapping="Wrap" Foreground="{StaticResource TextMuted}" />
-                                </StackPanel>
-                            </Border>
-                            <ItemsControl ItemsSource="{Binding BenchSuggestions}">
+                            <TextBlock Text="SUMMARY" Style="{StaticResource SectionHeader}" />
+                            <!-- UniformGrid sin anchos fijos: las tarjetas se reparten el ancho
+                                 disponible y crecen al maximizar la ventana. -->
+                            <ItemsControl ItemsSource="{Binding Scorecards}">
                                 <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate>
+                                    <ItemsPanelTemplate><UniformGrid Columns="6" /></ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource Card}" Padding="14">
+                                        <Border Style="{StaticResource Card}" Padding="16,12">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold"
-                                                           Foreground="{StaticResource TextPrimary}" />
-                                                <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
-                                                           Foreground="{StaticResource TextMuted}" Margin="0,4,0,0" />
+                                                <Border Height="3" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,0,10" />
+                                                <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" />
+                                                <TextBlock Style="{StaticResource CardValue}" Text="{Binding Value}" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <!-- Dragón/Barón: solo en la Grieta; en ARAM la sección desaparece. -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ShowObjectives}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="OBJECTIVES (ESTIMATED)" Style="{StaticResource SectionHeader}" />
+                                <!-- Mismas celdas que el Resumen (6 columnas) para mantener el ritmo visual. -->
+                                <ItemsControl ItemsSource="{Binding Objectives}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><UniformGrid Columns="6" Rows="1" /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource Card}" Padding="16,12">
+                                                <StackPanel>
+                                                    <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Label}" />
+                                                    <TextBlock FontSize="24" FontFamily="{StaticResource DisplayFont}"
+                                                               Foreground="{Binding Accent}" Text="{Binding Clock}" />
+                                                    <TextBlock FontSize="11" Foreground="{StaticResource TextFaint}"
+                                                               Text="{Binding Detail}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Tabla de jugadores -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="PLAYERS" Style="{StaticResource SectionHeader}" />
+                                    <Border Style="{StaticResource Card}" Padding="10">
+                                        <DataGrid ItemsSource="{Binding Players}" AutoGenerateColumns="False"
+                                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="None"
+                                                  Background="Transparent" BorderThickness="0" RowBackground="Transparent"
+                                                  CanUserAddRows="False" HorizontalScrollBarVisibility="Disabled">
+                                            <DataGrid.Columns>
+                                                <!-- Barra de color de equipo: azul = aliados, rojo = enemigos. -->
+                                                <DataGridTemplateColumn Width="Auto">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Border Width="4" CornerRadius="2" Background="{Binding TeamBrush}"
+                                                                    Margin="2,3" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn Header="Champion" Binding="{Binding Champion}" Width="*" />
+                                                <DataGridTextColumn Header="Summoner" Binding="{Binding Summoner}" Width="*" />
+                                                <DataGridTextColumn Header="Lvl" Binding="{Binding Level}" Width="Auto" />
+                                                <DataGridTextColumn Header="KDA" Binding="{Binding Kda}" Width="Auto" />
+                                                <DataGridTextColumn Header="CS" Binding="{Binding Cs}" Width="Auto" />
+                                                <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="2*" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Feed de consejos -->
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="ADVICE" Style="{StaticResource SectionHeader}" />
+                                    <ItemsControl ItemsSource="{Binding Advice}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource Card}" Padding="12">
+                                                    <!-- DockPanel (no StackPanel horizontal): el texto toma el ancho
+                                                         restante de la tarjeta y ajusta el wrap al redimensionar. -->
+                                                    <DockPanel>
+                                                        <Border DockPanel.Dock="Left" Width="4" CornerRadius="2"
+                                                                Background="{Binding Severity}" Margin="0,0,10,0" />
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Category}" Style="{StaticResource CardTitle}" />
+                                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap"
+                                                                       Foreground="{StaticResource TextPrimary}" />
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
 
-                        <TextBlock Text="{Binding DraftPhase}" Style="{StaticResource SectionHeader}" />
-                        <Border Style="{StaticResource Card}">
-                            <TextBlock Text="{Binding Bans}" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
-                        </Border>
+                <!-- PESTAÑA CHAMP SELECT -->
+                <TabItem Header="CHAMP SELECT">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,4,0,16">
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Your team" Style="{StaticResource SectionHeader}" />
-                                <ItemsControl ItemsSource="{Binding MyTeam}">
+                            <!-- ===== ASESOR DE BANCA (ARAM): mejor intercambio para equilibrar ===== -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BenchVerdict}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="BENCH ADVISOR" Style="{StaticResource SectionHeader}" Margin="10,6,0,6" />
+                                <Border Style="{StaticResource GoldCard}" Padding="16,12">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding BenchVerdict}" FontSize="16" FontWeight="Bold"
+                                                   TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" />
+                                        <TextBlock Text="{Binding BenchSummary}" FontSize="13" Margin="0,8,0,0"
+                                                   TextWrapping="Wrap" Foreground="{StaticResource TextMuted}" />
+                                        <TextBlock Text="{Binding BenchLine}" FontSize="13" Margin="0,2,0,0"
+                                                   TextWrapping="Wrap" Foreground="{StaticResource TextMuted}" />
+                                    </StackPanel>
+                                </Border>
+                                <ItemsControl ItemsSource="{Binding BenchSuggestions}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Style="{StaticResource Card}" Padding="12">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Border Width="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,10,0" />
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Position}" Style="{StaticResource CardTitle}" />
-                                                        <TextBlock Text="{Binding Champion}" Foreground="{StaticResource TextPrimary}"
-                                                                   FontWeight="SemiBold" />
-                                                    </StackPanel>
+                                            <Border Style="{StaticResource Card}" Padding="14">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold"
+                                                               Foreground="{StaticResource TextPrimary}" />
+                                                    <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
+                                                               Foreground="{StaticResource TextMuted}" Margin="0,4,0,0" />
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -496,35 +500,66 @@
                                 </ItemsControl>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Enemy team" Style="{StaticResource SectionHeader}" />
-                                <ItemsControl ItemsSource="{Binding TheirTeam}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Style="{StaticResource Card}" Padding="12">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Border Width="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,10,0" />
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Position}" Style="{StaticResource CardTitle}" />
-                                                        <TextBlock Text="{Binding Champion}" Foreground="{StaticResource TextPrimary}"
-                                                                   FontWeight="SemiBold" />
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Grid>
+                            <TextBlock Text="{Binding DraftPhase}" Style="{StaticResource SectionHeader}" />
+                            <Border Style="{StaticResource Card}">
+                                <TextBlock Text="{Binding Bans}" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
+                            </Border>
 
-                        <Border Style="{StaticResource Card}" Margin="6,12,6,6">
-                            <TextBlock Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"
-                                       Text="Note: champion names come from the Data Dragon catalog; until it loads, the ID is shown." />
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-        </TabControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="YOUR TEAM" Style="{StaticResource SectionHeader}" />
+                                    <ItemsControl ItemsSource="{Binding MyTeam}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource Card}" Padding="12">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,10,0" />
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Position}" Style="{StaticResource CardTitle}" />
+                                                            <TextBlock Text="{Binding Champion}" Foreground="{StaticResource TextPrimary}"
+                                                                       FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="ENEMY TEAM" Style="{StaticResource SectionHeader}" />
+                                    <ItemsControl ItemsSource="{Binding TheirTeam}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource Card}" Padding="12">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,10,0" />
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Position}" Style="{StaticResource CardTitle}" />
+                                                            <TextBlock Text="{Binding Champion}" Foreground="{StaticResource TextPrimary}"
+                                                                       FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Style="{StaticResource Card}" Margin="6,12,6,6">
+                                <TextBlock Foreground="{StaticResource TextFaint}" TextWrapping="Wrap"
+                                           Text="Note: champion names come from the Data Dragon catalog; until it loads, the ID is shown." />
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
         </Grid>
     </DockPanel>
 </Window>
