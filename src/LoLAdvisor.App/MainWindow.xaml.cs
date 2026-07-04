@@ -15,6 +15,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
         SourceInitialized += OnSourceInitialized;
+        // Consola oculta de entrada (no guardar la altura del XAML como "elegida").
+        SetConsoleCollapsed(true, remember: false);
     }
 
     [DllImport("dwmapi.dll")]
@@ -57,17 +59,31 @@ public partial class MainWindow : Window
             _ = vm.DownloadAndApplyAsync(info.LatestVersion);
     }
 
-    private GridLength _savedConsoleHeight = new(200);
-    private bool _consoleCollapsed;
+    private GridLength _savedConsoleHeight = new(180);
+    // La consola arranca oculta: es un log de diagnóstico, no la vista principal.
+    private bool _consoleCollapsed = true;
 
     /// <summary>
     /// Muestra/oculta el log de la consola. Al ocultarlo queda solo la barra de título
     /// (la fila pasa a Auto) y se recuerda la altura elegida con el splitter para
     /// restaurarla al volver a mostrarlo.
     /// </summary>
-    private void OnToggleConsole(object sender, RoutedEventArgs e)
+    private void OnToggleConsole(object sender, RoutedEventArgs e) =>
+        SetConsoleCollapsed(!_consoleCollapsed, remember: true);
+
+    private void SetConsoleCollapsed(bool collapse, bool remember)
     {
-        if (_consoleCollapsed)
+        if (collapse)
+        {
+            if (remember)
+                _savedConsoleHeight = ConsoleRow.Height;
+            ConsoleRow.MinHeight = 0;
+            ConsoleRow.Height = GridLength.Auto;
+            ConsoleList.Visibility = Visibility.Collapsed;
+            ConsoleSplitter.Visibility = Visibility.Collapsed;
+            ToggleConsoleButton.Content = "Show console";
+        }
+        else
         {
             ConsoleRow.MinHeight = 120;
             ConsoleRow.Height = _savedConsoleHeight;
@@ -75,16 +91,7 @@ public partial class MainWindow : Window
             ConsoleSplitter.Visibility = Visibility.Visible;
             ToggleConsoleButton.Content = "Hide";
         }
-        else
-        {
-            _savedConsoleHeight = ConsoleRow.Height;
-            ConsoleRow.MinHeight = 0;
-            ConsoleRow.Height = GridLength.Auto;
-            ConsoleList.Visibility = Visibility.Collapsed;
-            ConsoleSplitter.Visibility = Visibility.Collapsed;
-            ToggleConsoleButton.Content = "Show";
-        }
-        _consoleCollapsed = !_consoleCollapsed;
+        _consoleCollapsed = collapse;
     }
 
     private void OnConsoleLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
