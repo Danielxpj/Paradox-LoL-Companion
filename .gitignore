@@ -12,6 +12,8 @@ obj/
 [Rr]elease/
 TestResults/
 *.log
+## Salida de publicar.bat (exe portable)
+publish/
 
 ## Claude Code / editor local state
 .claude/
