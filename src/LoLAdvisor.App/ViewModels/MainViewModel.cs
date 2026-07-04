@@ -19,6 +19,7 @@ using LoLAdvisor.Core.Live;
 using LoLAdvisor.Core.Mayhem;
 using LoLAdvisor.Core.Models;
 using LoLAdvisor.Core.Objectives;
+using LoLAdvisor.Core.Stats;
 using LoLAdvisor.Core.Util;
 
 namespace LoLAdvisor.App.ViewModels;
@@ -52,6 +53,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly ReplaySamples _samples;
     private BuildArchetype? _forcedArchetype;
     private GameState? _lastGameState;
+    private readonly StatsProvider _statsProvider = new();
+    private readonly LcuRuneWriter _runeWriter = new();
+    private ChampionBuildStats? _championStats;
+    private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -100,6 +105,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         PauseConsoleCommand = new RelayCommand(TogglePauseConsole);
         ClearConsoleCommand = new RelayCommand(() => ConsoleLines.Clear());
         SaveConsoleCommand = new RelayCommand(SaveConsole);
+        ApplyRunesCommand = new RelayCommand(OnApplyRunes);
         CheckUpdatesCommand = new RelayCommand(() =>
         {
             // El botón corre en el hilo de UI: aquí _catalog ya tiene el valor actual.
@@ -132,6 +138,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand ClearConsoleCommand { get; }
     public ICommand SaveConsoleCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
+    public ICommand ApplyRunesCommand { get; }
 
     private string _contextLabel = "Idle";
     public string ContextLabel { get => _contextLabel; private set => SetProperty(ref _contextLabel, value); }
@@ -169,6 +176,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private string _shopAlertLine = "";
     public string ShopAlertLine { get => _shopAlertLine; private set => SetProperty(ref _shopAlertLine, value); }
+
+    private string _runesLine = "";
+    public string RunesLine { get => _runesLine; private set => SetProperty(ref _runesLine, value); }
+
+    private string _skillOrderLine = "";
+    public string SkillOrderLine { get => _skillOrderLine; private set => SetProperty(ref _skillOrderLine, value); }
+
+    private string _runesStatus = "";
+    public string RunesStatus { get => _runesStatus; private set => SetProperty(ref _runesStatus, value); }
 
     private string _mayhemStatus = "";
     public string MayhemStatus { get => _mayhemStatus; private set => SetProperty(ref _mayhemStatus, value); }
@@ -387,6 +403,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _inGame = true;
         _gameMode = state.GameData.GameMode;
         UpdateContext();
+        RequestStatsIfNeeded(state);
 
         _clockCard.Value = TimeFmt.Clock(state.GameData.GameTime);
         _goldCard.Value = ((int)(state.ActivePlayer?.CurrentGold ?? 0)).ToString("N0", CultureInfo.InvariantCulture);
@@ -455,10 +472,98 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             role.IsChecked = role.Archetype is null;
     }
 
+    /// <summary>
+    /// Pide las stats de OP.GG cuando cambia el contexto (campeón/rol/mapa/parche).
+    /// El fetch es async y opcional: el consejo sale sin prior hasta que lleguen.
+    /// </summary>
+    private void RequestStatsIfNeeded(GameState state)
+    {
+        var me = state.ActivePlayerEntry;
+        if (me is null || !_catalog.IsLoaded)
+            return;
+        var champ = _catalog.ResolveChampion(me.ChampionName, me.RawChampionName);
+        if (champ is null)
+            return;
+
+        var mapNumber = state.GameData.MapNumber == 0 ? 11 : state.GameData.MapNumber;
+        var key = $"{champ.Key}|{me.Position}|{mapNumber}|{_catalog.Version}";
+        if (key == _statsFetchKey)
+            return;
+        _statsFetchKey = key;
+        _championStats = null;
+        RebuildRunesPanel();
+        _ = FetchStatsAsync(champ.Key, me.Position, mapNumber, _catalog.Version, key);
+    }
+
+    private async Task FetchStatsAsync(string champKey, string position, int mapNumber,
+        string patch, string key)
+    {
+        ChampionBuildStats? stats = null;
+        try
+        {
+            stats = await _statsProvider.GetAsync(champKey, position, mapNumber, patch)
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            // El provider ya degrada a null; este catch es el cinturón extra del hilo async.
+        }
+        OnUi(() =>
+        {
+            if (_statsFetchKey != key)
+                return;   // llegó tarde: el contexto ya cambió
+            _championStats = stats;
+            AppendConsole(stats is null
+                ? "[stats] OP.GG data unavailable — advising without statistical priors."
+                : $"[stats] OP.GG build data loaded for {champKey} ({stats.GameMode}/{stats.Position}).");
+            RebuildRunesPanel();
+            if (_lastGameState is { } s)
+                RebuildItemPlan(s);
+        });
+    }
+
+    private void RebuildRunesPanel()
+    {
+        if (_championStats?.Runes is not { } r)
+        {
+            RunesLine = "";
+            SkillOrderLine = "";
+            RunesStatus = "";
+            return;
+        }
+        RunesLine = $"{r.PrimaryPageName}: {string.Join(" · ", r.PrimaryRuneNames)}   |   "
+                  + $"{r.SecondaryPageName}: {string.Join(" · ", r.SecondaryRuneNames)}";
+        var order = _championStats.Skills?.Order ?? Array.Empty<string>();
+        SkillOrderLine = order.Count == 0
+            ? ""
+            : $"Skills: {SkillPriority(order)}   (first levels: {string.Join(" ", order.Take(6))}…)";
+    }
+
+    /// <summary>"Q > E > W": prioridad de maxeo por frecuencia en el orden de 15 niveles (R aparte).</summary>
+    internal static string SkillPriority(IReadOnlyList<string> order) =>
+        string.Join(" > ", order
+            .Where(s => s is "Q" or "W" or "E")
+            .GroupBy(s => s)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key));
+
+    private async void OnApplyRunes()
+    {
+        if (_championStats?.Runes is not { } runes)
+            return;
+        RunesStatus = "Applying…";
+        var champ = _championStats.ChampionKey;
+        var error = await _runeWriter.ApplyAsync(champ, runes);
+        RunesStatus = error ?? $"Rune page \"{LcuRuneWriter.PagePrefix}{champ}\" applied.";
+        AppendConsole(error is null
+            ? $"[runes] page applied for {champ}."
+            : $"[runes] failed: {error}");
+    }
+
     private void RebuildItemPlan(GameState state)
     {
         ItemRecos.Clear();
-        var plan = _itemAdvisor?.Advise(state, _forcedArchetype);
+        var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats);
         if (plan is null)
         {
             ThreatSummary = "";
