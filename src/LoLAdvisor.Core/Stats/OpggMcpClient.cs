@@ -21,7 +21,7 @@ public sealed class OpggMcpClient : IOpggClient
 {
     private const string Endpoint = "https://mcp-api.op.gg/mcp";
 
-    // Subconjunto cerrado de desired_output_fields que consume OpggResponseParser.
+    // Campos pedidos al tool: cubren lo que consume OpggResponseParser (los nombres extra ayudan a depurar fixtures).
     private static readonly string[] DesiredFields =
     {
         "data.core_items.{ids[],ids_names[],pick_rate,play,win}",
@@ -34,10 +34,14 @@ public sealed class OpggMcpClient : IOpggClient
         "data.summary.average_stats.{win_rate,pick_rate,play}",
     };
 
+    // Compartido: HttpClient está pensado para reutilizarse; instanciar uno por
+    // cliente agota sockets si alguien crea clientes por consulta.
+    private static readonly HttpClient SharedHttp = new() { Timeout = TimeSpan.FromSeconds(10) };
+
     private readonly HttpClient _http;
 
     public OpggMcpClient(HttpClient? http = null) =>
-        _http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        _http = http ?? SharedHttp;
 
     public async Task<string?> GetChampionAnalysisTextAsync(
         string champion, string gameMode, string position, CancellationToken ct = default)
@@ -57,6 +61,10 @@ public sealed class OpggMcpClient : IOpggClient
                 return null;
             var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             return ExtractToolText(body);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
@@ -97,6 +105,7 @@ public sealed class OpggMcpClient : IOpggClient
             if (json.StartsWith("event:", StringComparison.Ordinal)
                 || json.StartsWith("data:", StringComparison.Ordinal))
             {
+                // Solo se toma la primera línea "data:"; las respuestas de este servidor son JSON plano en un único frame.
                 var dataLine = json.Split('\n')
                     .FirstOrDefault(l => l.StartsWith("data:", StringComparison.Ordinal));
                 if (dataLine is null)

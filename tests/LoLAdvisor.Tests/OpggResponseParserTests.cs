@@ -77,6 +77,7 @@ public class OpggResponseParserTests
         var json = System.Text.Json.JsonSerializer.Serialize(stats);
         var back = System.Text.Json.JsonSerializer.Deserialize<ChampionBuildStats>(json)!;
         Assert.Equal(stats.CoreItems!.ItemIds, back.CoreItems!.ItemIds);
+        Assert.Equal(stats.CoreItems.WinRate, back.CoreItems.WinRate);
         Assert.Equal(stats.Runes!.PrimaryRuneNames, back.Runes!.PrimaryRuneNames);
         Assert.Equal(stats.Skills!.Order, back.Skills!.Order);
     }
