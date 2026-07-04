@@ -294,35 +294,20 @@
                                            Foreground="{StaticResource Amber}" />
                             </Border>
 
-                            <!-- ===== RUNAS Y SKILLS — página más popular (OP.GG) ===== -->
-                            <Border Padding="16,12">
+                            <!-- Las runas viven SOLO en la pestaña Champ Select (se eligen antes
+                                 de la partida); aquí en Match solo queda el orden de skills. -->
+                            <Border Padding="16,10">
                                 <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource GoldCard}">
+                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding RunesLine}" Value="">
+                                            <DataTrigger Binding="{Binding SkillOrderLine}" Value="">
                                                 <Setter Property="Visibility" Value="Collapsed" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <StackPanel>
-                                    <TextBlock Text="RUNES &amp; SKILLS — MOST POPULAR FOR YOUR CHAMPION"
-                                               FontFamily="{StaticResource DisplayFontCondensed}"
-                                               FontSize="12" FontWeight="Bold" Foreground="{StaticResource Gold}"
-                                               Margin="0,0,0,6" />
-                                    <TextBlock Text="{Binding RunesLine}" FontSize="13" TextWrapping="Wrap"
-                                               Foreground="{StaticResource TextPrimary}" />
-                                    <TextBlock Text="{Binding SkillOrderLine}" FontSize="13"
-                                               TextWrapping="Wrap" Margin="0,4,0,0"
-                                               Foreground="{StaticResource TextPrimary}" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                        <Button Content="Apply runes" Command="{Binding ApplyRunesCommand}"
-                                                Style="{StaticResource PrimaryButton}" Padding="14,5" />
-                                        <TextBlock Text="{Binding RunesStatus}" FontSize="12"
-                                                   Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"
-                                                   Margin="12,0,0,0" />
-                                    </StackPanel>
-                                </StackPanel>
+                                <TextBlock Text="{Binding SkillOrderLine}" FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{StaticResource TextPrimary}" />
                             </Border>
 
                             <!-- ===== ARAM: MAYHEM — tracker de picks de augment y guía ===== -->
