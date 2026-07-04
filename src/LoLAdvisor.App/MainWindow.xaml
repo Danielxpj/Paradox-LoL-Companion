@@ -248,6 +248,36 @@
                                        Foreground="#D97706" />
                         </Border>
 
+                        <!-- ===== RUNAS Y SKILLS — página más popular (OP.GG) ===== -->
+                        <Border Padding="16,10">
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RunesLine}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="Runes &amp; skills (most popular for your champion)"
+                                           FontSize="12" FontWeight="Bold" Foreground="#94A3B8"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Text="{Binding RunesLine}" FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{StaticResource TextPrimary}" />
+                                <TextBlock Text="{Binding SkillOrderLine}" FontSize="13"
+                                           TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Foreground="{StaticResource TextPrimary}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button Content="Apply runes" Command="{Binding ApplyRunesCommand}"
+                                            Padding="12,4" />
+                                    <TextBlock Text="{Binding RunesStatus}" FontSize="12"
+                                               Foreground="#94A3B8" VerticalAlignment="Center"
+                                               Margin="10,0,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
                         <!-- ===== ARAM: MAYHEM — tracker de picks de augment y guía ===== -->
                         <StackPanel>
                             <StackPanel.Style>
