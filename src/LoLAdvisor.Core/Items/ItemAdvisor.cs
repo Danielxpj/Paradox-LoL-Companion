@@ -2,6 +2,7 @@ using System.Globalization;
 using LoLAdvisor.Core.Config;
 using LoLAdvisor.Core.DataDragon;
 using LoLAdvisor.Core.Models;
+using LoLAdvisor.Core.Stats;
 
 namespace LoLAdvisor.Core.Items;
 
@@ -32,6 +33,15 @@ public sealed class ItemAdvisor
     private const double AntiTankMag = 2.0;
     private const double HardEngageMag = 1.5;
     private const double LifestealDevalMag = 0.6;
+    // Prior estadístico (OP.GG): magnitud del bono por "esto es lo que compran los
+    // jugadores de tu campeón". Rampa sobre el pick rate del SET de build (los sets
+    // completos rondan 0.05–0.35, no confundir con pick rate por item), escalada
+    // ±25 % por win rate. Calibrado para reforzar el fit sin aplastar counters.
+    private const double StatCoreMag = 2.5;
+    private const double StatPickFoot = 0.05;
+    private const double StatPickShoulder = 0.30;
+    private const double StatWinFoot = 0.48;
+    private const double StatWinShoulder = 0.54;
     /// <summary>μ mínimo para que una regla aporte bono y emita razón (evita ruido sub-umbral).</summary>
     private const double MuGate = 0.05;
 
@@ -49,7 +59,8 @@ public sealed class ItemAdvisor
     /// UI; anula la detección por campeón e inventario (el perfil de daño no cambia:
     /// es del kit del campeón, no de la build).
     /// </summary>
-    public ItemAdvicePlan? Advise(GameState state, BuildArchetype? forcedArchetype = null)
+    public ItemAdvicePlan? Advise(GameState state, BuildArchetype? forcedArchetype = null,
+        ChampionBuildStats? stats = null)
     {
         if (!_data.IsLoaded)
             return null;
@@ -104,6 +115,7 @@ public sealed class ItemAdvisor
         // AD/AP está tasado asumiendo la pasiva de maná. Se excluyen por completo.
         var myChampion = _data.ResolveChampion(me.ChampionName, me.RawChampionName);
         var skipManaItems = myChampion is { UsesMana: false };
+        var champName = string.IsNullOrEmpty(me.ChampionName) ? "your champion" : me.ChampionName;
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons, RecommendationCategory Category)>();
 
         foreach (var item in _data.CompletedItemsFor(mapNumber))
@@ -113,7 +125,7 @@ public sealed class ItemAdvisor
             if (skipManaItems && (item.HasTag("Mana") || item.HasTag("ManaRegen")))
                 continue;
 
-            var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw);
+            var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw, stats, champName);
             if (score > 0)
                 scored.Add((item, score, reasons, category));
         }
@@ -177,10 +189,10 @@ public sealed class ItemAdvisor
             profile,
             threat,
             recommendations,
-            BootsFor(me, profile, threat, mapNumber),
+            BootsFor(me, profile, threat, mapNumber, stats),
             SellSuggestions(me, profile, threat, weights, sustainThreshold,
                 recommendations.Count > 0 ? recommendations[0] : null),
-            StarterFor(me, profile, state.GameData.GameTime, isAram, weights),
+            StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats),
             ShopAlertFor(me, isAram, recommendations));
     }
 
@@ -192,7 +204,7 @@ public sealed class ItemAdvisor
     /// más caro (los Guardian's de 950 son la apertura estándar del mapa).
     /// </summary>
     private StarterAdvice? StarterFor(Player me, ChampionProfile profile, double gameTime,
-        bool isAram, IReadOnlyDictionary<string, double> weights)
+        bool isAram, IReadOnlyDictionary<string, double> weights, ChampionBuildStats? stats)
     {
         if (!isAram || gameTime > _config.StarterWindowSeconds)
             return null;
@@ -201,8 +213,10 @@ public sealed class ItemAdvisor
         if (ownsRealItem)
             return null;
 
+        var statStarterIds = stats?.Starter?.ItemIds ?? Array.Empty<int>();
         var best = _data.AramStarterItems
-            .OrderByDescending(i => i.Tags.Sum(t => weights.GetValueOrDefault(t)))
+            .OrderByDescending(i => statStarterIds.Contains(i.Id) ? 1 : 0)
+            .ThenByDescending(i => i.Tags.Sum(t => weights.GetValueOrDefault(t)))
             .ThenByDescending(i => i.GoldTotal)
             .FirstOrDefault();
         return best is null
@@ -321,7 +335,8 @@ public sealed class ItemAdvisor
     /// </summary>
     private (double Score, List<string> Reasons, RecommendationCategory Category) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
-        IReadOnlyDictionary<string, double> weights, bool teamHasGw)
+        IReadOnlyDictionary<string, double> weights, bool teamHasGw,
+        ChampionBuildStats? stats, string champName)
     {
         var reasons = new List<string>();
         var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t));
@@ -414,13 +429,30 @@ public sealed class ItemAdvisor
             reasons.Add("shreds enemy shields");
         }
 
+        // Prior estadístico: lo que los jugadores de este campeón realmente compran
+        // (OP.GG, por rol y parche). Entra como refuerzo del fit — NO cuenta como
+        // situacional para la categoría — así el item sigue siendo Core/Spike.
+        double statBonus = 0;
+        if (stats is not null && PriorFor(item, stats) is { } prior)
+        {
+            var mu = Fuzzy.Ramp(prior.PickRate, StatPickFoot, StatPickShoulder)
+                   * (0.75 + 0.5 * Fuzzy.Ramp(prior.WinRate, StatWinFoot, StatWinShoulder));
+            if (mu > MuGate)
+            {
+                statBonus = StatCoreMag * mu;
+                reasons.Add($"bought in {Pct(prior.PickRate)} of {champName} builds"
+                    + (prior.WinRate > 0 ? $" ({Pct(prior.WinRate)} WR)" : ""));
+            }
+        }
+
         // Devaluación del robo de vida si el enemigo YA compró anti-curación contra vos.
         var penalty = LifestealDevalMag * threat.EnemyAntiHeal * SustainTagWeight(item, weights);
 
-        var score = core + offense + defense - penalty;
+        var score = core + offense + defense + statBonus - penalty;
         // Categoría = qué explica el puntaje: si lo situacional es una fracción relevante
         // del total, manda la contrapartida dominante (defensa vs. counter ofensivo);
-        // si no, el item se recomienda por fit puro (Core).
+        // si no, el item se recomienda por fit puro (Core). El prior estadístico
+        // refuerza el fit, no lo situacional.
         var situational = offense + defense;
         var category =
             score <= 0 || situational < 0.2 * score ? RecommendationCategory.Core
@@ -440,6 +472,21 @@ public sealed class ItemAdvisor
     /// <summary>Peso de los tags de sustain del item (para devaluarlos si el enemigo tiene anti-heal).</summary>
     private double SustainTagWeight(StaticItem item, IReadOnlyDictionary<string, double> weights) =>
         item.Tags.Where(_config.SustainTags.Contains).Sum(t => weights.GetValueOrDefault(t));
+
+    /// <summary>
+    /// Prior del item en las builds del campeón. OP.GG registra evoluciones
+    /// (Muramana) mientras el catálogo recomienda la forma comprable (Manamune);
+    /// el mapa de la config traduce la evolución al item recomendable.
+    /// </summary>
+    private (double PickRate, double WinRate)? PriorFor(StaticItem item, ChampionBuildStats stats)
+    {
+        if (stats.ItemPriorFor(item.Id) is { } direct)
+            return direct;
+        foreach (var (evolved, buyable) in _config.ItemEvolutions)
+            if (buyable == item.Id && stats.ItemPriorFor(evolved) is { } viaEvolution)
+                return viaEvolution;
+        return null;
+    }
 
     private static double DefenseFactor(ChampionProfile me) =>
         me.Archetype == BuildArchetype.Tank ? 1.2 : me.IsSquishy ? 1.0 : 0.6;
@@ -496,7 +543,8 @@ public sealed class ItemAdvisor
 
     // --- Botas ---
 
-    private BootsAdvice? BootsFor(Player me, ChampionProfile profile, TeamThreat threat, int mapNumber)
+    private BootsAdvice? BootsFor(Player me, ChampionProfile profile, TeamThreat threat,
+        int mapNumber, ChampionBuildStats? stats)
     {
         var candidates = _data.FinishedBootsFor(mapNumber);
         if (candidates.Count == 0)
@@ -525,6 +573,15 @@ public sealed class ItemAdvisor
             if (steelcaps is not null)
                 return new BootsAdvice(steelcaps,
                     $"heavy physical auto-attack damage ({threat.TopPhysicalName})");
+        }
+
+        // Sin amenaza que decida: las botas que más compran los jugadores de tu campeón.
+        if (stats?.Boots is { } statBoots)
+        {
+            var popular = candidates.FirstOrDefault(c => statBoots.ItemIds.Contains(c.Id));
+            if (popular is not null)
+                return new BootsAdvice(popular,
+                    $"most common boots on your champion ({Pct(statBoots.PickRate)} pick rate)");
         }
 
         var byArchetype = profile.Archetype switch

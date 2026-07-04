@@ -105,6 +105,18 @@ public sealed class ItemsConfig
     /// <summary>Nombres localizados del recurso maná en champion.json (partype). en + es.</summary>
     public List<string> ManaResourceNames { get; set; } = new() { "Mana", "Maná" };
 
+    /// <summary>
+    /// Evolución → forma comprable. OP.GG registra la evolución (Muramana) pero el
+    /// catálogo recomienda lo que se puede comprar (Manamune); ddragon NO enlaza
+    /// ambas por from/into, así que el puente es explícito. Tear + Winter's Approach.
+    /// </summary>
+    public Dictionary<int, int> ItemEvolutions { get; set; } = new()
+    {
+        [3042] = 3004,   // Muramana → Manamune
+        [3040] = 3003,   // Seraph's Embrace → Archangel's Staff
+        [3121] = 3119,   // Fimbulwinter → Winter's Approach
+    };
+
     // Conocimiento de campeones (claves = id textual de ddragon, p.ej. "MonkeyKing").
     public List<string> HealerChampions { get; set; } = new()
     {
