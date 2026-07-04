@@ -55,6 +55,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private GameState? _lastGameState;
     private readonly StatsProvider _statsProvider;
     private readonly LcuRuneWriter _runeWriter = new();
+    private readonly LcuItemSetWriter _itemSetWriter = new();
+    private string? _itemSetsWrittenKey;   // "champKey|map|patch": una escritura por contexto
     private ChampionBuildStats? _championStats;
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
 
@@ -488,7 +490,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
 
         var mapNumber = state.GameData.MapNumber == 0 ? 11 : state.GameData.MapNumber;
-        var key = $"{champ.Key}|{me.Position}|{mapNumber}|{_catalog.Version}";
+        // Upper: la AssignedPosition de champ select es "middle" y la Position en
+        // vivo "MIDDLE" — normalizado, el pase de selección a partida no re-pide.
+        var key = $"{champ.Key}|{me.Position.ToUpperInvariant()}|{mapNumber}|{_catalog.Version}";
         if (key == _statsFetchKey)
             return;
         _statsFetchKey = key;
@@ -519,8 +523,46 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 ? $"[stats] no OP.GG data for {champKey} — advising without statistical priors (see lines above for why)."
                 : $"[stats] OP.GG build data loaded for {champKey} ({stats.GameMode}/{stats.Position}).");
             RebuildRunesPanel();
+            WriteItemSetsIfNeeded(stats);
             if (_lastGameState is { } s)
                 RebuildItemPlan(s);
+        });
+    }
+
+    /// <summary>
+    /// Escribe las 3 páginas de items en el cliente (automático). Deduplicado por
+    /// campeón+mapa+parche; si falla se limpia la clave para reintentar en el
+    /// próximo disparo natural (champ select o partida).
+    /// </summary>
+    private void WriteItemSetsIfNeeded(ChampionBuildStats? stats)
+    {
+        if (stats is null || _catalog.ChampionByKey(stats.ChampionKey) is not { } champ)
+            return;
+        var mapNumber = stats.GameMode == "aram" ? 12 : 11;
+        var key = $"{stats.ChampionKey}|{mapNumber}|{_catalog.Version}";
+        if (key == _itemSetsWrittenKey)
+            return;
+        _itemSetsWrittenKey = key;
+        var pages = ItemSetBuilder.Build(stats, champ.Name);
+        if (pages.Count == 0)
+            return;
+        _ = ApplyItemSetsAsync(pages, champ, mapNumber, key);
+    }
+
+    private async Task ApplyItemSetsAsync(IReadOnlyList<ItemSetPage> pages,
+        StaticChampion champ, int mapNumber, string key)
+    {
+        var error = await _itemSetWriter.ApplyAsync(pages, champ.Id, mapNumber).ConfigureAwait(false);
+        OnUi(() =>
+        {
+            if (error is null)
+            {
+                AppendConsole($"[builds] {pages.Count} item pages written for {champ.Name}.");
+                return;
+            }
+            if (_itemSetsWrittenKey == key)
+                _itemSetsWrittenKey = null;
+            AppendConsole($"[builds] item pages not written: {error}");
         });
     }
 
@@ -658,6 +700,33 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             : $"Phase: {session.Timer.Phase} ({session.Timer.AdjustedTimeLeftInPhase / 1000}s)";
 
         RebuildBenchAdvice(session);
+        RequestStatsFromChampSelect(session);
+    }
+
+    /// <summary>
+    /// Champ select: el campeón del jugador local dispara el fetch de stats (y con
+    /// él las páginas de items) ANTES de que arranque la partida. En ARAM la banca
+    /// cambia el campeón: cada swap re-dispara con el nuevo.
+    /// </summary>
+    private void RequestStatsFromChampSelect(ChampSelectSession session)
+    {
+        if (!_catalog.IsLoaded)
+            return;
+        var me = session.MyTeam.FirstOrDefault(c => c.CellId == session.LocalPlayerCellId);
+        if (me is null || me.DisplayChampionId == 0)
+            return;
+        var champ = _catalog.ChampionById(me.DisplayChampionId);
+        if (champ is null)
+            return;
+        var isAram = _currentQueueId == 450 || _config.Mayhem.QueueIds.Contains(_currentQueueId);
+        var mapNumber = isAram ? 12 : 11;
+        var key = $"{champ.Key}|{me.AssignedPosition.ToUpperInvariant()}|{mapNumber}|{_catalog.Version}";
+        if (key == _statsFetchKey)
+            return;
+        _statsFetchKey = key;
+        _championStats = null;
+        RebuildRunesPanel();
+        _ = FetchStatsAsync(champ.Key, me.AssignedPosition, mapNumber, _catalog.Version, key);
     }
 
     /// <summary>Consejo de banca (ARAM): con qué campeón descartado equilibras mejor al equipo.</summary>
