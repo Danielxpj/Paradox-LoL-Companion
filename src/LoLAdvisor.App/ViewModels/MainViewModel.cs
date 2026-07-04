@@ -53,7 +53,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly ReplaySamples _samples;
     private BuildArchetype? _forcedArchetype;
     private GameState? _lastGameState;
-    private readonly StatsProvider _statsProvider = new();
+    private readonly StatsProvider _statsProvider;
     private readonly LcuRuneWriter _runeWriter = new();
     private ChampionBuildStats? _championStats;
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
@@ -81,6 +81,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _config = config;
         _engine = AdviceEngine.CreateDefault(config);
         _ddragon = new DataDragonClient(itemsConfig: config.Items);
+        // El porqué de cada fallo de OP.GG va a la consola: "sin stats" a secas no se puede diagnosticar.
+        _statsProvider = new StatsProvider(log: line => OnUi(() => AppendConsole($"[stats] {line}")));
 
         Scorecards = new ObservableCollection<ScorecardViewModel>
         {
@@ -514,7 +516,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 return;   // llegó tarde: el contexto ya cambió
             _championStats = stats;
             AppendConsole(stats is null
-                ? "[stats] OP.GG data unavailable — advising without statistical priors."
+                ? $"[stats] no OP.GG data for {champKey} — advising without statistical priors (see lines above for why)."
                 : $"[stats] OP.GG build data loaded for {champKey} ({stats.GameMode}/{stats.Position}).");
             RebuildRunesPanel();
             if (_lastGameState is { } s)

@@ -26,4 +26,17 @@ public class OpggMcpClientTests
         Assert.Contains(fields, f => f.StartsWith("data.runes"));
         Assert.Contains(fields, f => f.StartsWith("data.skills"));
     }
+
+    [Theory]
+    // Formato real del tool (verificado 2026-07-04): el resumen lista las posiciones
+    // jugadas con su cantidad de partidas; gana la de más play.
+    [InlineData("""Summary([Position("ADC",Stats(233174,1))])""", "adc")]
+    [InlineData("""Summary([Position("MID",Stats(9000,0.6)),Position("TOP",Stats(90000,0.4))])""", "top")]
+    [InlineData("""Summary([Position("SUPPORT",Stats(50,1))])""", "support")]
+    [InlineData("""Summary([Position("MIDDLE",Stats(10,1))])""", "mid")]
+    [InlineData("no positions here", null)]
+    public void Parses_the_main_position_from_tool_text(string text, string? expected)
+    {
+        Assert.Equal(expected, OpggMcpClient.ParseMainPosition(text));
+    }
 }
