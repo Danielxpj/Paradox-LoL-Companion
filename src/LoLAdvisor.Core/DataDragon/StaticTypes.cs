@@ -19,6 +19,15 @@ public sealed class StaticChampion
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
     public ChampionInfo Info { get; init; } = new();
 
+    /// <summary>Recurso del kit (<c>partype</c> de ddragon, LOCALIZADO: "Mana"/"Maná", "Energy"…).</summary>
+    public string Partype { get; init; } = "";
+
+    /// <summary>
+    /// Usa maná según partype y la lista localizable de la config. Vacío o
+    /// desconocido cuenta como "sí": sin evidencia no se penalizan items de maná.
+    /// </summary>
+    public bool UsesMana { get; init; } = true;
+
     public string PrimaryTag => Tags.Count > 0 ? Tags[0] : "";
 
     public bool HasTag(string tag) =>

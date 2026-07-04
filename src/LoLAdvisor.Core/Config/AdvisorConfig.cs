@@ -102,6 +102,9 @@ public sealed class ItemsConfig
     public List<string> CritReductionKeywords { get; set; } = new()
         { "from critical strikes", "de los golpes críticos", "de golpes críticos" };
 
+    /// <summary>Nombres localizados del recurso maná en champion.json (partype). en + es.</summary>
+    public List<string> ManaResourceNames { get; set; } = new() { "Mana", "Maná" };
+
     // Conocimiento de campeones (claves = id textual de ddragon, p.ej. "MonkeyKing").
     public List<string> HealerChampions { get; set; } = new()
     {

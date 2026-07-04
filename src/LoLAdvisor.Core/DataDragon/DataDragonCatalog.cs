@@ -151,12 +151,16 @@ public sealed class DataDragonCatalog : IStaticData
         {
             if (!int.TryParse(entry.Key, out var id))
                 continue;
+            var partype = entry.Partype ?? "";
             champions[id] = new StaticChampion
             {
                 Id = id,
                 Key = string.IsNullOrEmpty(entry.Id) ? textKey : entry.Id,
                 Name = entry.Name,
                 Tags = entry.Tags.AsReadOnly(),
+                Partype = partype,
+                UsesMana = partype.Length == 0
+                    || config.ManaResourceNames.Contains(partype, StringComparer.OrdinalIgnoreCase),
                 Info = new ChampionInfo
                 {
                     Attack = entry.Info?.Attack ?? 0,
@@ -255,6 +259,7 @@ public sealed class DataDragonCatalog : IStaticData
         public string Key { get; set; } = "";
         public string Name { get; set; } = "";
         public List<string> Tags { get; set; } = new();
+        public string? Partype { get; set; }
         public InfoEntry? Info { get; set; }
     }
 
