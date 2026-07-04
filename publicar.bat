@@ -17,6 +17,7 @@ dotnet publish src\LoLAdvisor.App\LoLAdvisor.App.csproj -c Release -r win-x64 ^
     -p:PublishSingleFile=true ^
     -p:IncludeNativeLibrariesForSelfExtract=true ^
     -p:EnableCompressionInSingleFile=true ^
+    -p:DebugType=None -p:DebugSymbols=false ^
     -o publish
 if errorlevel 1 (
     echo.
@@ -32,6 +33,9 @@ ren "publish\LoLAdvisor.App.exe" "Paradox LoL Companion.exe"
 
 echo.
 echo Listo: publish\Paradox LoL Companion.exe
-echo Es portable: copialo a donde quieras (los logs se crean junto al exe).
+echo.
+echo Portable: con copiar el exe alcanza (los logs se crean junto al exe).
+echo La carpeta Assets es OPCIONAL: solo hace falta para el demo de Replay
+echo (partidas de muestra); sin ella la app funciona completa igual.
 pause
 endlocal
