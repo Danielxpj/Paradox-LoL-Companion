@@ -67,7 +67,7 @@ public partial class App : Application
         _errorDialogShown = true;
         MessageBox.Show(
             $"An error occurred, but the app keeps running.\n\n{ex.Message}\n\nDetails at:\n{FileLog.LogFilePath}",
-            "LoL Advisor", MessageBoxButton.OK, MessageBoxImage.Warning);
+            "Paradox LoL Companion", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     protected override async void OnExit(ExitEventArgs e)

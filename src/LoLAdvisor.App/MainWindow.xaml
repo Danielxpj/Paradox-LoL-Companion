@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LoLAdvisor.App"
         mc:Ignorable="d"
-        Title="LoL Advisor" Height="780" Width="1220" MinHeight="640" MinWidth="1000"
+        Title="Paradox LoL Companion" Height="780" Width="1220" MinHeight="640" MinWidth="1000"
         Background="{StaticResource PageBg}">
     <DockPanel>
 
@@ -21,10 +21,10 @@
 
                 <!-- Marca + contexto actual (Idle / In game / Champ Select) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="LOL" FontFamily="{StaticResource DisplayFont}" FontSize="22"
+                    <TextBlock Text="PARADOX" FontFamily="{StaticResource DisplayFont}" FontSize="22"
                                Foreground="{StaticResource Gold}" VerticalAlignment="Center" />
-                    <TextBlock Text="ADVISOR" FontFamily="{StaticResource DisplayFont}" FontSize="22"
-                               Foreground="{StaticResource GoldBright}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Text="LoL Companion" FontFamily="{StaticResource DisplayFont}" FontSize="22"
+                               Foreground="{StaticResource GoldBright}" Margin="8,0,0,0" VerticalAlignment="Center" />
                     <Border Style="{StaticResource StatusPill}" Margin="16,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding ContextLabel}" Foreground="{StaticResource Cyan}"
                                    FontFamily="{StaticResource DisplayFontCondensed}" FontSize="13"
