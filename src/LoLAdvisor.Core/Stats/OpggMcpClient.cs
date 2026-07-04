@@ -38,6 +38,7 @@ public sealed class OpggMcpClient : IOpggClient
         "data.starter_items.{ids[],ids_names[],pick_rate,play,win}",
         "data.fourth_items[].{ids[],ids_names[],pick_rate,play,win}",
         "data.fifth_items[].{ids[],ids_names[],pick_rate,play,win}",
+        "data.sixth_items[].{ids[],ids_names[],pick_rate,play,win}",
         "data.runes.{id,pick_rate,play,primary_page_id,primary_page_name,primary_rune_ids[],primary_rune_names[],secondary_page_id,secondary_page_name,secondary_rune_ids[],secondary_rune_names[],stat_mod_ids[],stat_mod_names[],win}",
         "data.skills.{order[],pick_rate,play,win}",
         "data.summary.average_stats.{win_rate,pick_rate,play}",

@@ -25,6 +25,7 @@ public class OpggMcpClientTests
         Assert.Contains(fields, f => f.StartsWith("data.core_items"));
         Assert.Contains(fields, f => f.StartsWith("data.runes"));
         Assert.Contains(fields, f => f.StartsWith("data.skills"));
+        Assert.Contains(fields, f => f.StartsWith("data.sixth_items"));
     }
 
     [Theory]

@@ -64,6 +64,36 @@ public class OpggResponseParserTests
     }
 
     [Fact]
+    public void Parses_sixth_items_and_flattens_them_into_late()
+    {
+        const string text = """
+            class LolGetChampionAnalysis: data
+            class Data: sixth_items,starter_items
+            class SixthItem: ids,ids_names,pick_rate,play,win
+
+            LolGetChampionAnalysis(Data([SixthItem([3026],["Guardian Angel"],0.21,181,109),SixthItem([3142],["Youmuu's Ghostblade"],0.11,90,51),SixthItem([6695],["Serpent's Fang"],0.11,90,43)],SixthItem([1055,2003],["Doran's Blade","Health Potion"],0.91,90004,44040)))
+            """;
+        var stats = OpggResponseParser.Parse(text, "Jayce", "ranked", "top")!;
+        Assert.Equal(3, stats.SixthItems.Count);
+        Assert.Equal(new[] { 3026 }, stats.SixthItems[0].ItemIds);
+        Assert.Equal(0.21, stats.SixthItems[0].PickRate, 2);
+        // El prior también los ve: LateItems aplana 4.º+5.º+6.º.
+        Assert.NotNull(stats.ItemPriorFor(3026));
+        Assert.False(stats.ItemPriorFor(3026)!.Value.IsCore);
+    }
+
+    [Fact]
+    public void Splits_late_items_by_slot()
+    {
+        var stats = ParseFixture();
+        // El fixture trae 3 candidatos de 4.º y 3 de 5.º; sixth no estaba grabado.
+        Assert.Equal(3, stats.FourthItems.Count);
+        Assert.Equal(3, stats.FifthItems.Count);
+        Assert.Empty(stats.SixthItems);
+        Assert.Equal(stats.FourthItems.Count + stats.FifthItems.Count, stats.LateItems.Count);
+    }
+
+    [Fact]
     public void Envelope_extraction_handles_sse_and_errors()
     {
         var plain = """{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"hola"}]}}""";

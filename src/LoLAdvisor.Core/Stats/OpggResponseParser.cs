@@ -24,7 +24,14 @@ public static class OpggResponseParser
             CoreItems = ItemSet(data.Obj("core_items")),
             Boots = ItemSet(data.Obj("boots")),
             Starter = ItemSet(data.Obj("starter_items")),
+            FourthItems = data.ObjList("fourth_items")
+                .Select(ItemSet).Where(s => s is not null).Select(s => s!).ToList(),
+            FifthItems = data.ObjList("fifth_items")
+                .Select(ItemSet).Where(s => s is not null).Select(s => s!).ToList(),
+            SixthItems = data.ObjList("sixth_items")
+                .Select(ItemSet).Where(s => s is not null).Select(s => s!).ToList(),
             LateItems = data.ObjList("fourth_items").Concat(data.ObjList("fifth_items"))
+                .Concat(data.ObjList("sixth_items"))
                 .Select(ItemSet).Where(s => s is not null).Select(s => s!).ToList(),
             Runes = Runes(data.Obj("runes")),
             Skills = Skills(data.Obj("skills")),

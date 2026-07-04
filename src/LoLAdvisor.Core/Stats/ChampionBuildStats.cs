@@ -29,7 +29,16 @@ public sealed class ChampionBuildStats
     public ItemSetStats? CoreItems { get; init; }
     public ItemSetStats? Boots { get; init; }
     public ItemSetStats? Starter { get; init; }
-    /// <summary>Candidatos de 4.º/5.º item (sets de un solo item, típicamente).</summary>
+    /// <summary>Candidatos del 4.º item (sets de un solo item, rankeados por OP.GG).</summary>
+    public IReadOnlyList<ItemSetStats> FourthItems { get; init; } = Array.Empty<ItemSetStats>();
+    /// <summary>Candidatos del 5.º item.</summary>
+    public IReadOnlyList<ItemSetStats> FifthItems { get; init; } = Array.Empty<ItemSetStats>();
+    /// <summary>Candidatos del 6.º item (muestras chicas: la rampa de confianza los modera).</summary>
+    public IReadOnlyList<ItemSetStats> SixthItems { get; init; } = Array.Empty<ItemSetStats>();
+    /// <summary>
+    /// Candidatos tardíos aplanados (4.º+5.º+6.º) para el prior del asesor. Se
+    /// persiste en la caché (compatibilidad con entradas viejas que solo traían esto).
+    /// </summary>
     public IReadOnlyList<ItemSetStats> LateItems { get; init; } = Array.Empty<ItemSetStats>();
     public RunePageStats? Runes { get; init; }
     public SkillOrderStats? Skills { get; init; }
