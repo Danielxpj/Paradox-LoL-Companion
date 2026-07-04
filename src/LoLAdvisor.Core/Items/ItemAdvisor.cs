@@ -100,11 +100,17 @@ public sealed class ItemAdvisor
             .Any(i => _data.ItemById(i.ItemID)?.AppliesGrievousWounds == true);
 
         var weights = WeightsFor(profile.Archetype);
+        // Campeón sin maná (partype): los items de maná no le aportan nada — su
+        // AD/AP está tasado asumiendo la pasiva de maná. Se excluyen por completo.
+        var myChampion = _data.ResolveChampion(me.ChampionName, me.RawChampionName);
+        var skipManaItems = myChampion is { UsesMana: false };
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons, RecommendationCategory Category)>();
 
         foreach (var item in _data.CompletedItemsFor(mapNumber))
         {
             if (owned.Contains(item.Id) || ownedNames.Contains(item.Name))
+                continue;
+            if (skipManaItems && (item.HasTag("Mana") || item.HasTag("ManaRegen")))
                 continue;
 
             var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw);
