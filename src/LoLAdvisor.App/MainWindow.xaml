@@ -97,6 +97,27 @@
                                        FontFamily="{StaticResource DisplayFontCondensed}" FontSize="12"
                                        FontWeight="SemiBold" VerticalAlignment="Center" />
                         </StackPanel>
+                        <!-- Atribución de las fuentes de datos (siempre visible). -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="Powered by" Foreground="{StaticResource TextFaint}"
+                                       FontSize="12" VerticalAlignment="Center" />
+                            <TextBlock Text="OP.GG" Foreground="{StaticResource Info}"
+                                       FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
+                                       FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"
+                                       ToolTip="Champion build, runes and skill-order stats come from OP.GG" />
+                            <TextBlock Text="·" Foreground="{StaticResource TextFaint}"
+                                       FontSize="12" Margin="6,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Data Dragon" Foreground="{StaticResource Cyan}"
+                                       FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       ToolTip="Champion and item catalog data from Riot's Data Dragon" />
+                            <TextBlock Text="·" Foreground="{StaticResource TextFaint}"
+                                       FontSize="12" Margin="6,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Claude Fable" Foreground="{StaticResource Gold}"
+                                       FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       ToolTip="Built with Claude Fable" />
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Content="{Binding PauseLabel}" Command="{Binding PauseConsoleCommand}"
                                     Padding="10,2" Margin="4,0" FontSize="12" />
