@@ -57,6 +57,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly LcuRuneWriter _runeWriter = new();
     private readonly LcuItemSetWriter _itemSetWriter = new();
     private string? _itemSetsWrittenKey;   // "champKey|map|patch": una escritura por contexto
+    private string? _runesAppliedKey;      // "champKey|patch": una aplicación automática por campeón
     private ChampionBuildStats? _championStats;
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
 
@@ -524,8 +525,46 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 : $"[stats] OP.GG build data loaded for {champKey} ({stats.GameMode}/{stats.Position}).");
             RebuildRunesPanel();
             WriteItemSetsIfNeeded(stats);
+            // Las runas solo sirven ANTES de la partida: se auto-aplican únicamente
+            // durante un champ select real (nunca en replay ni con el juego andando).
+            if (_inChampSelect)
+                AutoApplyRunesIfNeeded(stats);
             if (_lastGameState is { } s)
                 RebuildItemPlan(s);
+        });
+    }
+
+    /// <summary>
+    /// Champ select: aplica la página de runas más popular sin que el jugador
+    /// toque nada. Deduplicado por campeón+parche; el botón manual queda como
+    /// reintento. En ARAM cada swap de banca re-dispara con el campeón nuevo.
+    /// </summary>
+    private void AutoApplyRunesIfNeeded(ChampionBuildStats? stats)
+    {
+        if (stats?.Runes is not { } runes)
+            return;
+        var key = $"{stats.ChampionKey}|{_catalog.Version}";
+        if (key == _runesAppliedKey)
+            return;
+        _runesAppliedKey = key;
+        var champ = stats.ChampionKey;
+        RunesStatus = "Applying…";
+        _ = Task.Run(async () =>
+        {
+            var error = await _runeWriter.ApplyAsync(champ, runes).ConfigureAwait(false);
+            OnUi(() =>
+            {
+                if (error is null)
+                {
+                    RunesStatus = $"Rune page \"{LcuRuneWriter.PagePrefix}{champ}\" applied.";
+                    AppendConsole($"[runes] page auto-applied for {champ} (champ select).");
+                    return;
+                }
+                if (_runesAppliedKey == key)
+                    _runesAppliedKey = null;
+                RunesStatus = error;
+                AppendConsole($"[runes] auto-apply failed: {error}");
+            });
         });
     }
 
@@ -722,7 +761,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         var mapNumber = isAram ? 12 : 11;
         var key = $"{champ.Key}|{me.AssignedPosition.ToUpperInvariant()}|{mapNumber}|{_catalog.Version}";
         if (key == _statsFetchKey)
+        {
+            // Stats ya cargadas (mismo campeón que antes): igual hay que aplicar
+            // las runas de ESTE champ select — el dedup interno evita repetirlo.
+            if (_inChampSelect)
+                AutoApplyRunesIfNeeded(_championStats);
             return;
+        }
         _statsFetchKey = key;
         _championStats = null;
         RebuildRunesPanel();
@@ -755,6 +800,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private void EndChampSelect()
     {
         _inChampSelect = false;
+        // Cada champ select aplica sus runas aunque el campeón se repita entre partidas.
+        _runesAppliedKey = null;
         ClearChampSelectData();
         UpdateContext();
         // Si estamos en replay, volver a mostrar la selección de ejemplo.

@@ -521,6 +521,37 @@
                                 </ItemsControl>
                             </StackPanel>
 
+                            <!-- ===== RUNAS EN CHAMP SELECT — se aplican solas al lockear campeón ===== -->
+                            <Border Padding="16,12">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource GoldCard}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RunesLine}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="RUNES &amp; SKILLS — APPLIED AUTOMATICALLY ON LOCK-IN"
+                                               FontFamily="{StaticResource DisplayFontCondensed}"
+                                               FontSize="12" FontWeight="Bold" Foreground="{StaticResource Gold}"
+                                               Margin="0,0,0,6" />
+                                    <TextBlock Text="{Binding RunesLine}" FontSize="13" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextPrimary}" />
+                                    <TextBlock Text="{Binding SkillOrderLine}" FontSize="13"
+                                               TextWrapping="Wrap" Margin="0,4,0,0"
+                                               Foreground="{StaticResource TextPrimary}" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Content="Re-apply runes" Command="{Binding ApplyRunesCommand}"
+                                                Style="{StaticResource PrimaryButton}" Padding="14,5" />
+                                        <TextBlock Text="{Binding RunesStatus}" FontSize="12"
+                                                   Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"
+                                                   Margin="12,0,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
                             <TextBlock Text="{Binding DraftPhase}" Style="{StaticResource SectionHeader}" />
                             <Border Style="{StaticResource Card}">
                                 <TextBlock Text="{Binding Bans}" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
