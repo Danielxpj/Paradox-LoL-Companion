@@ -134,6 +134,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ObservableCollection<AdviceRowViewModel> Advice { get; } = new();
     public ObservableCollection<ItemRecoRowViewModel> ItemRecos { get; } = new();
     public ObservableCollection<BenchSuggestionRowViewModel> BenchSuggestions { get; } = new();
+    public ObservableCollection<SellRowViewModel> SellRows { get; } = new();
     public ObservableCollection<ChampCellViewModel> MyTeam { get; } = new();
     public ObservableCollection<ChampCellViewModel> TheirTeam { get; } = new();
     public ObservableCollection<string> ConsoleLines { get; } = new();
@@ -172,6 +173,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private string _bootsLine = "";
     public string BootsLine { get => _bootsLine; private set => SetProperty(ref _bootsLine, value); }
+
+    private string? _bootsIconUrl;
+    public string? BootsIconUrl { get => _bootsIconUrl; private set => SetProperty(ref _bootsIconUrl, value); }
+
+    private string? _starterIconUrl;
+    public string? StarterIconUrl { get => _starterIconUrl; private set => SetProperty(ref _starterIconUrl, value); }
 
     private string _sellLine = "";
     public string SellLine { get => _sellLine; private set => SetProperty(ref _sellLine, value); }
@@ -450,7 +457,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         Players.Clear();
         foreach (var p in state.AllPlayers)
-            Players.Add(new PlayerRowViewModel(p));
+            Players.Add(new PlayerRowViewModel(p, _catalog));
     }
 
     private void RebuildAdvice(GameState state)
@@ -654,9 +661,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             ThreatSummary = "";
             BootsLine = "";
+            BootsIconUrl = null;
             SellLine = "";
+            SellRows.Clear();
             LateTipsLine = "";
             StarterLine = "";
+            StarterIconUrl = null;
             ShopAlertLine = "";
             ItemPanelHint = _catalog.IsLoaded
                 ? "Waiting for game data…"
@@ -669,15 +679,24 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             ? plan.ThreatSummary + "  |  Inventory FULL — sell before buying"
             : plan.ThreatSummary;
         foreach (var reco in plan.Recommendations)
-            ItemRecos.Add(new ItemRecoRowViewModel(reco));
+            ItemRecos.Add(new ItemRecoRowViewModel(reco, _catalog.Version));
         BootsLine = plan.Boots is null ? "" : FormatBoots(plan.Boots);
+        BootsIconUrl = plan.Boots is null
+            ? null
+            : DdragonImages.ItemIcon(_catalog.Version, plan.Boots.Boots.Id);
         SellLine = plan.Sells.Count == 0
             ? ""
             : "Sell: " + string.Join("  ·  ", plan.Sells.Select(s =>
                 $"{s.Item.Name} (+{s.SellGold.ToString("N0", CultureInfo.InvariantCulture)} g) — {s.Reason}"));
+        SellRows.Clear();
+        foreach (var sell in plan.Sells)
+            SellRows.Add(new SellRowViewModel(sell, _catalog.Version));
         StarterLine = plan.Starter is null
             ? ""
             : $"Start: {plan.Starter.Item.Name} ({plan.Starter.Item.GoldTotal.ToString("N0", CultureInfo.InvariantCulture)}) — {plan.Starter.Reason}";
+        StarterIconUrl = plan.Starter is null
+            ? null
+            : DdragonImages.ItemIcon(_catalog.Version, plan.Starter.Item.Id);
         ShopAlertLine = plan.ShopAlert ?? "";
         LateTipsLine = string.Join("   ·   ", plan.LateTips);
     }
@@ -746,11 +765,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         MyTeam.Clear();
         foreach (var c in session.MyTeam)
-            MyTeam.Add(new ChampCellViewModel(c, c.CellId == session.LocalPlayerCellId, ChampName(c)));
+            MyTeam.Add(new ChampCellViewModel(c, c.CellId == session.LocalPlayerCellId, ChampName(c), ChampIcon(c)));
 
         TheirTeam.Clear();
         foreach (var c in session.TheirTeam)
-            TheirTeam.Add(new ChampCellViewModel(c, isLocal: false, ChampName(c)));
+            TheirTeam.Add(new ChampCellViewModel(c, isLocal: false, ChampName(c), ChampIcon(c)));
 
         Bans = $"Bans — us: {FormatBans(session.Bans.MyTeamBans)} | them: {FormatBans(session.Bans.TheirTeamBans)}";
         DraftPhase = string.IsNullOrEmpty(session.Timer.Phase)
@@ -813,7 +832,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             : "Bench: " + string.Join(", ", session.BenchChampions
                 .Select(b => _catalog.ChampionNameById(b.ChampionId) ?? $"#{b.ChampionId}"));
         foreach (var suggestion in advice.Suggestions)
-            BenchSuggestions.Add(new BenchSuggestionRowViewModel(suggestion));
+            BenchSuggestions.Add(new BenchSuggestionRowViewModel(suggestion, _catalog.Version));
     }
 
     private void EndChampSelect()
@@ -953,6 +972,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private string? ChampName(ChampSelectCell cell) =>
         _catalog.ChampionNameById(cell.DisplayChampionId);
+
+    private string? ChampIcon(ChampSelectCell cell) =>
+        DdragonImages.ChampionIcon(_catalog.Version,
+            _catalog.ChampionById(cell.DisplayChampionId)?.Key);
 
     private string FormatBans(IReadOnlyList<int> bans) =>
         bans.Count == 0 ? "—" : string.Join(", ", bans.Select(b => _catalog.ChampionNameById(b) ?? $"#{b}"));

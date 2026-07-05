@@ -2,6 +2,7 @@ using System.Windows.Media;
 using LoLAdvisor.App.Mvvm;
 using LoLAdvisor.App.Theme;
 using LoLAdvisor.Core.Advice;
+using LoLAdvisor.Core.DataDragon;
 using LoLAdvisor.Core.Items;
 using LoLAdvisor.Core.Models;
 using LoLAdvisor.Core.Objectives;
@@ -63,10 +64,13 @@ public sealed class ObjectiveTimerViewModel : ObservableObject
 
 }
 
+/// <summary>Un ícono de item del inventario de un jugador (con nombre para el tooltip).</summary>
+public sealed record OwnedItemIconViewModel(string? IconUrl, string Name);
+
 /// <summary>Fila de la tabla de jugadores.</summary>
 public sealed class PlayerRowViewModel
 {
-    public PlayerRowViewModel(Player p)
+    public PlayerRowViewModel(Player p, IStaticData catalog)
     {
         Champion = string.IsNullOrEmpty(p.ChampionName) ? "—" : p.ChampionName;
         Summoner = !string.IsNullOrEmpty(p.SummonerName) ? p.SummonerName
@@ -76,6 +80,16 @@ public sealed class PlayerRowViewModel
         Kda = p.Scores.Kda;
         Cs = p.Scores.CreepScore;
         TeamBrush = p.Team == "CHAOS" ? Palette.TeamChaos : Palette.TeamOrder;
+        ChampionIconUrl = DdragonImages.ChampionIcon(catalog.Version,
+            catalog.ResolveChampion(p.ChampionName, p.RawChampionName)?.Key);
+        // Inventario como strip de íconos (tooltip = nombre); el texto queda de respaldo.
+        ItemIcons = p.Items
+            .Where(i => i.ItemID > 0)
+            .OrderBy(i => i.Slot)
+            .Select(i => new OwnedItemIconViewModel(
+                DdragonImages.ItemIcon(catalog.Version, i.ItemID),
+                string.IsNullOrEmpty(i.DisplayName) ? $"#{i.ItemID}" : i.DisplayName))
+            .ToList();
         Items = string.Join(", ", p.Items.Where(i => !string.IsNullOrEmpty(i.DisplayName)).Select(i => i.DisplayName));
     }
 
@@ -85,6 +99,8 @@ public sealed class PlayerRowViewModel
     public string Kda { get; }
     public int Cs { get; }
     public Brush TeamBrush { get; }
+    public string? ChampionIconUrl { get; }
+    public IReadOnlyList<OwnedItemIconViewModel> ItemIcons { get; }
     public string Items { get; }
 }
 
@@ -111,9 +127,10 @@ public sealed class AdviceRowViewModel
 /// <summary>Fila del panel "Asesor de items": un item recomendado con costo y razones.</summary>
 public sealed class ItemRecoRowViewModel
 {
-    public ItemRecoRowViewModel(Core.Items.ItemRecommendation reco)
+    public ItemRecoRowViewModel(Core.Items.ItemRecommendation reco, string catalogVersion)
     {
         Name = reco.Item.Name;
+        IconUrl = DdragonImages.ItemIcon(catalogVersion, reco.Item.Id);
         Cost = reco.Item.GoldTotal.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
         if (reco.BlockedByFullInventory)
         {
@@ -148,6 +165,7 @@ public sealed class ItemRecoRowViewModel
     }
 
     public string Name { get; }
+    public string? IconUrl { get; }
     public string Cost { get; }
     public string AffordText { get; }
     public Brush AffordBrush { get; }
@@ -159,16 +177,31 @@ public sealed class ItemRecoRowViewModel
     public string Priority { get; }
 }
 
+/// <summary>Una sugerencia de venta con su ícono (fila del panel de venta).</summary>
+public sealed class SellRowViewModel
+{
+    public SellRowViewModel(Core.Items.SellSuggestion sell, string catalogVersion)
+    {
+        IconUrl = DdragonImages.ItemIcon(catalogVersion, sell.Item.Id);
+        Text = $"Sell {sell.Item.Name} (+{sell.SellGold.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} g) — {sell.Reason}";
+    }
+
+    public string? IconUrl { get; }
+    public string Text { get; }
+}
+
 /// <summary>Fila del asesor de banca: un intercambio sugerido con sus razones.</summary>
 public sealed class BenchSuggestionRowViewModel
 {
-    public BenchSuggestionRowViewModel(Core.Draft.BenchSuggestion suggestion)
+    public BenchSuggestionRowViewModel(Core.Draft.BenchSuggestion suggestion, string catalogVersion)
     {
         Name = suggestion.Champion.Name;
+        IconUrl = DdragonImages.ChampionIcon(catalogVersion, suggestion.Champion.Key);
         Reasons = string.Join(" · ", suggestion.Reasons);
     }
 
     public string Name { get; }
+    public string? IconUrl { get; }
     public string Reasons { get; }
 }
 
@@ -208,7 +241,8 @@ public sealed class BuildRoleOptionViewModel : ObservableObject
 /// <summary>Celda de champ select (una posición del draft).</summary>
 public sealed class ChampCellViewModel
 {
-    public ChampCellViewModel(ChampSelectCell cell, bool isLocal, string? championName = null)
+    public ChampCellViewModel(ChampSelectCell cell, bool isLocal, string? championName = null,
+        string? iconUrl = null)
     {
         Position = string.IsNullOrEmpty(cell.AssignedPosition) ? "—" : cell.AssignedPosition;
         var champ = cell.DisplayChampionId;
@@ -217,10 +251,12 @@ public sealed class ChampCellViewModel
                  : $"Champion #{champ}";
         IsLocal = isLocal;
         Accent = isLocal ? Palette.Green : Palette.Muted;
+        IconUrl = iconUrl;
     }
 
     public string Position { get; }
     public string Champion { get; }
     public bool IsLocal { get; }
     public Brush Accent { get; }
+    public string? IconUrl { get; }
 }

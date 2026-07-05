@@ -184,18 +184,26 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                     <!-- Compra inicial sugerida (arranque de ARAM). -->
-                                    <TextBlock Text="{Binding StarterLine}" FontSize="14" FontWeight="SemiBold"
-                                               TextWrapping="Wrap" Foreground="{StaticResource Cyan}" Margin="0,6,0,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
+                                    <DockPanel Margin="0,6,0,0">
+                                        <DockPanel.Style>
+                                            <Style TargetType="DockPanel">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding StarterLine}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        </DockPanel.Style>
+                                        <Border DockPanel.Dock="Left" Width="24" Height="24" CornerRadius="4"
+                                                Margin="0,0,10,0" VerticalAlignment="Center"
+                                                BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                            <Image Source="{Binding StarterIconUrl, TargetNullValue={x:Null}}"
+                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                        </Border>
+                                        <TextBlock Text="{Binding StarterLine}" FontSize="14" FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" Foreground="{StaticResource Cyan}"
+                                                   VerticalAlignment="Center" />
+                                    </DockPanel>
                                     <!-- Selector de build: Auto (detección automática) o un rol forzado por el jugador. -->
                                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                         <TextBlock Text="Build:" FontSize="13" FontWeight="SemiBold"
@@ -253,8 +261,15 @@
                                                                FontFamily="{StaticResource DisplayFont}"
                                                                Foreground="{StaticResource Gold}" Margin="8,0,0,0"
                                                                VerticalAlignment="Center" />
+                                                    <Border DockPanel.Dock="Left" Width="30" Height="30" CornerRadius="4"
+                                                            Margin="0,0,8,0" VerticalAlignment="Center"
+                                                            BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                        <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                    </Border>
                                                     <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="Bold"
-                                                               Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
+                                                               Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"
+                                                               VerticalAlignment="Center" />
                                                 </DockPanel>
                                                 <TextBlock Text="{Binding AffordText}" FontSize="13" FontWeight="SemiBold"
                                                            Foreground="{Binding AffordBrush}" TextWrapping="Wrap"
@@ -276,8 +291,16 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="{Binding BootsLine}" FontSize="13" TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextPrimary}" />
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Left" Width="24" Height="24" CornerRadius="4"
+                                            Margin="0,0,10,0" VerticalAlignment="Center"
+                                            BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                        <Image Source="{Binding BootsIconUrl, TargetNullValue={x:Null}}"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </Border>
+                                    <TextBlock Text="{Binding BootsLine}" FontSize="13" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                </DockPanel>
                             </Border>
                             <!-- Items que conviene vender (ya no pegan con la build). -->
                             <Border Padding="16,10">
@@ -290,8 +313,22 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="{Binding SellLine}" FontSize="13" TextWrapping="Wrap"
-                                           Foreground="{StaticResource Amber}" />
+                                <ItemsControl ItemsSource="{Binding SellRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="0,2">
+                                                <Border DockPanel.Dock="Left" Width="24" Height="24" CornerRadius="4"
+                                                        Margin="0,0,10,0" VerticalAlignment="Center"
+                                                        BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                    <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                           RenderOptions.BitmapScalingMode="HighQuality" />
+                                                </Border>
+                                                <TextBlock Text="{Binding Text}" FontSize="13" TextWrapping="Wrap"
+                                                           Foreground="{StaticResource Amber}" VerticalAlignment="Center" />
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </Border>
                             <!-- Consejos de late game: elixir con build completa, Control Ward. -->
                             <Border Padding="16,10">
@@ -435,12 +472,48 @@
                                                         </DataTemplate>
                                                     </DataGridTemplateColumn.CellTemplate>
                                                 </DataGridTemplateColumn>
-                                                <DataGridTextColumn Header="Champion" Binding="{Binding Champion}" Width="*" />
+                                                <DataGridTemplateColumn Header="Champion" Width="*">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Border Width="22" Height="22" CornerRadius="3" Margin="0,0,8,0"
+                                                                        VerticalAlignment="Center"
+                                                                        BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                                    <Image Source="{Binding ChampionIconUrl, TargetNullValue={x:Null}}"
+                                                                           RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                </Border>
+                                                                <TextBlock Text="{Binding Champion}" VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource TextPrimary}" />
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
                                                 <DataGridTextColumn Header="Summoner" Binding="{Binding Summoner}" Width="*" />
                                                 <DataGridTextColumn Header="Lvl" Binding="{Binding Level}" Width="Auto" />
                                                 <DataGridTextColumn Header="KDA" Binding="{Binding Kda}" Width="Auto" />
                                                 <DataGridTextColumn Header="CS" Binding="{Binding Cs}" Width="Auto" />
-                                                <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="2*" />
+                                                <!-- Inventario como strip de íconos; el nombre queda en el tooltip. -->
+                                                <DataGridTemplateColumn Header="Items" Width="2*">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ItemsControl ItemsSource="{Binding ItemIcons}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Width="20" Height="20" CornerRadius="3" Margin="0,0,3,0"
+                                                                                BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                                                                                ToolTip="{Binding Name}">
+                                                                            <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
                                             </DataGrid.Columns>
                                         </DataGrid>
                                     </Border>
@@ -508,12 +581,20 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource Card}" Padding="14">
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold"
-                                                               Foreground="{StaticResource TextPrimary}" />
-                                                    <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
-                                                               Foreground="{StaticResource TextMuted}" Margin="0,4,0,0" />
-                                                </StackPanel>
+                                                <DockPanel>
+                                                    <Border DockPanel.Dock="Left" Width="36" Height="36" CornerRadius="4"
+                                                            Margin="0,0,12,0" VerticalAlignment="Top"
+                                                            BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                        <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                    </Border>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold"
+                                                                   Foreground="{StaticResource TextPrimary}" />
+                                                        <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
+                                                                   Foreground="{StaticResource TextMuted}" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                </DockPanel>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -570,7 +651,13 @@
                                                 <Border Style="{StaticResource Card}" Padding="12">
                                                     <StackPanel Orientation="Horizontal">
                                                         <Border Width="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,10,0" />
-                                                        <StackPanel>
+                                                        <Border Width="34" Height="34" CornerRadius="4" Margin="0,0,10,0"
+                                                                VerticalAlignment="Center"
+                                                                BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                            <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                                        </Border>
+                                                        <StackPanel VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding Position}" Style="{StaticResource CardTitle}" />
                                                             <TextBlock Text="{Binding Champion}" Foreground="{StaticResource TextPrimary}"
                                                                        FontWeight="SemiBold" />
@@ -590,7 +677,13 @@
                                                 <Border Style="{StaticResource Card}" Padding="12">
                                                     <StackPanel Orientation="Horizontal">
                                                         <Border Width="4" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,10,0" />
-                                                        <StackPanel>
+                                                        <Border Width="34" Height="34" CornerRadius="4" Margin="0,0,10,0"
+                                                                VerticalAlignment="Center"
+                                                                BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                            <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                                        </Border>
+                                                        <StackPanel VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding Position}" Style="{StaticResource CardTitle}" />
                                                             <TextBlock Text="{Binding Champion}" Foreground="{StaticResource TextPrimary}"
                                                                        FontWeight="SemiBold" />
