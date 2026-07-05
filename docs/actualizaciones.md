@@ -8,12 +8,12 @@ Al arrancar, la app (antes de abrir la ventana principal):
 
 1. Borra restos `*.old` de una actualización anterior.
 2. Lee la última versión desde
-   `https://raw.githubusercontent.com/Danielxpj/LoLAdvisor/main/version.txt`
+   `https://raw.githubusercontent.com/Danielxpj/Paradox-LoL-Companion/main/version.txt`
    (timeout corto; si falla, arranca igual — *fail-open*).
 3. La compara con la versión del propio exe (`<Version>` del `.csproj`).
 4. Si hay una más nueva:
    - Muestra un splash y descarga el exe de la última GitHub Release desde
-     `https://github.com/Danielxpj/LoLAdvisor/releases/latest/download/ParadoxLoLCompanion.exe`.
+     `https://github.com/Danielxpj/Paradox-LoL-Companion/releases/latest/download/ParadoxLoLCompanion.exe`.
    - Renombra el exe en ejecución a `.old`, deja el nuevo en su lugar (swap en caliente,
      con rollback si algo falla), **relanza** la app y cierra la instancia vieja.
 

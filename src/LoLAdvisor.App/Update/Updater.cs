@@ -26,7 +26,7 @@ public static class Updater
 {
     // --- Configuración de hosting (GitHub Releases del repo) ---
     private const string Owner = "Danielxpj";
-    private const string Repo = "LoLAdvisor";
+    private const string Repo = "Paradox-LoL-Companion";
     private const string Branch = "main";
     private const string AssetName = "ParadoxLoLCompanion.exe";
 

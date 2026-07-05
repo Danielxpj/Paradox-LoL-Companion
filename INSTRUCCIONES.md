@@ -14,7 +14,7 @@ descarga sola. Para el detalle técnico de cómo funciona el auto-update, ver
   winget install JRSoftware.InnoSetup
   ```
   `instalador.bat` lo busca en Program Files y en `%LocalAppData%\Programs\Inno Setup 6`.
-- **git** + una cuenta con push al repo `Danielxpj/LoLAdvisor`.
+- **git** + una cuenta con push al repo `Danielxpj/Paradox-LoL-Companion`.
 - *(Opcional pero recomendado)* **GitHub CLI** (`gh`) para crear Releases desde la terminal:
   ```
   winget install GitHub.cli
@@ -89,7 +89,7 @@ Listo: cualquier app ya instalada, al abrirse, verá la versión nueva y **se ac
 
 Al abrir, **antes** de mostrar la ventana:
 
-1. Lee `version.txt` desde `raw.githubusercontent.com/Danielxpj/LoLAdvisor/main/version.txt`.
+1. Lee `version.txt` desde `raw.githubusercontent.com/Danielxpj/Paradox-LoL-Companion/main/version.txt`.
 2. Si hay una versión mayor a la instalada, muestra un splash y descarga el exe de la
    última Release.
 3. Reemplaza el exe en caliente y **relanza**.

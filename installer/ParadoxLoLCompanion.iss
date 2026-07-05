@@ -15,7 +15,7 @@
 #define MyAppName "Paradox LoL Companion"
 #define MyAppExe  "Paradox LoL Companion.exe"
 #define MyAppPublisher "Danielxpj"
-#define MyAppUrl "https://github.com/Danielxpj/LoLAdvisor"
+#define MyAppUrl "https://github.com/Danielxpj/Paradox-LoL-Companion"
 
 [Setup]
 ; AppId fijo: identifica la app entre versiones (no cambiar).
