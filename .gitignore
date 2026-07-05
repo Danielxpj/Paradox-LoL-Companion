@@ -15,6 +15,9 @@ TestResults/
 
 ## Scripts .bat (locales, no se versionan)
 *.bat
+
+## Notas personales (no se versionan)
+INSTRUCCIONES.md
 ## Salida de publicar.bat (exe portable)
 publish/
 
