@@ -14,6 +14,8 @@ screen, not a mod.
 > `ParadoxLoLCompanion-Setup-<version>.exe`. Installs per-user (no admin) and
 > **auto-updates itself** on launch.
 
+![Paradox LoL Companion — Tactical HUD: enemy X-ray, item advisor with reasons and buy-now plans, Mayhem augment tracker](docs/img/screenshot.png)
+
 ---
 
 ## Table of contents
