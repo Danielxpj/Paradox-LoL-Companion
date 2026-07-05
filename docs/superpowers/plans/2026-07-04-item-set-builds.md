@@ -29,10 +29,10 @@ git checkout -b feature/item-set-builds
 ### Task 1: Parser por slot + sixth_items en el cliente
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/Stats/ChampionBuildStats.cs`
-- Modify: `src/LoLAdvisor.Core/Stats/OpggResponseParser.cs`
-- Modify: `src/LoLAdvisor.Core/Stats/OpggMcpClient.cs` (DesiredFields)
-- Test: `tests/LoLAdvisor.Tests/OpggResponseParserTests.cs`, `tests/LoLAdvisor.Tests/OpggMcpClientTests.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Stats/ChampionBuildStats.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Stats/OpggResponseParser.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Stats/OpggMcpClient.cs` (DesiredFields)
+- Test: `tests/ParadoxLoLCompanion.Tests/OpggResponseParserTests.cs`, `tests/ParadoxLoLCompanion.Tests/OpggMcpClientTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -78,7 +78,7 @@ En `OpggMcpClientTests.Builds_a_valid_tools_call_payload`, agregar al final:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter "OpggResponseParserTests|OpggMcpClientTests"`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter "OpggResponseParserTests|OpggMcpClientTests"`
 Expected: FAIL — `SixthItems`/`FourthItems` no existen; falta el desired field.
 
 - [ ] **Step 3: Implement**
@@ -121,13 +121,13 @@ Expected: FAIL — `SixthItems`/`FourthItems` no existen; falta el desired field
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`
 Expected: ALL PASS (las entradas viejas de caché siguen deserializando: `LateItems` sigue siendo propiedad almacenada).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/ tests/LoLAdvisor.Tests/
+git add src/ParadoxLoLCompanion.Core/Stats/ tests/ParadoxLoLCompanion.Tests/
 git commit -m "feat: per-slot late item lists + sixth_items in OP.GG stats"
 ```
 
@@ -136,15 +136,15 @@ git commit -m "feat: per-slot late item lists + sixth_items in OP.GG stats"
 ### Task 2: `ItemSetBuilder`
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Stats/ItemSetBuilder.cs`
-- Test: `tests/LoLAdvisor.Tests/ItemSetBuilderTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/ItemSetBuilder.cs`
+- Test: `tests/ParadoxLoLCompanion.Tests/ItemSetBuilderTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class ItemSetBuilderTests
 {
@@ -212,15 +212,15 @@ public class ItemSetBuilderTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter ItemSetBuilderTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter ItemSetBuilderTests`
 Expected: FAIL — `ItemSetBuilder` no existe.
 
 - [ ] **Step 3: Implement**
 
-`src/LoLAdvisor.Core/Stats/ItemSetBuilder.cs`:
+`src/ParadoxLoLCompanion.Core/Stats/ItemSetBuilder.cs`:
 
 ```csharp
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>Bloque de una página de items (sección de la tienda).</summary>
 public sealed record ItemSetBlock(string Title, IReadOnlyList<int> ItemIds);
@@ -279,13 +279,13 @@ public static class ItemSetBuilder
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter ItemSetBuilderTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter ItemSetBuilderTests`
 Expected: 3 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/ItemSetBuilder.cs tests/LoLAdvisor.Tests/ItemSetBuilderTests.cs
+git add src/ParadoxLoLCompanion.Core/Stats/ItemSetBuilder.cs tests/ParadoxLoLCompanion.Tests/ItemSetBuilderTests.cs
 git commit -m "feat: ItemSetBuilder composes 3 meta build variants as item pages"
 ```
 
@@ -294,17 +294,17 @@ git commit -m "feat: ItemSetBuilder composes 3 meta build variants as item pages
 ### Task 3: `LcuItemSetWriter`
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Connectors/Lcu/LcuItemSetWriter.cs`
-- Test: `tests/LoLAdvisor.Tests/LcuItemSetWriterTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Connectors/Lcu/LcuItemSetWriter.cs`
+- Test: `tests/ParadoxLoLCompanion.Tests/LcuItemSetWriterTests.cs`
 
 - [ ] **Step 1: Write the failing tests (merge + payload, sin red)**
 
 ```csharp
 using System.Text.Json;
-using LoLAdvisor.Core.Connectors.Lcu;
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Connectors.Lcu;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class LcuItemSetWriterTests
 {
@@ -361,22 +361,22 @@ public class LcuItemSetWriterTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter LcuItemSetWriterTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter LcuItemSetWriterTests`
 Expected: FAIL — `LcuItemSetWriter` no existe.
 
 - [ ] **Step 3: Implement**
 
-`src/LoLAdvisor.Core/Connectors/Lcu/LcuItemSetWriter.cs`:
+`src/ParadoxLoLCompanion.Core/Connectors/Lcu/LcuItemSetWriter.cs`:
 
 ```csharp
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using LoLAdvisor.Core.Net;
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Net;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Core.Connectors.Lcu;
+namespace ParadoxLoLCompanion.Core.Connectors.Lcu;
 
 /// <summary>
 /// Escribe las páginas de items en el cliente de LoL vía LCU. Preserva las
@@ -511,13 +511,13 @@ public sealed class LcuItemSetWriter
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter LcuItemSetWriterTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter LcuItemSetWriterTests`
 Expected: 3 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Connectors/Lcu/LcuItemSetWriter.cs tests/LoLAdvisor.Tests/LcuItemSetWriterTests.cs
+git add src/ParadoxLoLCompanion.Core/Connectors/Lcu/LcuItemSetWriter.cs tests/ParadoxLoLCompanion.Tests/LcuItemSetWriterTests.cs
 git commit -m "feat: LcuItemSetWriter merges Paradox pages into client item sets"
 ```
 
@@ -526,7 +526,7 @@ git commit -m "feat: LcuItemSetWriter merges Paradox pages into client item sets
 ### Task 4: Disparadores en `MainViewModel`
 
 **Files:**
-- Modify: `src/LoLAdvisor.App/ViewModels/MainViewModel.cs`
+- Modify: `src/ParadoxLoLCompanion.App/ViewModels/MainViewModel.cs`
 
 Sin tests nuevos (glue fino; la lógica vive en Core). Steps:
 
@@ -638,13 +638,13 @@ En `RequestStatsIfNeeded`, cambiar la línea del key:
 
 - [ ] **Step 5: Build**
 
-Run: `dotnet build src/LoLAdvisor.App/LoLAdvisor.App.csproj`
-Expected: Build succeeded (si `ChampSelectCell.DisplayChampionId`/`CellId` no existen con esos nombres, verificar `src/LoLAdvisor.Core/Models/ChampSelectSession.cs` — son los que usa `PopulateChampSelect`).
+Run: `dotnet build src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj`
+Expected: Build succeeded (si `ChampSelectCell.DisplayChampionId`/`CellId` no existen con esos nombres, verificar `src/ParadoxLoLCompanion.Core/Models/ChampSelectSession.cs` — son los que usa `PopulateChampSelect`).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/LoLAdvisor.App/ViewModels/MainViewModel.cs
+git add src/ParadoxLoLCompanion.App/ViewModels/MainViewModel.cs
 git commit -m "feat: auto-write item set pages on champ select and live stats"
 ```
 
@@ -654,7 +654,7 @@ git commit -m "feat: auto-write item set pages on champ select and live stats"
 
 - [ ] **Step 1: Suite completa**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`
 Expected: ALL PASS
 
 - [ ] **Step 2: Smoke con replay (sin cliente de LoL)**

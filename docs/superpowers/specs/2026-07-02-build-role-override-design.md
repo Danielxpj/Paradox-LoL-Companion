@@ -22,7 +22,7 @@ una fila de radio buttons que fuerza el arquetipo y hace que las recomendaciones
 
 ## Diseño
 
-### Core (`LoLAdvisor.Core`) — advisors stateless, override por parámetro
+### Core (`ParadoxLoLCompanion.Core`) — advisors stateless, override por parámetro
 
 - `ItemAdvisor.Advise(GameState state, BuildArchetype? forcedArchetype = null)`:
   - `forcedArchetype == null` → comportamiento actual (`ProfileWithInventory`).
@@ -40,7 +40,7 @@ una fila de radio buttons que fuerza el arquetipo y hace que las recomendaciones
   catálogo y lo perderían) o en `ItemsConfig.ArchetypeOverrides` (config persistente
   por campeón ≠ decisión por partida).
 
-### UI (`LoLAdvisor.App`)
+### UI (`ParadoxLoLCompanion.App`)
 
 - En la tarjeta "Item advisor" (pestaña Match), bajo el encabezado:
   `Build:  ◉ Auto ○ Marksman ○ Mage ○ Assassin ○ Fighter ○ AP Fighter ○ Tank ○ Support`.

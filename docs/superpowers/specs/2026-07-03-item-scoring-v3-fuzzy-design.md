@@ -8,7 +8,7 @@ cómo se armó el oponente… quizás lógica difusa… coherencia en cada item 
 priorizado").
 
 Evoluciona el motor de scoring de la v2 (`ItemAdvisor`) sin reescribir su arquitectura:
-mismos límites (`LoLAdvisor.Core.Items`, sin UI, `ItemAdvicePlan` inmutable por tick).
+mismos límites (`ParadoxLoLCompanion.Core.Items`, sin UI, `ItemAdvicePlan` inmutable por tick).
 
 ## Auditoría crítica de la v2 (qué limita hoy la calidad de las recomendaciones)
 
@@ -40,7 +40,7 @@ razón dominante de por qué está donde está.
 
 ## Diseño
 
-### A. Núcleo difuso — `LoLAdvisor.Core.Items.Fuzzy` (nuevo, puro, testeable)
+### A. Núcleo difuso — `ParadoxLoLCompanion.Core.Items.Fuzzy` (nuevo, puro, testeable)
 
 Toolkit sin dependencias. Cada "grado" es una pertenencia ∈ [0,1].
 

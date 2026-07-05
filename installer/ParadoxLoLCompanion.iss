@@ -35,7 +35,7 @@ DisableProgramGroupPage=yes
 DisableDirPage=auto
 
 ; Icono e imagen del propio instalador y del "Agregar o quitar programas".
-SetupIconFile=..\src\LoLAdvisor.App\img\app.ico
+SetupIconFile=..\src\ParadoxLoLCompanion.App\img\app.ico
 UninstallDisplayIcon={app}\{#MyAppExe}
 UninstallDisplayName={#MyAppName}
 

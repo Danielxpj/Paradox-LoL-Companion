@@ -29,9 +29,9 @@ Piezas chicas, cada una con una sola responsabilidad, testeables por separado.
 5. **UI WPF (MVVM)** — los conectores viven en librería sin UI para poder testearlos.
 
 **Estructura de proyectos:**
-- `LoLAdvisor.Core` (classlib, `net10.0`): modelos, conectores, motor de consejos, canal de log. Sin UI.
-- `LoLAdvisor.App` (WPF, `net10.0-windows`): ventana, MVVM, cableado (DI simple).
-- `LoLAdvisor.Tests` (xUnit): fixtures (JSON grabados) + tests.
+- `ParadoxLoLCompanion.Core` (classlib, `net10.0`): modelos, conectores, motor de consejos, canal de log. Sin UI.
+- `ParadoxLoLCompanion.App` (WPF, `net10.0-windows`): ventana, MVVM, cableado (DI simple).
+- `ParadoxLoLCompanion.Tests` (xUnit): fixtures (JSON grabados) + tests.
 
 ## Sección 2 — UI / Dashboard (estilo Data Studio)
 

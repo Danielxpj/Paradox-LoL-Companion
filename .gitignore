@@ -12,6 +12,9 @@ obj/
 [Rr]elease/
 TestResults/
 *.log
+
+## Scripts .bat (locales, no se versionan)
+*.bat
 ## Salida de publicar.bat (exe portable)
 publish/
 

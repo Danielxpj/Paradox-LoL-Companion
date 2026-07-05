@@ -17,12 +17,12 @@
 ### Task 1: Core — `ItemAdvisor.Advise` accepts a forced archetype
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/Items/ItemAdvisor.cs` (method `Advise`, ~line 30, and the summary block ~line 125)
-- Test: `tests/LoLAdvisor.Tests/ItemAdvisorTests.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Items/ItemAdvisor.cs` (method `Advise`, ~line 30, and the summary block ~line 125)
+- Test: `tests/ParadoxLoLCompanion.Tests/ItemAdvisorTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `tests/LoLAdvisor.Tests/ItemAdvisorTests.cs` (inside the existing class; `None`, `Advisor()` and `TestCatalog` already exist there). Note: in TestCatalog, Soraka has tags `["Support","Mage"]` and defense 3, so her default archetype is Enchanter; item 2065 (Shurelya's) is a support item she already owns:
+Add to `tests/ParadoxLoLCompanion.Tests/ItemAdvisorTests.cs` (inside the existing class; `None`, `Advisor()` and `TestCatalog` already exist there). Note: in TestCatalog, Soraka has tags `["Support","Mage"]` and defense 3, so her default archetype is Enchanter; item 2065 (Shurelya's) is a support item she already owns:
 
 ```csharp
 [Fact]
@@ -57,12 +57,12 @@ public void ForcedArchetype_Null_KeepsAutoDetection()
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --filter "FullyQualifiedName~ForcedArchetype" --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --filter "FullyQualifiedName~ForcedArchetype" --nologo -v q`
 Expected: `ForcedArchetype_OverridesDetectionAndInventory` FAILS to compile? No — compile error: `Advise` has no 2-argument overload. That compile error IS the red state. (`ForcedArchetype_Null_KeepsAutoDetection` compiles fine but can't run until the other is fixed.)
 
 - [ ] **Step 3: Implement the parameter in `ItemAdvisor`**
 
-In `src/LoLAdvisor.Core/Items/ItemAdvisor.cs`, change the `Advise` signature and doc:
+In `src/ParadoxLoLCompanion.Core/Items/ItemAdvisor.cs`, change the `Advise` signature and doc:
 
 ```csharp
 /// <summary>
@@ -96,12 +96,12 @@ else if (profile.InferredFromItems)
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --filter "FullyQualifiedName~ForcedArchetype" --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --filter "FullyQualifiedName~ForcedArchetype" --nologo -v q`
 Expected: 2 passed.
 
 - [ ] **Step 5: Run the whole suite (no regressions)**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --nologo -v q`
 Expected: all pass (135 existing + 2 new).
 
 ---
@@ -109,12 +109,12 @@ Expected: all pass (135 existing + 2 new).
 ### Task 2: Core — `MayhemAdvisor.Advise` accepts a forced archetype
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/Mayhem/MayhemAdvisor.cs` (`Advise` ~line 47, `Guidance` ~line 75)
-- Test: `tests/LoLAdvisor.Tests/MayhemAdvisorTests.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Mayhem/MayhemAdvisor.cs` (`Advise` ~line 47, `Guidance` ~line 75)
+- Test: `tests/ParadoxLoLCompanion.Tests/MayhemAdvisorTests.cs`
 
 - [ ] **Step 1: Write the failing test**
 
-Add to `tests/LoLAdvisor.Tests/MayhemAdvisorTests.cs` (add `using LoLAdvisor.Core.Items;` to the file's usings for `BuildArchetype`):
+Add to `tests/ParadoxLoLCompanion.Tests/MayhemAdvisorTests.cs` (add `using ParadoxLoLCompanion.Core.Items;` to the file's usings for `BuildArchetype`):
 
 ```csharp
 [Fact]
@@ -131,12 +131,12 @@ public void Guidance_FollowsForcedArchetype()
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --filter "FullyQualifiedName~Guidance_FollowsForcedArchetype" --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --filter "FullyQualifiedName~Guidance_FollowsForcedArchetype" --nologo -v q`
 Expected: compile error — `Advise` has no 2-argument overload. That is the red state.
 
 - [ ] **Step 3: Implement the parameter in `MayhemAdvisor`**
 
-In `src/LoLAdvisor.Core/Mayhem/MayhemAdvisor.cs`:
+In `src/ParadoxLoLCompanion.Core/Mayhem/MayhemAdvisor.cs`:
 
 Signature (keep the existing doc line, add the param note):
 
@@ -173,12 +173,12 @@ private IReadOnlyList<string> Guidance(GameState state, Player me, BuildArchetyp
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --filter "FullyQualifiedName~Guidance_FollowsForcedArchetype" --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --filter "FullyQualifiedName~Guidance_FollowsForcedArchetype" --nologo -v q`
 Expected: 1 passed.
 
 - [ ] **Step 5: Run the whole suite**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --nologo -v q`
 Expected: all pass (138 total).
 
 ---
@@ -188,12 +188,12 @@ Expected: all pass (138 total).
 No unit tests here: `MainViewModel` is WPF-bound (Dispatcher) and the project has no App-side test host; the Core behavior is covered by Tasks 1–2. Verification is compile + Task 5's manual replay check.
 
 **Files:**
-- Modify: `src/LoLAdvisor.App/ViewModels/ItemViewModels.cs` (add class at the end)
-- Modify: `src/LoLAdvisor.App/ViewModels/MainViewModel.cs`
+- Modify: `src/ParadoxLoLCompanion.App/ViewModels/ItemViewModels.cs` (add class at the end)
+- Modify: `src/ParadoxLoLCompanion.App/ViewModels/MainViewModel.cs`
 
 - [ ] **Step 1: Add `BuildRoleOptionViewModel` to `ItemViewModels.cs`**
 
-Append at the end of the file (it already has `using LoLAdvisor.App.Mvvm;`; add `using LoLAdvisor.Core.Items;` to the usings):
+Append at the end of the file (it already has `using ParadoxLoLCompanion.App.Mvvm;`; add `using ParadoxLoLCompanion.Core.Items;` to the usings):
 
 ```csharp
 /// <summary>
@@ -324,15 +324,15 @@ ResetBuildRole();
 
 - [ ] **Step 5: Verify it compiles**
 
-Run: `dotnet build src/LoLAdvisor.Core src/LoLAdvisor.App --nologo -v q`
-Expected: Build succeeded, 0 errors. (If the app is running, the copy step fails with MSB3027 — close LoLAdvisor first.)
+Run: `dotnet build src/ParadoxLoLCompanion.Core src/ParadoxLoLCompanion.App --nologo -v q`
+Expected: Build succeeded, 0 errors. (If the app is running, the copy step fails with MSB3027 — close ParadoxLoLCompanion first.)
 
 ---
 
 ### Task 4: XAML — radio row in the Item advisor card
 
 **Files:**
-- Modify: `src/LoLAdvisor.App/MainWindow.xaml` (Item advisor card, ~line 114-141)
+- Modify: `src/ParadoxLoLCompanion.App/MainWindow.xaml` (Item advisor card, ~line 114-141)
 
 - [ ] **Step 1: Insert the selector row**
 
@@ -364,7 +364,7 @@ Inside the card's `StackPanel`, right after the closing `</TextBlock>` of the `T
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `dotnet build src/LoLAdvisor.App --nologo -v q`
+Run: `dotnet build src/ParadoxLoLCompanion.App --nologo -v q`
 Expected: Build succeeded, 0 errors.
 
 ---
@@ -373,12 +373,12 @@ Expected: Build succeeded, 0 errors.
 
 - [ ] **Step 1: Full test suite**
 
-Run: `dotnet test tests/LoLAdvisor.Tests --nologo -v q`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests --nologo -v q`
 Expected: 138 passed, 0 failed.
 
 - [ ] **Step 2: Manual check in replay mode (app must be closed first if running)**
 
-Run: `dotnet run --project src/LoLAdvisor.App`
+Run: `dotnet run --project src/ParadoxLoLCompanion.App`
 Then in the app:
 1. Enable "Replay mode", scenario "ARAM: Mayhem".
 2. The Item advisor card shows the `Build:` row with `Auto` selected.

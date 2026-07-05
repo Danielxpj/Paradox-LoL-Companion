@@ -26,7 +26,7 @@ mismo* con el oro que tienes, y **explica cada recomendación** con razones legi
 
 ## Arquitectura
 
-Todo el motor vive en `LoLAdvisor.Core.Items` (sin UI, testeable). La UI consume un
+Todo el motor vive en `ParadoxLoLCompanion.Core.Items` (sin UI, testeable). La UI consume un
 `ItemAdvicePlan` inmutable por tick.
 
 ```

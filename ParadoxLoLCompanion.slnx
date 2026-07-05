@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj" />
+  </Folder>
+</Solution>

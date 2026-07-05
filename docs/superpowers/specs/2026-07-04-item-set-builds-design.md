@@ -19,7 +19,7 @@ el 6.º).
 
 ## Arquitectura
 
-Todo lo testeable vive en `LoLAdvisor.Core`; el ViewModel solo cablea.
+Todo lo testeable vive en `ParadoxLoLCompanion.Core`; el ViewModel solo cablea.
 
 ### 1. Parser ampliado (`Core/Stats`)
 

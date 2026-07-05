@@ -51,7 +51,7 @@ Cada vez que quieras sacar una versión nueva:
 ### 1. Subí el número de versión en **los dos** lugares (deben coincidir)
 
 - `version.txt` (raíz) — ej. `1.0.1`
-- `src/LoLAdvisor.App/LoLAdvisor.App.csproj` → `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+- `src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj` → `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 
 ### 2. Generá el instalador
 
@@ -73,7 +73,7 @@ O a mano: GitHub → **Releases** → *Draft a new release* → tag `v1.0.1` →
 ### 4. Pusheá `version.txt` a `main`
 
 ```
-git add version.txt src/LoLAdvisor.App/LoLAdvisor.App.csproj
+git add version.txt src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj
 git commit -m "release: v1.0.1"
 git push origin main
 ```
@@ -101,7 +101,7 @@ te deja sin app). En desarrollo (con depurador) el auto-update se omite.
 
 ## Regenerar el icono
 
-`installer/make-icon.ps1` dibuja `src/LoLAdvisor.App/img/app.ico`. Correlo con
+`installer/make-icon.ps1` dibuja `src/ParadoxLoLCompanion.App/img/app.ico`. Correlo con
 **Windows PowerShell 5.1** (no pwsh 7, que no trae System.Drawing):
 
 ```

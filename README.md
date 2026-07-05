@@ -62,13 +62,13 @@ your game client language (players are matched via locale-independent ids).
 
 ```
 src/
-  LoLAdvisor.Core/   models, parser, connectors (Live + LCU), item advisor, rules  (no UI, testable)
+  ParadoxLoLCompanion.Core/   models, parser, connectors (Live + LCU), item advisor, rules  (no UI, testable)
     Items/           ChampionProfiler · ThreatAnalyzer · BuildPathPlanner · ItemAdvisor
     Draft/           TeamBalanceAdvisor (ARAM bench swaps)
     DataDragon/      static catalog (champions + items with stats, build tree, per-map pools)
-  LoLAdvisor.App/    WPF (MVVM), dashboard, "Item advisor" panel, console
+  ParadoxLoLCompanion.App/    WPF (MVVM), dashboard, "Item advisor" panel, console
 tests/
-  LoLAdvisor.Tests/  xUnit: parsing, item engine (99 tests), lockfile, champ select
+  ParadoxLoLCompanion.Tests/  xUnit: parsing, item engine (99 tests), lockfile, champ select
 docs/superpowers/specs/  design documents (v1 and item advisor v2)
 ```
 
@@ -79,7 +79,7 @@ docs/superpowers/specs/  design documents (v1 and item advisor v2)
 ## How to run
 
 ```powershell
-dotnet run --project src/LoLAdvisor.App
+dotnet run --project src/ParadoxLoLCompanion.App
 ```
 
 - Without LoL open you'll see **"waiting for game"**. Check **"Replay mode"** (top right)
@@ -92,7 +92,7 @@ dotnet run --project src/LoLAdvisor.App
 ## Configuration
 
 `advisor-config.json` (next to the app, with an editable copy at
-`%LocalAppData%\LoLAdvisor\advisor-config.json`) exposes all the advisor's knowledge:
+`%LocalAppData%\ParadoxLoLCompanion\advisor-config.json`) exposes all the advisor's knowledge:
 lists of healer / suppression / heavy-CC / shield champions, per-champion damage-profile
 and archetype overrides, threat-analysis thresholds, ARAM tuning, and even the per-tag
 weights of each archetype. All adjustable without recompiling.

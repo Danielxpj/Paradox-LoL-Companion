@@ -3,7 +3,7 @@
 # Usa System.Drawing (Windows PowerShell 5.1). Empaqueta PNGs en un .ico multi-res.
 Add-Type -AssemblyName System.Drawing
 
-$OutDir = Join-Path $PSScriptRoot '..\src\LoLAdvisor.App\img'
+$OutDir = Join-Path $PSScriptRoot '..\src\ParadoxLoLCompanion.App\img'
 $OutIco = Join-Path $OutDir 'app.ico'
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 

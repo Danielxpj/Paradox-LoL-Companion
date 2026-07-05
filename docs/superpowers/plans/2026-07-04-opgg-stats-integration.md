@@ -4,7 +4,7 @@
 
 **Goal:** Feed real per-champion build statistics (OP.GG MCP server) into the fuzzy item advisor as an additive prior, gate mana items by `partype`, and show a runes/skill-order panel with an LCU "Apply runes" button.
 
-**Architecture:** New `LoLAdvisor.Core/Stats/` layer (MCP client → compact-text parser → model → per-patch file cache → provider). `ItemAdvisor.Advise` gains an optional `ChampionBuildStats?` parameter; a new additive fuzzy rule in `ScoreItem` uses it. `partype` parsing in `DataDragonCatalog` powers offline mana gating. `MainViewModel` fetches stats async and wires a runes panel + `LcuRuneWriter`.
+**Architecture:** New `ParadoxLoLCompanion.Core/Stats/` layer (MCP client → compact-text parser → model → per-patch file cache → provider). `ItemAdvisor.Advise` gains an optional `ChampionBuildStats?` parameter; a new additive fuzzy rule in `ScoreItem` uses it. `partype` parsing in `DataDragonCatalog` powers offline mana gating. `MainViewModel` fetches stats async and wires a runes panel + `LcuRuneWriter`.
 
 **Tech Stack:** .NET 10, WPF, xunit 2.9, System.Text.Json (no new packages). Spec: `docs/superpowers/specs/2026-07-04-opgg-stats-integration-design.md`.
 
@@ -12,11 +12,11 @@
 - `POST https://mcp-api.op.gg/mcp` is **stateless** — no `initialize` handshake or session header needed; plain JSON-RPC `tools/call` works per request. Response observed as plain JSON (handle SSE `data:` lines defensively).
 - Tool name: `lol_get_champion_analysis`. Arguments: `champion` (UPPER_SNAKE_CASE — **both** `MONKEY_KING` and `MONKEYKING` are accepted, so a simple PascalCase→UPPER_SNAKE conversion of the ddragon Key is safe), `game_mode` (`ranked|aram|...`), `position` (`all|none|top|mid|jungle|adc|support`), `desired_output_fields` (closed set).
 - `result.content[0].text` is NOT JSON. It is a compact format: `class Name: field1,field2` header lines, a blank line, then one nested-constructor expression. The headers define positional field binding — parse them, don't hardcode positions.
-- Real Jayce-top response is recorded at `tests/LoLAdvisor.Tests/Fixtures/opgg-champion-analysis-jayce.json` (raw JSON-RPC envelope). Its core build is `[3070 Tear, 3142 Youmuu's, 3042 Muramana, 6699 Voltaic]` — note it lists **Muramana (3042)**, the transformed item, while the catalog recommends purchasable **Manamune (3004)**.
+- Real Jayce-top response is recorded at `tests/ParadoxLoLCompanion.Tests/Fixtures/opgg-champion-analysis-jayce.json` (raw JSON-RPC envelope). Its core build is `[3070 Tear, 3142 Youmuu's, 3042 Muramana, 6699 Voltaic]` — note it lists **Muramana (3042)**, the transformed item, while the catalog recommends purchasable **Manamune (3004)**.
 - **Verified against cached ddragon 16.13.1:** Manamune (3004) has NO `into` (it IS a completed, recommendable item — no catalog filter change needed) and Muramana (3042) has NO `from`. The build tree does NOT link evolutions, so the prior lookup bridges them via an explicit config map (`ItemsConfig.ItemEvolutions`), not via `StaticItem.From`.
 - Rune names come localized in the response — **no `runesReforged.json` needed** (conscious simplification vs. spec: names, no icons).
 
-**Conventions:** comments in the codebase are Spanish, reasons/UI strings are English. Tests: xunit `[Fact]`, files in `tests/LoLAdvisor.Tests/`. Run tests with `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`. Commit after every task.
+**Conventions:** comments in the codebase are Spanish, reasons/UI strings are English. Tests: xunit `[Fact]`, files in `tests/ParadoxLoLCompanion.Tests/`. Run tests with `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`. Commit after every task.
 
 ---
 
@@ -25,20 +25,20 @@
 The fixture file already exists in the working tree (recorded during planning). Wire it up.
 
 **Files:**
-- Exists: `tests/LoLAdvisor.Tests/Fixtures/opgg-champion-analysis-jayce.json`
-- Modify: `tests/LoLAdvisor.Tests/Fixtures.cs`
+- Exists: `tests/ParadoxLoLCompanion.Tests/Fixtures/opgg-champion-analysis-jayce.json`
+- Modify: `tests/ParadoxLoLCompanion.Tests/Fixtures.cs`
 
 - [ ] **Step 1: Verify the fixture is picked up by the csproj glob**
 
-`tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj` already has `<None Update="Fixtures\**\*">` with copy-to-output — no csproj change needed. Verify the file exists:
+`tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj` already has `<None Update="Fixtures\**\*">` with copy-to-output — no csproj change needed. Verify the file exists:
 
-Run: `dir tests\LoLAdvisor.Tests\Fixtures\opgg-champion-analysis-jayce.json`
+Run: `dir tests\ParadoxLoLCompanion.Tests\Fixtures\opgg-champion-analysis-jayce.json`
 Expected: file listed (~2 KB)
 
 - [ ] **Step 2: Add the helper to Fixtures.cs**
 
 ```csharp
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 /// <summary>Carga los payloads grabados que se copian al directorio de salida de los tests.</summary>
 internal static class Fixtures
@@ -55,13 +55,13 @@ internal static class Fixtures
 
 - [ ] **Step 3: Build tests to confirm compile**
 
-Run: `dotnet build tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`
+Run: `dotnet build tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add tests/LoLAdvisor.Tests/Fixtures/opgg-champion-analysis-jayce.json tests/LoLAdvisor.Tests/Fixtures.cs
+git add tests/ParadoxLoLCompanion.Tests/Fixtures/opgg-champion-analysis-jayce.json tests/ParadoxLoLCompanion.Tests/Fixtures.cs
 git commit -m "test: record real OP.GG champion-analysis response as fixture"
 ```
 
@@ -72,15 +72,15 @@ git commit -m "test: record real OP.GG champion-analysis response as fixture"
 Generic parser for the `class X: fields` + constructor-expression format. Output is a tree of `McpObject` (field-name → value) so downstream code never depends on positions.
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Stats/McpTextParser.cs`
-- Create: `tests/LoLAdvisor.Tests/McpTextParserTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/McpTextParser.cs`
+- Create: `tests/ParadoxLoLCompanion.Tests/McpTextParserTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class McpTextParserTests
 {
@@ -134,7 +134,7 @@ public class McpTextParserTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter McpTextParserTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter McpTextParserTests`
 Expected: FAIL — `McpTextParser` does not exist
 
 - [ ] **Step 3: Implement the parser**
@@ -143,7 +143,7 @@ Expected: FAIL — `McpTextParser` does not exist
 using System.Globalization;
 using System.Text;
 
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>
 /// Parser del formato compacto que devuelve el MCP de OP.GG: cabeceras
@@ -338,13 +338,13 @@ public sealed class McpObject
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter McpTextParserTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter McpTextParserTests`
 Expected: 4 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/McpTextParser.cs tests/LoLAdvisor.Tests/McpTextParserTests.cs
+git add src/ParadoxLoLCompanion.Core/Stats/McpTextParser.cs tests/ParadoxLoLCompanion.Tests/McpTextParserTests.cs
 git commit -m "feat: parser for OP.GG MCP compact text format"
 ```
 
@@ -355,17 +355,17 @@ git commit -m "feat: parser for OP.GG MCP compact text format"
 Maps the parsed tree into a typed, JSON-serializable model. Also the pure static that extracts `content[0].text` from the JSON-RPC envelope (lives with the client-to-be, testable now against the fixture).
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Stats/ChampionBuildStats.cs`
-- Create: `src/LoLAdvisor.Core/Stats/OpggResponseParser.cs`
-- Create: `src/LoLAdvisor.Core/Stats/OpggMcpClient.cs` (only the static `ExtractToolText` in this task; HTTP part in Task 4)
-- Create: `tests/LoLAdvisor.Tests/OpggResponseParserTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/ChampionBuildStats.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/OpggResponseParser.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/OpggMcpClient.cs` (only the static `ExtractToolText` in this task; HTTP part in Task 4)
+- Create: `tests/ParadoxLoLCompanion.Tests/OpggResponseParserTests.cs`
 
 - [ ] **Step 1: Write the failing tests (against the real fixture)**
 
 ```csharp
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class OpggResponseParserTests
 {
@@ -450,15 +450,15 @@ public class OpggResponseParserTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter OpggResponseParserTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter OpggResponseParserTests`
 Expected: FAIL — types do not exist
 
 - [ ] **Step 3: Implement model, mapper, and envelope extraction**
 
-`src/LoLAdvisor.Core/Stats/ChampionBuildStats.cs`:
+`src/ParadoxLoLCompanion.Core/Stats/ChampionBuildStats.cs`:
 
 ```csharp
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>Un conjunto de items con sus estadísticas (core build, botas, starter o candidato tardío).</summary>
 public sealed record ItemSetStats(IReadOnlyList<int> ItemIds, double PickRate, int Play, int Win)
@@ -512,10 +512,10 @@ public sealed class ChampionBuildStats
 }
 ```
 
-`src/LoLAdvisor.Core/Stats/OpggResponseParser.cs`:
+`src/ParadoxLoLCompanion.Core/Stats/OpggResponseParser.cs`:
 
 ```csharp
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>
 /// Convierte el texto compacto de <c>lol_get_champion_analysis</c> en
@@ -571,12 +571,12 @@ public static class OpggResponseParser
 }
 ```
 
-`src/LoLAdvisor.Core/Stats/OpggMcpClient.cs` (this task: only the static; the HTTP methods arrive in Task 4):
+`src/ParadoxLoLCompanion.Core/Stats/OpggMcpClient.cs` (this task: only the static; the HTTP methods arrive in Task 4):
 
 ```csharp
 using System.Text.Json;
 
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>
 /// Cliente mínimo del MCP de OP.GG (JSON-RPC sobre HTTP). El servidor es
@@ -621,13 +621,13 @@ public sealed class OpggMcpClient
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter OpggResponseParserTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter OpggResponseParserTests`
 Expected: 6 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/ tests/LoLAdvisor.Tests/OpggResponseParserTests.cs
+git add src/ParadoxLoLCompanion.Core/Stats/ tests/ParadoxLoLCompanion.Tests/OpggResponseParserTests.cs
 git commit -m "feat: ChampionBuildStats model and OP.GG response parser"
 ```
 
@@ -638,16 +638,16 @@ git commit -m "feat: ChampionBuildStats model and OP.GG response parser"
 Thin HTTP layer. The request payload builder is static and tested; the network call itself is exercised manually (Task 13).
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/Stats/OpggMcpClient.cs`
-- Create: `tests/LoLAdvisor.Tests/OpggMcpClientTests.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Stats/OpggMcpClient.cs`
+- Create: `tests/ParadoxLoLCompanion.Tests/OpggMcpClientTests.cs`
 
 - [ ] **Step 1: Write the failing test for the payload builder**
 
 ```csharp
 using System.Text.Json;
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class OpggMcpClientTests
 {
@@ -677,7 +677,7 @@ public class OpggMcpClientTests
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter OpggMcpClientTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter OpggMcpClientTests`
 Expected: FAIL — `BuildToolCallJson` does not exist
 
 - [ ] **Step 3: Add interface, payload builder, and HTTP call**
@@ -774,13 +774,13 @@ public sealed class OpggMcpClient : IOpggClient
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter OpggMcpClientTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter OpggMcpClientTests`
 Expected: PASS (and OpggResponseParserTests still PASS)
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/OpggMcpClient.cs tests/LoLAdvisor.Tests/OpggMcpClientTests.cs
+git add src/ParadoxLoLCompanion.Core/Stats/OpggMcpClient.cs tests/ParadoxLoLCompanion.Tests/OpggMcpClientTests.cs
 git commit -m "feat: OP.GG MCP HTTP client with IOpggClient abstraction"
 ```
 
@@ -791,15 +791,15 @@ git commit -m "feat: OP.GG MCP HTTP client with IOpggClient abstraction"
 Per-patch JSON file cache with old-patch pruning. All IO failure-tolerant.
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Stats/StatsCache.cs`
-- Create: `tests/LoLAdvisor.Tests/StatsCacheTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/StatsCache.cs`
+- Create: `tests/ParadoxLoLCompanion.Tests/StatsCacheTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class StatsCacheTests : IDisposable
 {
@@ -860,7 +860,7 @@ public class StatsCacheTests : IDisposable
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter StatsCacheTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter StatsCacheTests`
 Expected: FAIL — `StatsCache` does not exist
 
 - [ ] **Step 3: Implement**
@@ -868,7 +868,7 @@ Expected: FAIL — `StatsCache` does not exist
 ```csharp
 using System.Text.Json;
 
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>
 /// Caché de <see cref="ChampionBuildStats"/> en disco, un JSON por
@@ -883,7 +883,7 @@ public sealed class StatsCache
     public StatsCache(string? baseDir = null) =>
         _baseDir = baseDir ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "LoLAdvisor", "stats");
+            "ParadoxLoLCompanion", "stats");
 
     public bool TryRead(string patch, string championKey, string gameMode, string position,
         out ChampionBuildStats? stats)
@@ -941,13 +941,13 @@ public sealed class StatsCache
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter StatsCacheTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter StatsCacheTests`
 Expected: 4 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/StatsCache.cs tests/LoLAdvisor.Tests/StatsCacheTests.cs
+git add src/ParadoxLoLCompanion.Core/Stats/StatsCache.cs tests/ParadoxLoLCompanion.Tests/StatsCacheTests.cs
 git commit -m "feat: per-patch file cache for champion build stats"
 ```
 
@@ -958,15 +958,15 @@ git commit -m "feat: per-patch file cache for champion build stats"
 Orchestration + the two pure mappings (role/mode, ddragon Key → OP.GG name).
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Stats/StatsProvider.cs`
-- Create: `tests/LoLAdvisor.Tests/StatsProviderTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Stats/StatsProvider.cs`
+- Create: `tests/ParadoxLoLCompanion.Tests/StatsProviderTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class StatsProviderTests
 {
@@ -1051,18 +1051,18 @@ public class StatsProviderTests
 internal static class OpggMcpClientTestsHelper
 {
     public static string JayceText() =>
-        LoLAdvisor.Core.Stats.OpggMcpClient.ExtractToolText(Fixtures.OpggJayce())!;
+        ParadoxLoLCompanion.Core.Stats.OpggMcpClient.ExtractToolText(Fixtures.OpggJayce())!;
 }
 ```
 
 Note: `ExtractToolText` is `internal` — check whether the test project already sees internals. Search for `InternalsVisibleTo`:
 
 Run: `grep -r "InternalsVisibleTo" src/`
-If absent, add to `src/LoLAdvisor.Core/LoLAdvisor.Core.csproj` inside an `<ItemGroup>`:
+If absent, add to `src/ParadoxLoLCompanion.Core/ParadoxLoLCompanion.Core.csproj` inside an `<ItemGroup>`:
 
 ```xml
 <ItemGroup>
-  <InternalsVisibleTo Include="LoLAdvisor.Tests" />
+  <InternalsVisibleTo Include="ParadoxLoLCompanion.Tests" />
 </ItemGroup>
 ```
 
@@ -1070,7 +1070,7 @@ If absent, add to `src/LoLAdvisor.Core/LoLAdvisor.Core.csproj` inside an `<ItemG
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter StatsProviderTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter StatsProviderTests`
 Expected: FAIL — `StatsProvider` does not exist
 
 - [ ] **Step 3: Implement**
@@ -1078,7 +1078,7 @@ Expected: FAIL — `StatsProvider` does not exist
 ```csharp
 using System.Text.RegularExpressions;
 
-namespace LoLAdvisor.Core.Stats;
+namespace ParadoxLoLCompanion.Core.Stats;
 
 /// <summary>
 /// Punto de entrada de la capa estadística: cache-first, fetch al MCP de OP.GG
@@ -1141,13 +1141,13 @@ public sealed class StatsProvider
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter StatsProviderTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter StatsProviderTests`
 Expected: 4 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Stats/StatsProvider.cs tests/LoLAdvisor.Tests/StatsProviderTests.cs src/LoLAdvisor.Core/LoLAdvisor.Core.csproj
+git add src/ParadoxLoLCompanion.Core/Stats/StatsProvider.cs tests/ParadoxLoLCompanion.Tests/StatsProviderTests.cs src/ParadoxLoLCompanion.Core/ParadoxLoLCompanion.Core.csproj
 git commit -m "feat: StatsProvider orchestrating OP.GG fetch with per-patch cache"
 ```
 
@@ -1156,17 +1156,17 @@ git commit -m "feat: StatsProvider orchestrating OP.GG fetch with per-patch cach
 ### Task 7: `partype` parsing → `StaticChampion.UsesMana`
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/DataDragon/StaticTypes.cs` (StaticChampion, ~line 12-26)
-- Modify: `src/LoLAdvisor.Core/DataDragon/DataDragonCatalog.cs` (FromJson ~line 150-167, ChampionEntry DTO ~line 252)
-- Modify: `src/LoLAdvisor.Core/Config/AdvisorConfig.cs` (ItemsConfig, after the keyword lists ~line 103)
-- Create: `tests/LoLAdvisor.Tests/PartypeTests.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/DataDragon/StaticTypes.cs` (StaticChampion, ~line 12-26)
+- Modify: `src/ParadoxLoLCompanion.Core/DataDragon/DataDragonCatalog.cs` (FromJson ~line 150-167, ChampionEntry DTO ~line 252)
+- Modify: `src/ParadoxLoLCompanion.Core/Config/AdvisorConfig.cs` (ItemsConfig, after the keyword lists ~line 103)
+- Create: `tests/ParadoxLoLCompanion.Tests/PartypeTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-using LoLAdvisor.Core.DataDragon;
+using ParadoxLoLCompanion.Core.DataDragon;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class PartypeTests
 {
@@ -1196,7 +1196,7 @@ public class PartypeTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter PartypeTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter PartypeTests`
 Expected: FAIL — `UsesMana` does not exist
 
 - [ ] **Step 3: Implement the three edits**
@@ -1253,13 +1253,13 @@ In `FromJson`, inside the champion loop (~line 154), add the two properties to t
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter PartypeTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter PartypeTests`
 Expected: 6 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/DataDragon/ src/LoLAdvisor.Core/Config/AdvisorConfig.cs tests/LoLAdvisor.Tests/PartypeTests.cs
+git add src/ParadoxLoLCompanion.Core/DataDragon/ src/ParadoxLoLCompanion.Core/Config/AdvisorConfig.cs tests/ParadoxLoLCompanion.Tests/PartypeTests.cs
 git commit -m "feat: parse partype into StaticChampion.UsesMana"
 ```
 
@@ -1270,19 +1270,19 @@ git commit -m "feat: parse partype into StaticChampion.UsesMana"
 Manaless champions get `Mana`/`ManaRegen` weights removed before scoring.
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/Items/ItemAdvisor.cs` (Advise ~line 102, new private helper)
-- Create: `tests/LoLAdvisor.Tests/ItemAdvisorStatsTests.cs` (this file also grows in Task 9)
+- Modify: `src/ParadoxLoLCompanion.Core/Items/ItemAdvisor.cs` (Advise ~line 102, new private helper)
+- Create: `tests/ParadoxLoLCompanion.Tests/ItemAdvisorStatsTests.cs` (this file also grows in Task 9)
 
 - [ ] **Step 1: Write the failing test**
 
-Create `tests/LoLAdvisor.Tests/ItemAdvisorStatsTests.cs`. The test builds a minimal catalog via `DataDragonCatalog.FromJson` with a mana item and a non-mana item, and a `GameState` with a manaless champion (Mage archetype forced so mana would normally score).
+Create `tests/ParadoxLoLCompanion.Tests/ItemAdvisorStatsTests.cs`. The test builds a minimal catalog via `DataDragonCatalog.FromJson` with a mana item and a non-mana item, and a `GameState` with a manaless champion (Mage archetype forced so mana would normally score).
 
 ```csharp
-using LoLAdvisor.Core.DataDragon;
-using LoLAdvisor.Core.Items;
-using LoLAdvisor.Core.Models;
+using ParadoxLoLCompanion.Core.DataDragon;
+using ParadoxLoLCompanion.Core.Items;
+using ParadoxLoLCompanion.Core.Models;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class ItemAdvisorStatsTests
 {
@@ -1355,7 +1355,7 @@ Note: with Mage weights, "Mana Tome Item" (SpellDamage 3 + Mana 1.5 + ManaRegen 
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter ItemAdvisorStatsTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter ItemAdvisorStatsTests`
 Expected: FAIL — mana item is recommended to the Energy champion
 
 - [ ] **Step 3: Implement in `ItemAdvisor.Advise`**
@@ -1383,13 +1383,13 @@ In the item loop (~line 105), add the skip right after the owned check:
 
 - [ ] **Step 4: Run tests — new ones pass, old ones still pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`
 Expected: ALL PASS (existing fixture uses real champions whose partype parses; if any existing test regresses, the fixture champion resolved as manaless — inspect, likely the test catalog lacks partype so `UsesMana` stays true and nothing changes)
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Items/ItemAdvisor.cs tests/LoLAdvisor.Tests/ItemAdvisorStatsTests.cs
+git add src/ParadoxLoLCompanion.Core/Items/ItemAdvisor.cs tests/ParadoxLoLCompanion.Tests/ItemAdvisorStatsTests.cs
 git commit -m "feat: manaless champions never see mana items (partype gating)"
 ```
 
@@ -1400,14 +1400,14 @@ git commit -m "feat: manaless champions never see mana items (partype gating)"
 The core of the feature: additive fuzzy rule + transformation bridging (Muramana→Manamune) + boots/starter tiebreak.
 
 **Files:**
-- Modify: `src/LoLAdvisor.Core/Items/ItemAdvisor.cs` (constants ~line 25-36, Advise signature ~line 52, ScoreItem ~line 316, BootsFor ~line 493, StarterFor ~line 188)
-- Modify: `src/LoLAdvisor.Core/Config/AdvisorConfig.cs` (ItemsConfig: `ItemEvolutions` map)
-- Modify: `tests/LoLAdvisor.Tests/ItemAdvisorStatsTests.cs`
+- Modify: `src/ParadoxLoLCompanion.Core/Items/ItemAdvisor.cs` (constants ~line 25-36, Advise signature ~line 52, ScoreItem ~line 316, BootsFor ~line 493, StarterFor ~line 188)
+- Modify: `src/ParadoxLoLCompanion.Core/Config/AdvisorConfig.cs` (ItemsConfig: `ItemEvolutions` map)
+- Modify: `tests/ParadoxLoLCompanion.Tests/ItemAdvisorStatsTests.cs`
 
 - [ ] **Step 1: Write the failing tests (add to ItemAdvisorStatsTests)**
 
 ```csharp
-using LoLAdvisor.Core.Stats;   // añadir arriba
+using ParadoxLoLCompanion.Core.Stats;   // añadir arriba
 
     private static ChampionBuildStats StatsWith(params int[] coreIds) => new()
     {
@@ -1448,7 +1448,7 @@ using LoLAdvisor.Core.Stats;   // añadir arriba
         // OP.GG lista la forma evolucionada (4003, no comprable y SIN from — igual
         // que Muramana en ddragon real); el catálogo recomienda la comprable (4002).
         // El puente es el mapa ItemEvolutions de la config.
-        var config = new LoLAdvisor.Core.Config.ItemsConfig();
+        var config = new ParadoxLoLCompanion.Core.Config.ItemsConfig();
         config.ItemEvolutions[4003] = 4002;
         var catalog = DataDragonCatalog.FromJson(
             "16.13.1",
@@ -1494,12 +1494,12 @@ using LoLAdvisor.Core.Stats;   // añadir arriba
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter ItemAdvisorStatsTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter ItemAdvisorStatsTests`
 Expected: FAIL — `Advise` has no `stats` parameter
 
 - [ ] **Step 3: Implement**
 
-Add `using LoLAdvisor.Core.Stats;` to `ItemAdvisor.cs`.
+Add `using ParadoxLoLCompanion.Core.Stats;` to `ItemAdvisor.cs`.
 
 Constants (after `LifestealDevalMag`, ~line 34):
 
@@ -1570,7 +1570,7 @@ Update the final score/category block (~line 414):
         var situational = offense + defense;
 ```
 
-Add to `ItemsConfig` in `src/LoLAdvisor.Core/Config/AdvisorConfig.cs` (after `ManaResourceNames` from Task 7):
+Add to `ItemsConfig` in `src/ParadoxLoLCompanion.Core/Config/AdvisorConfig.cs` (after `ManaResourceNames` from Task 7):
 
 ```csharp
     /// <summary>
@@ -1643,17 +1643,17 @@ Starter tiebreak — in `StarterFor`, accept stats and prefer the statistical st
 
 Update the call site (~line 177): `StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats)`.
 
-Also verify `src/LoLAdvisor.Core/Advice/Rules/ItemRecommendationRule.cs:38` still compiles — it calls `Advise(state, archetype)` and the new parameter is optional, so no change needed (feed rules stay stat-less by design).
+Also verify `src/ParadoxLoLCompanion.Core/Advice/Rules/ItemRecommendationRule.cs:38` still compiles — it calls `Advise(state, archetype)` and the new parameter is optional, so no change needed (feed rules stay stat-less by design).
 
 - [ ] **Step 4: Run the full test suite**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`
 Expected: ALL PASS — pay attention to existing `AdviceTests`/`BuildPathPlannerTests`: the `stats` default null must leave them byte-identical
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Items/ItemAdvisor.cs tests/LoLAdvisor.Tests/ItemAdvisorStatsTests.cs
+git add src/ParadoxLoLCompanion.Core/Items/ItemAdvisor.cs tests/ParadoxLoLCompanion.Tests/ItemAdvisorStatsTests.cs
 git commit -m "feat: additive fuzzy prior from OP.GG build stats in ItemAdvisor"
 ```
 
@@ -1662,17 +1662,17 @@ git commit -m "feat: additive fuzzy prior from OP.GG build stats in ItemAdvisor"
 ### Task 10: `LcuRuneWriter`
 
 **Files:**
-- Create: `src/LoLAdvisor.Core/Connectors/Lcu/LcuRuneWriter.cs`
-- Create: `tests/LoLAdvisor.Tests/LcuRuneWriterTests.cs`
+- Create: `src/ParadoxLoLCompanion.Core/Connectors/Lcu/LcuRuneWriter.cs`
+- Create: `tests/ParadoxLoLCompanion.Tests/LcuRuneWriterTests.cs`
 
 - [ ] **Step 1: Write the failing test for the payload builder**
 
 ```csharp
 using System.Text.Json;
-using LoLAdvisor.Core.Connectors.Lcu;
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Connectors.Lcu;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Tests;
+namespace ParadoxLoLCompanion.Tests;
 
 public class LcuRuneWriterTests
 {
@@ -1686,10 +1686,10 @@ public class LcuRuneWriterTests
             new[] { 8304, 8345 }, new[] { "E", "F" },
             new[] { 5008, 5008, 5001 }, 0.19);
 
-        var json = LcuRuneWriter.BuildPagePayload("LoLAdvisor: Jayce", runes);
+        var json = LcuRuneWriter.BuildPagePayload("ParadoxLoLCompanion: Jayce", runes);
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
-        Assert.Equal("LoLAdvisor: Jayce", root.GetProperty("name").GetString());
+        Assert.Equal("ParadoxLoLCompanion: Jayce", root.GetProperty("name").GetString());
         Assert.Equal(8200, root.GetProperty("primaryStyleId").GetInt32());
         Assert.Equal(8300, root.GetProperty("subStyleId").GetInt32());
         Assert.Equal(
@@ -1702,7 +1702,7 @@ public class LcuRuneWriterTests
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter LcuRuneWriterTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter LcuRuneWriterTests`
 Expected: FAIL — `LcuRuneWriter` does not exist
 
 - [ ] **Step 3: Implement**
@@ -1711,10 +1711,10 @@ Expected: FAIL — `LcuRuneWriter` does not exist
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using LoLAdvisor.Core.Net;
-using LoLAdvisor.Core.Stats;
+using ParadoxLoLCompanion.Core.Net;
+using ParadoxLoLCompanion.Core.Stats;
 
-namespace LoLAdvisor.Core.Connectors.Lcu;
+namespace ParadoxLoLCompanion.Core.Connectors.Lcu;
 
 /// <summary>
 /// Escribe la página de runas recomendada en el cliente de LoL vía LCU:
@@ -1724,7 +1724,7 @@ namespace LoLAdvisor.Core.Connectors.Lcu;
 /// </summary>
 public sealed class LcuRuneWriter
 {
-    public const string PagePrefix = "LoLAdvisor: ";
+    public const string PagePrefix = "ParadoxLoLCompanion: ";
     private const string PagesPath = "/lol-perks/v1/pages";
 
     private readonly LockfileLocator _locator;
@@ -1802,13 +1802,13 @@ public sealed class LcuRuneWriter
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj --filter LcuRuneWriterTests`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj --filter LcuRuneWriterTests`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.Core/Connectors/Lcu/LcuRuneWriter.cs tests/LoLAdvisor.Tests/LcuRuneWriterTests.cs
+git add src/ParadoxLoLCompanion.Core/Connectors/Lcu/LcuRuneWriter.cs tests/ParadoxLoLCompanion.Tests/LcuRuneWriterTests.cs
 git commit -m "feat: LcuRuneWriter applies recommended rune page via LCU"
 ```
 
@@ -1819,7 +1819,7 @@ git commit -m "feat: LcuRuneWriter applies recommended rune page via LCU"
 Async stats fetch keyed by champion+position+map+patch, pass into `Advise`, runes-panel properties, apply-runes command.
 
 **Files:**
-- Modify: `src/LoLAdvisor.App/ViewModels/MainViewModel.cs`
+- Modify: `src/ParadoxLoLCompanion.App/ViewModels/MainViewModel.cs`
 
 No new unit tests (ViewModel is thin glue; core logic is already covered). Steps:
 
@@ -1834,7 +1834,7 @@ Near the other private fields (top of class):
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
 ```
 
-Add `using LoLAdvisor.Core.Stats;` and `using LoLAdvisor.Core.Connectors.Lcu;` (the latter may already exist).
+Add `using ParadoxLoLCompanion.Core.Stats;` and `using ParadoxLoLCompanion.Core.Connectors.Lcu;` (the latter may already exist).
 
 With the other bindable properties (pattern at `MainViewModel.cs:158-168`):
 
@@ -1971,13 +1971,13 @@ New methods:
 
 - [ ] **Step 4: Build**
 
-Run: `dotnet build src/LoLAdvisor.App/LoLAdvisor.App.csproj`
-Expected: Build succeeded. If `RelayCommand`'s constructor differs (check `src/LoLAdvisor.App/Mvvm/RelayCommand.cs`), match its actual signature.
+Run: `dotnet build src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj`
+Expected: Build succeeded. If `RelayCommand`'s constructor differs (check `src/ParadoxLoLCompanion.App/Mvvm/RelayCommand.cs`), match its actual signature.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/LoLAdvisor.App/ViewModels/MainViewModel.cs
+git add src/ParadoxLoLCompanion.App/ViewModels/MainViewModel.cs
 git commit -m "feat: wire OP.GG stats into the advisor and expose runes panel state"
 ```
 
@@ -1986,7 +1986,7 @@ git commit -m "feat: wire OP.GG stats into the advisor and expose runes panel st
 ### Task 12: Runes panel in `MainWindow.xaml`
 
 **Files:**
-- Modify: `src/LoLAdvisor.App/MainWindow.xaml` (insert after the Sell card that closes at ~line 249, right before the `<!-- ===== ARAM: MAYHEM` comment at ~line 251)
+- Modify: `src/ParadoxLoLCompanion.App/MainWindow.xaml` (insert after the Sell card that closes at ~line 249, right before the `<!-- ===== ARAM: MAYHEM` comment at ~line 251)
 
 - [ ] **Step 1: Add the panel XAML**
 
@@ -2026,13 +2026,13 @@ If the app has a themed button style in use elsewhere in this file (search for `
 
 - [ ] **Step 2: Build and run**
 
-Run: `dotnet build src/LoLAdvisor.App/LoLAdvisor.App.csproj`
+Run: `dotnet build src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/LoLAdvisor.App/MainWindow.xaml
+git add src/ParadoxLoLCompanion.App/MainWindow.xaml
 git commit -m "feat: runes and skill-order panel with apply button"
 ```
 
@@ -2042,14 +2042,14 @@ git commit -m "feat: runes and skill-order panel with apply button"
 
 - [ ] **Step 1: Full test suite**
 
-Run: `dotnet test tests/LoLAdvisor.Tests/LoLAdvisor.Tests.csproj`
+Run: `dotnet test tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj`
 Expected: ALL PASS, zero warnings that didn't exist before
 
 - [ ] **Step 2: Live smoke test of the OP.GG client (network)**
 
 Small console check without the game running — replay mode plus the console line is enough:
 
-Run: `dotnet run --project src/LoLAdvisor.App/LoLAdvisor.App.csproj` — enable replay mode in the UI, watch the console pane for `[stats] OP.GG build data loaded for <champ>` (or the graceful `unavailable` line if offline). The item panel should show a `bought in NN% of <champ> builds` reason on statistically-core items, and the runes card should appear.
+Run: `dotnet run --project src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj` — enable replay mode in the UI, watch the console pane for `[stats] OP.GG build data loaded for <champ>` (or the graceful `unavailable` line if offline). The item panel should show a `bought in NN% of <champ> builds` reason on statistically-core items, and the runes card should appear.
 
 - [ ] **Step 3: Update memory/docs if behavior notes emerged, then commit any stragglers**
 

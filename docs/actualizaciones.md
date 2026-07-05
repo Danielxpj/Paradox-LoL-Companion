@@ -26,7 +26,7 @@ No requiere permisos de administrador porque el instalador coloca la app en
 
 1. **Subí el número de versión** en dos lugares (deben coincidir):
    - `version.txt` (raíz del repo) — ej. `1.0.1`
-   - `src/LoLAdvisor.App/LoLAdvisor.App.csproj` → `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+   - `src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj` → `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 2. Ejecutá **`instalador.bat`** (raíz). Genera:
    - `installer/output/ParadoxLoLCompanion-Setup-<ver>.exe` — el instalador.
    - `publish/ParadoxLoLCompanion.exe` — el **asset** para la Release (nombre sin espacios).
@@ -40,7 +40,7 @@ Listo: cualquier app instalada detectará la nueva versión al abrirse y se actu
 
 ## Regenerar el icono
 
-`installer/make-icon.ps1` dibuja `src/LoLAdvisor.App/img/app.ico` (tema Tactical HUD).
+`installer/make-icon.ps1` dibuja `src/ParadoxLoLCompanion.App/img/app.ico` (tema Tactical HUD).
 Correlo con **Windows PowerShell 5.1** (no pwsh 7):
 
 ```

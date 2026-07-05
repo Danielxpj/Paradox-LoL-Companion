@@ -25,7 +25,7 @@ today plus the `partype` rule. Stats are an enhancement, never a dependency.
 
 ## Components
 
-### `LoLAdvisor.Core/Stats/`
+### `ParadoxLoLCompanion.Core/Stats/`
 
 - **`OpggMcpClient`** — speaks MCP (JSON-RPC over streamable HTTP) to
   `https://mcp-api.op.gg/mcp`: `initialize` handshake, then `tools/call` of
@@ -35,7 +35,7 @@ today plus the `partype` rule. Stats are an enhancement, never a dependency.
   - boots and starter priors
   - rune pages (perk ids: keystone, primary/secondary trees, shards)
   - skill order and summoner spells
-- **`StatsCache`** — JSON files at `%LocalAppData%\LoLAdvisor\stats\{patch}\{champKey}-{role}.json`.
+- **`StatsCache`** — JSON files at `%LocalAppData%\ParadoxLoLCompanion\stats\{patch}\{champKey}-{role}.json`.
   Invalidated only by patch change (patch version comes from `DataDragonClient`).
 - **`StatsProvider`** — orchestrates: cache-first, async fetch on miss, returns `null` on
   any failure. Single entry point: `Task<ChampionBuildStats?> GetAsync(champion, role, mapNumber)`.
@@ -87,7 +87,7 @@ opaque reasons).
   and icons from Data Dragon `runesReforged.json`), skill order (e.g. `Q > E > W`), and
   summoner spells.
 - **Apply runes** button: new `LcuConnector` method that
-  1. `GET /lol-perks/v1/pages`, deletes any previous `"LoLAdvisor: {champ}"` page,
+  1. `GET /lol-perks/v1/pages`, deletes any previous `"ParadoxLoLCompanion: {champ}"` page,
   2. `POST /lol-perks/v1/pages` with the recommended perks,
   3. `PUT /lol-perks/v1/currentpage` to select it.
   Failures surface as a non-fatal UI notice.
