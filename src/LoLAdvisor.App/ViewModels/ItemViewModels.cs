@@ -127,28 +127,39 @@ public sealed class AdviceRowViewModel
 /// <summary>Fila del panel "Asesor de items": un item recomendado con costo y razones.</summary>
 public sealed class ItemRecoRowViewModel
 {
-    public ItemRecoRowViewModel(Core.Items.ItemRecommendation reco, string catalogVersion)
+    public ItemRecoRowViewModel(Core.Items.ItemRecommendation reco, string catalogVersion, double gold)
     {
         Name = reco.Item.Name;
         IconUrl = DdragonImages.ItemIcon(catalogVersion, reco.Item.Id);
         Cost = reco.Item.GoldTotal.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+
+        // Anillo radial: progreso del oro actual hacia el costo total del item.
+        GoldFraction = System.Math.Clamp(gold / System.Math.Max(reco.Item.GoldTotal, 1), 0, 1);
+        GoldPercent = (int)System.Math.Round(GoldFraction * 100) + "%";
+
+        // Barra de acción "BUY NOW ▸": qué compra procede AHORA con este oro.
         if (reco.BlockedByFullInventory)
         {
-            // Sin slot libre y la compra no fusiona nada del inventario: primero vender.
-            AffordText = "inventory full — sell something first";
+            BuyBarText = "INVENTORY FULL ▸ SELL FIRST";
+            BuyBarCost = "";
             AffordBrush = Palette.Red;
         }
         else if (reco.Affordable)
         {
-            AffordText = "✓ you can buy it now";
+            BuyBarText = "BUY NOW ✓ FULL ITEM";
+            BuyBarCost = Cost;
+            AffordBrush = Palette.Green;
+        }
+        else if (reco.Purchase.NextComponent is { } component)
+        {
+            BuyBarText = $"BUY NOW ▸ {component.Name}";
+            BuyBarCost = component.GoldTotal.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
             AffordBrush = Palette.Green;
         }
         else
         {
-            var missing = reco.MissingGold.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
-            AffordText = reco.Purchase.NextComponent is null
-                ? $"need {missing} more gold"
-                : $"need {missing} more · buy now: {reco.Purchase.NextComponent.Name}";
+            BuyBarText = $"SAVE {reco.MissingGold.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} MORE";
+            BuyBarCost = "";
             AffordBrush = Palette.Amber;
         }
         Reasons = string.Join(" · ", reco.Reasons);
@@ -157,24 +168,41 @@ public sealed class ItemRecoRowViewModel
         (CategoryLabel, CategoryBrush) = reco.Category switch
         {
             RecommendationCategory.Counter => ("COUNTER", Palette.Red),
-            RecommendationCategory.Defense => ("DEFENSIVE", Palette.Blue),
+            RecommendationCategory.Defense => ("DEFENSIVE", Palette.Cyan),
             RecommendationCategory.Spike => ("POWER SPIKE", Palette.Green),
-            _ => ("CORE", Palette.Muted),
+            _ => ("CORE", Palette.Blue),
         };
-        Priority = (int)System.Math.Round(reco.Priority * 100) + "% match";
+        Priority = (int)System.Math.Round(reco.Priority * 100) + "%";
     }
 
     public string Name { get; }
     public string? IconUrl { get; }
     public string Cost { get; }
-    public string AffordText { get; }
+    /// <summary>Progreso [0,1] del oro actual hacia el costo total (anillo radial).</summary>
+    public double GoldFraction { get; }
+    public string GoldPercent { get; }
+    public string BuyBarText { get; }
+    public string BuyBarCost { get; }
     public Brush AffordBrush { get; }
     public string Reasons { get; }
     /// <summary>Etiqueta de por qué está en este lugar del orden (CORE/COUNTER/DEFENSIVE/POWER SPIKE).</summary>
     public string CategoryLabel { get; }
     public Brush CategoryBrush { get; }
-    /// <summary>Prioridad relativa a la recomendación principal ("100% match" = la mejor).</summary>
+    /// <summary>Prioridad relativa a la recomendación principal ("100%" = la mejor).</summary>
     public string Priority { get; }
+}
+
+/// <summary>Tile del panel ENEMY X-RAY: retrato, KDA, rol y estado del enemigo.</summary>
+public sealed class EnemyTileViewModel
+{
+    public string? IconUrl { get; init; }
+    public string Name { get; init; } = "";
+    public string Kda { get; init; } = "";
+    /// <summary>Rol táctico (BURST/TANK/MARKSMAN/CC/…); "THREAT" reemplaza al rol si es el más fed.</summary>
+    public string Tag { get; init; } = "";
+    public bool IsTopThreat { get; init; }
+    /// <summary>"18s" mientras está muerto; vacío si está vivo.</summary>
+    public string RespawnText { get; init; } = "";
 }
 
 /// <summary>Una sugerencia de venta con su ícono (fila del panel de venta).</summary>

@@ -19,54 +19,89 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Marca + contexto actual (Idle / In game / Champ Select) -->
+                <!-- Marca + contexto actual (badge rojo cuando hay partida en vivo) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="PARADOX" FontFamily="{StaticResource DisplayFont}" FontSize="22"
                                Foreground="{StaticResource Gold}" VerticalAlignment="Center" />
                     <TextBlock Text="LoL Companion" FontFamily="{StaticResource DisplayFont}" FontSize="22"
-                               Foreground="{StaticResource GoldBright}" Margin="8,0,0,0" VerticalAlignment="Center" />
-                    <Border Style="{StaticResource StatusPill}" Margin="16,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding ContextLabel}" Foreground="{StaticResource Cyan}"
-                                   FontFamily="{StaticResource DisplayFontCondensed}" FontSize="13"
-                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                               Foreground="{StaticResource TextPrimary}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <Border Margin="18,0,0,0" VerticalAlignment="Center" Padding="10,4"
+                            BorderThickness="1" CornerRadius="2">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="BorderBrush" Value="{StaticResource CardBorderStrong}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ContextIsLive}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="●" FontSize="9" VerticalAlignment="Center" Margin="0,0,7,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ContextIsLive}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Danger}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Text="{Binding ContextLabel}" FontFamily="{StaticResource HudFont}"
+                                       FontSize="12" FontWeight="Bold" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ContextIsLive}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Danger}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
                     </Border>
                 </StackPanel>
 
                 <!-- Estado de conexiones + acciones -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Style="{StaticResource StatusPill}" Margin="0,0,10,0"
-                            ToolTip="Connection to the running game (Live Client Data API)">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="9" Height="9" Fill="{Binding LiveStatusBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="Game" Margin="7,0,5,0" Foreground="{StaticResource TextMuted}"
-                                       FontSize="12" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding LiveStatusText}" Foreground="{StaticResource TextPrimary}"
-                                       FontSize="12" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                    <Border Style="{StaticResource StatusPill}" Margin="0,0,14,0"
-                            ToolTip="Connection to the LoL client (champ select, queue info, runes)">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="9" Height="9" Fill="{Binding LcuStatusBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="Client" Margin="7,0,5,0" Foreground="{StaticResource TextMuted}"
-                                       FontSize="12" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding LcuStatusText}" Foreground="{StaticResource TextPrimary}"
-                                       FontSize="12" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                    <Button Content="Update data" Command="{Binding CheckUpdatesCommand}"
-                            Margin="0,0,14,0" VerticalAlignment="Center"
+                    <StackPanel Orientation="Horizontal" Margin="0,0,14,0" VerticalAlignment="Center"
+                                ToolTip="Connection to the running game (Live Client Data API)">
+                        <Ellipse Width="8" Height="8" Fill="{Binding LiveStatusBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="GAME" Margin="7,0,5,0" Foreground="{StaticResource TextFaint}"
+                                   FontFamily="{StaticResource HudFont}" FontSize="10.5" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding LiveStatusText}" Foreground="{StaticResource TextMuted}"
+                                   FontFamily="{StaticResource HudFont}" FontSize="10.5" VerticalAlignment="Center"
+                                   MaxWidth="130" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center"
+                                ToolTip="Connection to the LoL client (champ select, queue info, runes)">
+                        <Ellipse Width="8" Height="8" Fill="{Binding LcuStatusBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="CLIENT" Margin="7,0,5,0" Foreground="{StaticResource TextFaint}"
+                                   FontFamily="{StaticResource HudFont}" FontSize="10.5" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding LcuStatusText}" Foreground="{StaticResource TextMuted}"
+                                   FontFamily="{StaticResource HudFont}" FontSize="10.5" VerticalAlignment="Center"
+                                   MaxWidth="150" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button Content="UPDATE DATA" Command="{Binding CheckUpdatesCommand}"
+                            Margin="0,0,12,0" VerticalAlignment="Center"
                             ToolTip="Checks whether a newer version of the game data (Data Dragon) is available" />
-                    <Border Background="{StaticResource PageBg}" BorderBrush="{StaticResource CardBorder}"
-                            BorderThickness="1" CornerRadius="4" Padding="10,4">
+                    <Border BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1"
+                            CornerRadius="2" Padding="10,4">
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="Replay" IsChecked="{Binding ReplayMode}" VerticalAlignment="Center"
+                            <CheckBox Content="REPLAY" IsChecked="{Binding ReplayMode}" VerticalAlignment="Center"
                                       ToolTip="Demo mode: feeds a recorded game so you can explore the app without LoL running" />
-                            <ComboBox SelectedIndex="{Binding ReplayScenarioIndex}" Margin="10,0,0,0"
-                                      VerticalAlignment="Center" MinWidth="130" Height="26"
+                            <TextBlock Text="/" Foreground="{StaticResource TextFaint}" Margin="10,0,4,0"
+                                       VerticalAlignment="Center" FontFamily="{StaticResource HudFont}" />
+                            <ComboBox SelectedIndex="{Binding ReplayScenarioIndex}"
+                                      VerticalAlignment="Center" MinWidth="130" Height="24"
                                       ToolTip="Replay scenario">
-                                <ComboBoxItem Content="Rift" />
-                                <ComboBoxItem Content="ARAM: Mayhem" />
+                                <ComboBoxItem Content="RIFT" />
+                                <ComboBoxItem Content="ARAM: MAYHEM" />
                             </ComboBox>
                         </StackPanel>
                     </Border>
@@ -154,22 +189,200 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="0,4,0,16">
 
-                            <!-- ===== ASESOR DE ITEMS (feature principal, ancho completo) ===== -->
-                            <TextBlock Text="ITEM ADVISOR" Style="{StaticResource SectionHeader}" Margin="10,6,0,6" />
-                            <Border Style="{StaticResource Card}" Padding="16,12">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding ThreatSummary}" FontSize="15" FontWeight="SemiBold"
-                                               TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding ThreatSummary}" Value="">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                            <!-- ===== ENEMY X-RAY: radiografía del daño enemigo ===== -->
+                            <Border Padding="18,14">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding PhysPct}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="5*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,18,0">
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock DockPanel.Dock="Right" Text="damage weighted by how fed each enemy is"
+                                                       Style="{StaticResource SectionComment}" VerticalAlignment="Center" />
+                                            <TextBlock Text="ENEMY X-RAY" FontFamily="{StaticResource HudFont}" FontSize="13"
+                                                       FontWeight="Bold" Foreground="{StaticResource Gold}" />
+                                        </DockPanel>
+                                        <Grid Margin="0,2,0,6">
+                                            <StackPanel HorizontalAlignment="Left">
+                                                <TextBlock Text="PHYSICAL" FontFamily="{StaticResource HudFont}" FontSize="10.5"
+                                                           Foreground="{StaticResource Danger}" />
+                                                <TextBlock Text="{Binding PhysPct}" FontFamily="{StaticResource DisplayFont}"
+                                                           FontSize="30" Foreground="{StaticResource Danger}" />
+                                            </StackPanel>
+                                            <StackPanel HorizontalAlignment="Right">
+                                                <TextBlock Text="MAGIC" FontFamily="{StaticResource HudFont}" FontSize="10.5"
+                                                           Foreground="{StaticResource Info}" HorizontalAlignment="Right" />
+                                                <TextBlock Text="{Binding MagicPct}" FontFamily="{StaticResource DisplayFont}"
+                                                           FontSize="30" Foreground="{StaticResource Info}" HorizontalAlignment="Right" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Height="10" CornerRadius="2" Background="{Binding DamageSplitBrush}" />
+                                        <Grid Margin="0,12,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <DockPanel Grid.Column="0">
+                                                <Border DockPanel.Dock="Left" Width="3" Background="{StaticResource Danger}" Margin="0,2,10,2" />
+                                                <StackPanel>
+                                                    <TextBlock Text="RECOMMENDED" Style="{StaticResource CardTitle}" />
+                                                    <TextBlock Text="{Binding RecommendedLine}" FontFamily="{StaticResource HudFont}"
+                                                               FontSize="12" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                            <DockPanel Grid.Column="1" Margin="14,0,0,0">
+                                                <DockPanel.Style>
+                                                    <Style TargetType="DockPanel">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SustainLine}" Value="">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </DockPanel.Style>
+                                                <Border DockPanel.Dock="Left" Width="3" Background="{StaticResource Neon}" Margin="0,2,10,2" />
+                                                <StackPanel>
+                                                    <TextBlock Text="SUSTAIN" Style="{StaticResource CardTitle}" />
+                                                    <TextBlock Text="{Binding SustainLine}" FontFamily="{StaticResource HudFont}"
+                                                               FontSize="12" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Tiles de enemigos: retrato, KDA, rol; el más fed en rojo. -->
+                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding EnemyTiles}" VerticalAlignment="Center">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Width="88" Margin="3,0" Padding="6,8" CornerRadius="2" BorderThickness="1">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+                                                            <Setter Property="Background" Value="#0D120E" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsTopThreat}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel>
+                                                        <Grid Width="44" Height="44" HorizontalAlignment="Center">
+                                                            <Border CornerRadius="2" BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                                                <Border.Background>
+                                                                    <ImageBrush ImageSource="{Binding IconUrl, TargetNullValue={x:Null}}" Stretch="UniformToFill" />
+                                                                </Border.Background>
+                                                            </Border>
+                                                            <!-- Overlay de respawn cuando está muerto. -->
+                                                            <Border CornerRadius="2" Background="#C50A0D0B">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding RespawnText}" Value="">
+                                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="{Binding RespawnText}" FontFamily="{StaticResource HudFont}"
+                                                                           FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"
+                                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            </Border>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding Name}" FontFamily="{StaticResource HudFont}" FontSize="10.5"
+                                                                   Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center"
+                                                                   Margin="0,5,0,0" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Kda}" FontFamily="{StaticResource HudFont}" FontSize="10"
+                                                                   Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" />
+                                                        <Border HorizontalAlignment="Center" Margin="0,4,0,0" CornerRadius="2" Padding="5,1">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="Transparent" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsTopThreat}" Value="True">
+                                                                            <Setter Property="Background" Value="{StaticResource Danger}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding Tag}" FontFamily="{StaticResource HudFont}" FontSize="9" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsTopThreat}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#0B0E0C" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </Border>
+
+                            <!-- ===== ASESOR DE ITEMS ===== -->
+                            <DockPanel Margin="10,14,10,4">
+                                <Border DockPanel.Dock="Right" BorderBrush="{StaticResource GoldBorder}" BorderThickness="1"
+                                        CornerRadius="2" Padding="14,6" Background="#151109">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBorder}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding GoldText}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="10" Height="10" Fill="{StaticResource Gold}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding GoldText}" Margin="9,0,7,0" FontFamily="{StaticResource DisplayFont}"
+                                                   FontSize="17" Foreground="{StaticResource GoldBright}" VerticalAlignment="Center" />
+                                        <TextBlock Text="GOLD" FontFamily="{StaticResource HudFont}" FontSize="10"
+                                                   Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="ITEM ADVISOR" FontFamily="{StaticResource HudFont}" FontSize="13"
+                                               FontWeight="Bold" Foreground="{StaticResource Gold}" />
+                                    <TextBlock Text="// answers to the enemy threat" Style="{StaticResource SectionComment}"
+                                               VerticalAlignment="Center" Margin="10,0,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                            <!-- Selector de build como segmentos + avisos (starter/tienda/hint). -->
+                            <StackPanel Margin="10,2,10,4">
+                                <ItemsControl ItemsSource="{Binding BuildRoles}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="BuildRole" Content="{Binding Label}"
+                                                         Style="{StaticResource SegmentRadio}"
+                                                         IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="0,2,0,2" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                                     <!-- Aviso de tienda abierta (ARAM: solo se compra muerto). -->
                                     <TextBlock Text="{Binding ShopAlertLine}" FontSize="14" FontWeight="Bold"
                                                TextWrapping="Wrap" Foreground="{StaticResource Amber}" Margin="0,6,0,0">
@@ -204,26 +417,9 @@
                                                    TextWrapping="Wrap" Foreground="{StaticResource Cyan}"
                                                    VerticalAlignment="Center" />
                                     </DockPanel>
-                                    <!-- Selector de build: Auto (detección automática) o un rol forzado por el jugador. -->
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                        <TextBlock Text="Build:" FontSize="13" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource Gold}"
-                                                   VerticalAlignment="Center" Margin="0,0,12,0" />
-                                        <ItemsControl ItemsSource="{Binding BuildRoles}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <RadioButton GroupName="BuildRole" Content="{Binding Label}"
-                                                                 IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                                 FontSize="13" Margin="0,2,16,2" VerticalAlignment="Center" />
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding ItemPanelHint}" FontSize="14" TextWrapping="Wrap"
-                                               Foreground="{StaticResource TextMuted}" Margin="0,6,0,0">
+                                    <TextBlock Text="{Binding ItemPanelHint}" FontSize="13" TextWrapping="Wrap"
+                                               FontFamily="{StaticResource HudFont}"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,8,0,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Style.Triggers>
@@ -234,8 +430,7 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                </StackPanel>
-                            </Border>
+                            </StackPanel>
                             <ItemsControl ItemsSource="{Binding ItemRecos}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate>
@@ -244,38 +439,62 @@
                                     <DataTemplate>
                                         <Border Style="{StaticResource Card}" Padding="16,14">
                                             <StackPanel>
-                                                <!-- Barra de acento: cian = te alcanza ya, ámbar = juntando oro. -->
-                                                <Border Height="3" CornerRadius="2" Background="{Binding AffordBrush}"
-                                                        Margin="0,0,0,10" />
-                                                <!-- Insignia de prioridad: categoría (por qué) + match relativo al top. -->
-                                                <DockPanel Margin="0,0,0,8">
-                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Priority}" FontSize="12"
-                                                               FontWeight="SemiBold" Foreground="{StaticResource TextFaint}"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding CategoryLabel}" FontSize="12" FontWeight="Bold"
-                                                               FontFamily="{StaticResource DisplayFontCondensed}"
-                                                               Foreground="{Binding CategoryBrush}" />
-                                                </DockPanel>
-                                                <DockPanel>
-                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Cost}" FontSize="14"
-                                                               FontFamily="{StaticResource DisplayFont}"
-                                                               Foreground="{StaticResource Gold}" Margin="8,0,0,0"
-                                                               VerticalAlignment="Center" />
-                                                    <Border DockPanel.Dock="Left" Width="30" Height="30" CornerRadius="4"
-                                                            Margin="0,0,8,0" VerticalAlignment="Center"
-                                                            BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
-                                                        <Image Source="{Binding IconUrl, TargetNullValue={x:Null}}"
-                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                <!-- Chip de categoría + prioridad relativa. -->
+                                                <DockPanel Margin="0,0,0,12">
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Priority}"
+                                                               FontFamily="{StaticResource HudFont}" FontSize="12" FontWeight="Bold"
+                                                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                                    <Border Style="{StaticResource Chip}" Background="{Binding CategoryBrush}"
+                                                            HorizontalAlignment="Left">
+                                                        <TextBlock Style="{StaticResource ChipText}" Foreground="#0B0E0C"
+                                                                   Text="{Binding CategoryLabel}" />
                                                     </Border>
-                                                    <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="Bold"
-                                                               Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap"
-                                                               VerticalAlignment="Center" />
                                                 </DockPanel>
-                                                <TextBlock Text="{Binding AffordText}" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{Binding AffordBrush}" TextWrapping="Wrap"
-                                                           Margin="0,8,0,0" />
-                                                <TextBlock Text="{Binding Reasons}" FontSize="13" TextWrapping="Wrap"
-                                                           Foreground="{StaticResource TextMuted}" Margin="0,6,0,0" />
+                                                <StackPanel Orientation="Horizontal">
+                                                    <!-- Anillo radial: progreso del oro hacia el costo total. -->
+                                                    <Grid Width="58" Height="62" Margin="0,0,12,0">
+                                                        <Ellipse Width="55" Height="55" VerticalAlignment="Top"
+                                                                 Stroke="{StaticResource CardBorderStrong}" StrokeThickness="3" />
+                                                        <Path Stroke="{Binding AffordBrush}" StrokeThickness="3"
+                                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                              Data="{Binding GoldFraction, Converter={StaticResource GoldArc}}" />
+                                                        <Ellipse Width="40" Height="40" VerticalAlignment="Top" Margin="0,7.5,0,0">
+                                                            <Ellipse.Fill>
+                                                                <ImageBrush ImageSource="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                                            Stretch="UniformToFill" />
+                                                            </Ellipse.Fill>
+                                                        </Ellipse>
+                                                        <Border Background="#0B0E0C" CornerRadius="2" Padding="4,1"
+                                                                HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                                            <TextBlock Text="{Binding GoldPercent}" FontFamily="{StaticResource HudFont}"
+                                                                       FontSize="9" FontWeight="Bold" Foreground="{Binding AffordBrush}" />
+                                                        </Border>
+                                                    </Grid>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold"
+                                                                   Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" />
+                                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                            <Ellipse Width="9" Height="9" Fill="{StaticResource Gold}" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding Cost}" Margin="7,0,0,0"
+                                                                       FontFamily="{StaticResource DisplayFont}" FontSize="14"
+                                                                       Foreground="{StaticResource Gold}" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <!-- Barra de acción: la compra que procede AHORA. -->
+                                                <Border BorderBrush="{Binding AffordBrush}" BorderThickness="1" CornerRadius="2"
+                                                        Padding="10,5" Margin="0,12,0,0" Background="#0D120E">
+                                                    <DockPanel>
+                                                        <TextBlock DockPanel.Dock="Right" Text="{Binding BuyBarCost}"
+                                                                   FontFamily="{StaticResource HudFont}" FontSize="11"
+                                                                   Foreground="{Binding AffordBrush}" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding BuyBarText}" FontFamily="{StaticResource HudFont}"
+                                                                   FontSize="11" FontWeight="Bold" Foreground="{Binding AffordBrush}"
+                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    </DockPanel>
+                                                </Border>
+                                                <TextBlock Text="{Binding Reasons}" FontSize="12" TextWrapping="Wrap"
+                                                           Foreground="{StaticResource TextMuted}" Margin="0,10,0,0" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -292,14 +511,41 @@
                                     </Style>
                                 </Border.Style>
                                 <DockPanel>
-                                    <Border DockPanel.Dock="Left" Width="24" Height="24" CornerRadius="4"
-                                            Margin="0,0,10,0" VerticalAlignment="Center"
+                                    <!-- SKILLS a la derecha (mismo renglón que las botas, como en el HUD). -->
+                                    <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SkillPriorityLine}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBlock Text="SKILLS" Style="{StaticResource CardTitle}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding SkillPriorityLine}" FontFamily="{StaticResource HudFont}"
+                                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"
+                                                   HorizontalAlignment="Right" />
+                                    </StackPanel>
+                                    <Border DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="2"
+                                            Margin="0,0,12,0" VerticalAlignment="Center"
                                             BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
                                         <Image Source="{Binding BootsIconUrl, TargetNullValue={x:Null}}"
                                                RenderOptions.BitmapScalingMode="HighQuality" />
                                     </Border>
-                                    <TextBlock Text="{Binding BootsLine}" FontSize="13" TextWrapping="Wrap"
-                                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding BootsName}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                            <Border Style="{StaticResource Chip}" Margin="10,0,0,0"
+                                                    BorderBrush="{StaticResource Neon}" BorderThickness="1" Background="#12321F">
+                                                <TextBlock Style="{StaticResource ChipText}" Foreground="{StaticResource Neon}"
+                                                           Text="{Binding BootsChip}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding BootsSub}" FontFamily="{StaticResource HudFont}" FontSize="11"
+                                                   Foreground="{StaticResource TextFaint}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                                    </StackPanel>
                                 </DockPanel>
                             </Border>
                             <!-- Items que conviene vender (ya no pegan con la build). -->
@@ -345,55 +591,41 @@
                                            FontWeight="SemiBold" Foreground="{StaticResource Cyan}" />
                             </Border>
 
-                            <!-- Las runas viven SOLO en la pestaña Champ Select (se eligen antes
-                                 de la partida); aquí en Match solo queda el orden de skills. -->
-                            <Border Padding="16,10">
+                            <!-- ===== ARAM: MAYHEM — strip de augments estilo HUD ===== -->
+                            <Border Padding="14,10">
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource Card}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SkillOrderLine}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="{Binding SkillOrderLine}" FontSize="13" TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextPrimary}" />
-                            </Border>
-
-                            <!-- ===== ARAM: MAYHEM — tracker de picks de augment y guía ===== -->
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding MayhemStatus}" Value="">
                                                 <Setter Property="Visibility" Value="Collapsed" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="MAYHEM — AUGMENTS" Style="{StaticResource SectionHeader}" />
-                                <Border Style="{StaticResource Card}" Padding="16,12">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding MayhemStatus}" FontSize="14" FontWeight="SemiBold"
-                                                   TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" />
-                                        <TextBlock Text="{Binding MayhemPickNow}" FontSize="14" FontWeight="Bold"
-                                                   TextWrapping="Wrap" Foreground="{StaticResource Amber}" Margin="0,6,0,0">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding MayhemPickNow}" Value="">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                        <TextBlock Text="{Binding MayhemGuidance}" FontSize="13" TextWrapping="Wrap"
-                                                   Foreground="{StaticResource TextMuted}" Margin="0,8,0,0" />
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+                                </Border.Style>
+                                <WrapPanel>
+                                    <Border Style="{StaticResource Chip}" Background="{StaticResource Gold}" Margin="0,2,10,2">
+                                        <TextBlock Style="{StaticResource ChipText}" Foreground="#0B0E0C" Text="AUGMENTS" />
+                                    </Border>
+                                    <TextBlock Text="{Binding MayhemStatus}" FontFamily="{StaticResource HudFont}" FontSize="12"
+                                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,2,0,2" />
+                                    <TextBlock Text="{Binding MayhemPickNow}" FontFamily="{StaticResource HudFont}" FontSize="12"
+                                               FontWeight="Bold" Foreground="{StaticResource Amber}"
+                                               VerticalAlignment="Center" Margin="14,2,0,2">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding MayhemPickNow}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding MayhemGuidance}" FontFamily="{StaticResource HudFont}" FontSize="11.5"
+                                               TextWrapping="Wrap" Foreground="{StaticResource TextMuted}"
+                                               VerticalAlignment="Center" Margin="14,2,0,2" />
+                                </WrapPanel>
+                            </Border>
 
                             <TextBlock Text="SUMMARY" Style="{StaticResource SectionHeader}" />
                             <!-- UniformGrid sin anchos fijos: las tarjetas se reparten el ancho
@@ -406,9 +638,10 @@
                                     <DataTemplate>
                                         <Border Style="{StaticResource Card}" Padding="16,12">
                                             <StackPanel>
-                                                <Border Height="3" CornerRadius="2" Background="{Binding Accent}" Margin="0,0,0,10" />
                                                 <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" />
                                                 <TextBlock Style="{StaticResource CardValue}" Text="{Binding Value}" />
+                                                <!-- Subrayado de acento (estilo HUD: la línea va abajo). -->
+                                                <Border Height="3" CornerRadius="2" Background="{Binding Accent}" Margin="0,8,0,0" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>

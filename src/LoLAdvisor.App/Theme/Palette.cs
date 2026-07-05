@@ -3,20 +3,21 @@ using System.Windows.Media;
 namespace LoLAdvisor.App.Theme;
 
 /// <summary>
-/// Colores del tema "Hextech HUD" (oscuro) para uso desde ViewModels.
+/// Colores del tema "Tactical HUD" (oscuro, verde neón) para uso desde ViewModels.
 /// Deben mantenerse en sintonía con los brushes de App.xaml.
 /// </summary>
 public static class Palette
 {
-    public static readonly Brush Blue = Frozen("#5383E8");
-    public static readonly Brush Green = Frozen("#0AC8B9");
-    public static readonly Brush Amber = Frozen("#E8A33D");
-    public static readonly Brush Red = Frozen("#E84057");
+    public static readonly Brush Blue = Frozen("#3AA6FF");
+    public static readonly Brush Green = Frozen("#2BE38B");
+    public static readonly Brush Amber = Frozen("#F0B44C");
+    public static readonly Brush Red = Frozen("#FF4A3C");
     public static readonly Brush Purple = Frozen("#B07CE8");
-    public static readonly Brush Gold = Frozen("#C8AA6E");
-    public static readonly Brush Muted = Frozen("#8CA3BC");
-    public static readonly Brush TeamOrder = Frozen("#5383E8"); // azul
-    public static readonly Brush TeamChaos = Frozen("#E84057"); // rojo
+    public static readonly Brush Gold = Frozen("#F0B44C");
+    public static readonly Brush Cyan = Frozen("#3ADFEF");
+    public static readonly Brush Muted = Frozen("#8CA396");
+    public static readonly Brush TeamOrder = Frozen("#3AA6FF"); // azul
+    public static readonly Brush TeamChaos = Frozen("#FF4A3C"); // rojo
 
     private static Brush Frozen(string hex)
     {

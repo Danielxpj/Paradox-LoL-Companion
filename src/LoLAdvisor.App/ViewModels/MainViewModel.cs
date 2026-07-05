@@ -97,14 +97,14 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         // Los labels coinciden con ItemAdvisor.ArchetypeLabel.
         BuildRoles = new ObservableCollection<BuildRoleOptionViewModel>
         {
-            new("Auto", null, OnBuildRoleSelected, isChecked: true),
-            new("Marksman", BuildArchetype.Marksman, OnBuildRoleSelected),
-            new("Mage", BuildArchetype.Mage, OnBuildRoleSelected),
-            new("Assassin", BuildArchetype.AdAssassin, OnBuildRoleSelected),
-            new("Fighter", BuildArchetype.AdFighter, OnBuildRoleSelected),
-            new("AP Fighter", BuildArchetype.ApFighter, OnBuildRoleSelected),
-            new("Tank", BuildArchetype.Tank, OnBuildRoleSelected),
-            new("Support", BuildArchetype.Enchanter, OnBuildRoleSelected),
+            new("AUTO", null, OnBuildRoleSelected, isChecked: true),
+            new("MARKSMAN", BuildArchetype.Marksman, OnBuildRoleSelected),
+            new("MAGE", BuildArchetype.Mage, OnBuildRoleSelected),
+            new("ASSASSIN", BuildArchetype.AdAssassin, OnBuildRoleSelected),
+            new("FIGHTER", BuildArchetype.AdFighter, OnBuildRoleSelected),
+            new("AP FIGHTER", BuildArchetype.ApFighter, OnBuildRoleSelected),
+            new("TANK", BuildArchetype.Tank, OnBuildRoleSelected),
+            new("SUPPORT", BuildArchetype.Enchanter, OnBuildRoleSelected),
         };
 
         PauseConsoleCommand = new RelayCommand(TogglePauseConsole);
@@ -135,6 +135,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ObservableCollection<ItemRecoRowViewModel> ItemRecos { get; } = new();
     public ObservableCollection<BenchSuggestionRowViewModel> BenchSuggestions { get; } = new();
     public ObservableCollection<SellRowViewModel> SellRows { get; } = new();
+    public ObservableCollection<EnemyTileViewModel> EnemyTiles { get; } = new();
     public ObservableCollection<ChampCellViewModel> MyTeam { get; } = new();
     public ObservableCollection<ChampCellViewModel> TheirTeam { get; } = new();
     public ObservableCollection<string> ConsoleLines { get; } = new();
@@ -171,8 +172,40 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private string _threatSummary = "";
     public string ThreatSummary { get => _threatSummary; private set => SetProperty(ref _threatSummary, value); }
 
+    // --- Panel ENEMY X-RAY ---
+    private string _physPct = "";
+    public string PhysPct { get => _physPct; private set => SetProperty(ref _physPct, value); }
+
+    private string _magicPct = "";
+    public string MagicPct { get => _magicPct; private set => SetProperty(ref _magicPct, value); }
+
+    private Brush _damageSplitBrush = Brushes.Transparent;
+    /// <summary>Barra física/mágica: gradiente con corte duro en la fracción física.</summary>
+    public Brush DamageSplitBrush { get => _damageSplitBrush; private set => SetProperty(ref _damageSplitBrush, value); }
+
+    private string _recommendedLine = "";
+    public string RecommendedLine { get => _recommendedLine; private set => SetProperty(ref _recommendedLine, value); }
+
+    private string _sustainLine = "";
+    public string SustainLine { get => _sustainLine; private set => SetProperty(ref _sustainLine, value); }
+
+    private string _goldText = "";
+    public string GoldText { get => _goldText; private set => SetProperty(ref _goldText, value); }
+
+    private bool _contextIsLive;
+    public bool ContextIsLive { get => _contextIsLive; private set => SetProperty(ref _contextIsLive, value); }
+
     private string _bootsLine = "";
     public string BootsLine { get => _bootsLine; private set => SetProperty(ref _bootsLine, value); }
+
+    private string _bootsName = "";
+    public string BootsName { get => _bootsName; private set => SetProperty(ref _bootsName, value); }
+
+    private string _bootsChip = "";
+    public string BootsChip { get => _bootsChip; private set => SetProperty(ref _bootsChip, value); }
+
+    private string _bootsSub = "";
+    public string BootsSub { get => _bootsSub; private set => SetProperty(ref _bootsSub, value); }
 
     private string? _bootsIconUrl;
     public string? BootsIconUrl { get => _bootsIconUrl; private set => SetProperty(ref _bootsIconUrl, value); }
@@ -197,6 +230,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private string _skillOrderLine = "";
     public string SkillOrderLine { get => _skillOrderLine; private set => SetProperty(ref _skillOrderLine, value); }
+
+    private string _skillPriorityLine = "";
+    /// <summary>Versión corta ("Q › W › E") para la fila de botas del HUD.</summary>
+    public string SkillPriorityLine { get => _skillPriorityLine; private set => SetProperty(ref _skillPriorityLine, value); }
 
     private string _runesStatus = "";
     public string RunesStatus { get => _runesStatus; private set => SetProperty(ref _runesStatus, value); }
@@ -332,12 +369,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    private ChampionProfiler? _profilerForTiles;
+
     private void ApplyCatalog(IStaticData catalog, string logLine)
     {
         _catalog = catalog;
         // El provider lee el override vigente en cada tick: feed y panel siempre coinciden.
         _engine = AdviceEngine.CreateWith(catalog, _config, () => _forcedArchetype);
         _itemAdvisor = new ItemAdvisor(catalog, _config.Items);
+        _profilerForTiles = new ChampionProfiler(catalog, _config.Items);
         _benchAdvisor = new TeamBalanceAdvisor(catalog, _config.Items);
         _mayhemAdvisor = new MayhemAdvisor(catalog, _config.Items, _config.Mayhem);
         AppendConsole(logLine);
@@ -422,6 +462,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
         _clockCard.Value = TimeFmt.Clock(state.GameData.GameTime);
         _goldCard.Value = ((int)(state.ActivePlayer?.CurrentGold ?? 0)).ToString("N0", CultureInfo.InvariantCulture);
+        GoldText = _goldCard.Value;
         _levelCard.Value = (state.ActivePlayer?.Level ?? 0).ToString();
 
         var me = state.ActivePlayerEntry;
@@ -621,6 +662,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             RunesLine = "";
             SkillOrderLine = "";
+            SkillPriorityLine = "";
             RunesStatus = "";
             return;
         }
@@ -630,6 +672,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         SkillOrderLine = order.Count == 0
             ? ""
             : $"Skills: {SkillPriority(order)}   (first levels: {string.Join(" ", order.Take(6))}…)";
+        SkillPriorityLine = order.Count == 0 ? "" : SkillPriority(order).Replace(" > ", " › ");
     }
 
     /// <summary>"Q > E > W": prioridad de maxeo por frecuencia en el orden de 15 niveles (R aparte).</summary>
@@ -660,7 +703,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (plan is null)
         {
             ThreatSummary = "";
+            PhysPct = "";
+            MagicPct = "";
+            RecommendedLine = "";
+            SustainLine = "";
+            EnemyTiles.Clear();
             BootsLine = "";
+            BootsName = "";
+            BootsChip = "";
+            BootsSub = "";
             BootsIconUrl = null;
             SellLine = "";
             SellRows.Clear();
@@ -678,9 +729,27 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         ThreatSummary = plan.InventoryFull
             ? plan.ThreatSummary + "  |  Inventory FULL — sell before buying"
             : plan.ThreatSummary;
+        var gold = state.ActivePlayer?.CurrentGold ?? 0;
         foreach (var reco in plan.Recommendations)
-            ItemRecos.Add(new ItemRecoRowViewModel(reco, _catalog.Version));
+            ItemRecos.Add(new ItemRecoRowViewModel(reco, _catalog.Version, gold));
+        RebuildEnemyXRay(state, plan);
         BootsLine = plan.Boots is null ? "" : FormatBoots(plan.Boots);
+        if (plan.Boots is { } boots)
+        {
+            BootsName = boots.Boots.Name;
+            BootsChip = boots.Purchase.CanFinishNow
+                ? "✓ BUY NOW"
+                : boots.Purchase.NextComponent is { } comp
+                    ? $"▸ BUY {comp.Name.ToUpperInvariant()}"
+                    : $"SAVE {boots.MissingGold.ToString("N0", CultureInfo.InvariantCulture)}";
+            BootsSub = boots.Reason;
+        }
+        else
+        {
+            BootsName = "";
+            BootsChip = "";
+            BootsSub = "";
+        }
         BootsIconUrl = plan.Boots is null
             ? null
             : DdragonImages.ItemIcon(_catalog.Version, plan.Boots.Boots.Id);
@@ -699,6 +768,86 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             : DdragonImages.ItemIcon(_catalog.Version, plan.Starter.Item.Id);
         ShopAlertLine = plan.ShopAlert ?? "";
         LateTipsLine = string.Join("   ·   ", plan.LateTips);
+    }
+
+    /// <summary>
+    /// Panel ENEMY X-RAY: reparto de daño, recomendación defensiva de una línea,
+    /// aviso de sustain y un tile por enemigo (rol/amenaza/respawn).
+    /// </summary>
+    private void RebuildEnemyXRay(GameState state, ItemAdvicePlan plan)
+    {
+        var t = plan.Threat;
+        PhysPct = ((int)Math.Round(t.PhysicalShare * 100)).ToString(CultureInfo.InvariantCulture) + "%";
+        MagicPct = ((int)Math.Round(t.MagicalShare * 100)).ToString(CultureInfo.InvariantCulture) + "%";
+
+        // Barra partida: rojo hasta la fracción física, azul el resto (corte duro).
+        var f = Fuzzy.Clamp01(t.PhysicalShare);
+        var split = new LinearGradientBrush(new GradientStopCollection
+        {
+            new GradientStop((Color)ColorConverter.ConvertFromString("#FF4A3C"), 0),
+            new GradientStop((Color)ColorConverter.ConvertFromString("#FF4A3C"), f),
+            new GradientStop((Color)ColorConverter.ConvertFromString("#3AA6FF"), f),
+            new GradientStop((Color)ColorConverter.ConvertFromString("#3AA6FF"), 1),
+        }, new System.Windows.Point(0, 0), new System.Windows.Point(1, 0));
+        split.Freeze();
+        DamageSplitBrush = split;
+
+        // "Armor & anti-burst · not MR": la defensa primaria + counters activos.
+        var primary = t.PhysicalShare >= 0.55 ? "Armor"
+            : t.MagicalShare >= 0.55 ? "Magic resist"
+            : "Mixed resists";
+        var extras = new List<string>();
+        if (t.Burst > 0.5) extras.Add("anti-burst");
+        if (t.CritThreat > 0.5) extras.Add("anti-crit");
+        if (t.EnemyTankiness > 0.5) extras.Add("pen/on-hit");
+        var notHint = t.PhysicalShare >= 0.55 && t.MagicalShare < 0.2 ? " · not MR"
+            : t.MagicalShare >= 0.55 && t.PhysicalShare < 0.2 ? " · not armor"
+            : "";
+        RecommendedLine = primary
+            + (extras.Count > 0 ? " & " + string.Join(" & ", extras) : "")
+            + notHint;
+
+        SustainLine = t.Sustain > 0.3 && t.TopSustainName is not null
+            ? $"Grievous wounds › {t.TopSustainName} heals"
+            : "";
+
+        EnemyTiles.Clear();
+        var me = state.ActivePlayerEntry;
+        if (me is null)
+            return;
+        foreach (var p in state.AllPlayers.Where(p => p.Team != me.Team))
+        {
+            var champ = _catalog.ResolveChampion(p.ChampionName, p.RawChampionName);
+            var isTop = t.TopThreatName is { } top && top.StartsWith(p.ChampionName, StringComparison.Ordinal);
+            EnemyTiles.Add(new EnemyTileViewModel
+            {
+                IconUrl = DdragonImages.ChampionIcon(_catalog.Version, champ?.Key),
+                Name = p.ChampionName,
+                Kda = p.Scores.Kda,
+                Tag = isTop ? "THREAT" : EnemyTag(p, champ),
+                IsTopThreat = isTop,
+                RespawnText = p.IsDead && p.RespawnTimer > 0 ? $"{p.RespawnTimer:0}s" : "",
+            });
+        }
+    }
+
+    /// <summary>Rol táctico del enemigo para el tile (CC gana al arquetipo: es lo que te castiga).</summary>
+    private string EnemyTag(Player p, StaticChampion? champ)
+    {
+        if (champ is not null && _config.Items.HeavyCcChampions.Contains(champ.Key))
+            return "CC";
+        var archetype = _profilerForTiles?.Profile(p).Archetype;
+        return archetype switch
+        {
+            BuildArchetype.Marksman => "MARKSMAN",
+            BuildArchetype.Tank => "TANK",
+            BuildArchetype.AdAssassin => "BURST",
+            BuildArchetype.Mage => "MAGE",
+            BuildArchetype.ApFighter => "AP FIGHTER",
+            BuildArchetype.AdFighter => "FIGHTER",
+            BuildArchetype.Enchanter => "SUPPORT",
+            _ => "—",
+        };
     }
 
     /// <summary>Línea de botas accionable: qué comprar YA y cuánto falta, no solo el nombre.</summary>
@@ -735,7 +884,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
         MayhemStatus = advice.StatusLine;
         MayhemPickNow = advice.PickNowLine ?? "";
-        MayhemGuidance = "• " + string.Join("\n• ", advice.Guidance);
+        // Strip horizontal estilo HUD: guías separadas por "//" (antes bullets).
+        MayhemGuidance = string.Join("   //   ", advice.Guidance);
     }
 
     private void ApplyLiveStatus(ConnectionStatus status, string? message)
@@ -872,20 +1022,21 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         int? tab = null;
         if (_inChampSelect)
         {
-            label = "Champ Select";
+            label = "CHAMP SELECT";
             tab = 1;
         }
         else if (_inGame)
         {
             label = string.Equals(_gameMode, "ARAM", StringComparison.OrdinalIgnoreCase)
-                ? "In game (ARAM)"
-                : "In game";
+                ? "LIVE · ARAM"
+                : "LIVE · RIFT";
             tab = 0;
         }
         else
         {
-            label = "Idle";
+            label = "IDLE";
         }
+        ContextIsLive = _inGame && !_inChampSelect;
 
         // Cambiar de pestaña solo al CAMBIAR de contexto: si se forzara en cada tick,
         // el usuario no podría quedarse mirando la otra pestaña.
