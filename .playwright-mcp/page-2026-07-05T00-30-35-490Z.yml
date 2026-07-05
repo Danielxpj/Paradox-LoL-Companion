@@ -1,0 +1,242 @@
+- main [ref=f57e3]:
+  - generic [ref=f57e4]:
+    - generic [ref=f57e5]:
+      - navigation [ref=f57e6]:
+        - link [ref=f57e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=f57e8]
+        - link "League of Legends" [ref=f57e12] [cursor=pointer]:
+          - /url: /lol
+          - img [ref=f57e13]
+          - generic [ref=f57e16]: League of Legends
+        - link "Teamfight Tactics" [ref=f57e17] [cursor=pointer]:
+          - /url: /tft
+          - img [ref=f57e18]
+          - generic [ref=f57e21]: Teamfight Tactics
+        - link "VALORANT" [ref=f57e22] [cursor=pointer]:
+          - /url: /valorant
+          - img [ref=f57e23]
+          - generic [ref=f57e25]: VALORANT
+        - link "Counter-Strike 2" [ref=f57e26] [cursor=pointer]:
+          - /url: /cs2
+          - img [ref=f57e27]
+          - generic [ref=f57e29]: Counter-Strike 2
+        - link "Fortnite" [ref=f57e30] [cursor=pointer]:
+          - /url: /fortnite
+          - img [ref=f57e31]
+          - generic [ref=f57e33]: Fortnite
+        - link "Escape From Tarkov" [ref=f57e34] [cursor=pointer]:
+          - /url: /eft
+          - img [ref=f57e35]
+          - generic [ref=f57e42]: Escape From Tarkov
+        - link "Apex Legends" [ref=f57e43] [cursor=pointer]:
+          - /url: /apex
+          - img [ref=f57e44]
+          - generic [ref=f57e46]: Apex Legends
+        - link "Marvel Rivals" [ref=f57e47] [cursor=pointer]:
+          - /url: /marvel-rivals
+          - img [ref=f57e48]
+          - generic [ref=f57e50]: Marvel Rivals
+        - link "Deadlock" [ref=f57e51] [cursor=pointer]:
+          - /url: /deadlock
+          - img [ref=f57e52]
+          - generic [ref=f57e55]: Deadlock
+      - button [ref=f57e56] [cursor=pointer]:
+        - img [ref=f57e57]
+    - generic [ref=f57e59]:
+      - button "Search... Ctrl K" [ref=f57e60] [cursor=pointer]:
+        - img [ref=f57e61]
+        - generic [ref=f57e63]: Search...
+        - generic [ref=f57e64]:
+          - generic [ref=f57e65]: Ctrl
+          - generic [ref=f57e66]: K
+      - generic [ref=f57e67]:
+        - link "Go Ad-Free" [ref=f57e68] [cursor=pointer]:
+          - /url: /premium
+          - img [ref=f57e69]
+          - generic [ref=f57e71]: Go Ad-Free
+        - button [ref=f57e72] [cursor=pointer]:
+          - img [ref=f57e73]
+        - link "Log In" [ref=f57e77] [cursor=pointer]:
+          - /url: /sign-in?returnTo=%2Foverlays%2Flol
+          - img [ref=f57e78]
+          - generic [ref=f57e80]: Log In
+        - link "Download Blitz" [ref=f57e81] [cursor=pointer]:
+          - /url: /download?ref=nav-header
+          - img [ref=f57e82]
+          - generic [ref=f57e85]: Download Blitz
+  - generic [ref=f57e86]:
+    - generic [ref=f57e88]:
+      - generic [ref=f57e89]:
+        - generic [ref=f57e90]:
+          - img "League of Legends Overlays" [ref=f57e93]
+          - generic [ref=f57e94]:
+            - heading "League of Legends Overlays" [level=1] [ref=f57e96]
+            - generic [ref=f57e99]: Enhance your League of Legends gameplay with real-time in-game overlays. Get live stats, imported builds, timers,and performance tracking without leaving the game.
+        - button [ref=f57e103] [cursor=pointer]:
+          - img [ref=f57e104]
+      - generic [ref=f57e106]:
+        - generic [ref=f57e108]:
+          - generic [ref=f57e109]:
+            - img "ARAM Mayhem Augments Overlay - Blitz.gg Feature" [ref=f57e110]
+            - img "ARAM Mayhem Augments Overlay - Blitz.gg Feature" [ref=f57e112]
+          - generic [ref=f57e113]:
+            - generic [ref=f57e114]: In-Game Overlay
+            - heading "ARAM Mayhem Augments Overlay" [level=3] [ref=f57e115]
+            - paragraph [ref=f57e116]: Get our hand-crafted ARAM Mayhem Augments Tier List right in your game as your pick augments.
+        - generic [ref=f57e118]:
+          - generic [ref=f57e119]:
+            - img "Benchmarking Overlay - Blitz.gg Feature" [ref=f57e120]
+            - img "Benchmarking Overlay - Blitz.gg Feature" [ref=f57e122]
+          - generic [ref=f57e123]:
+            - generic [ref=f57e124]: In-Game Overlay
+            - heading "Benchmarking Overlay" [level=3] [ref=f57e125]
+            - paragraph [ref=f57e126]: Track key performance metrics to better guage performance in real time.
+        - generic [ref=f57e128]:
+          - generic [ref=f57e129]:
+            - img "ARAM Health Timers Overlay - Blitz.gg Feature" [ref=f57e130]
+            - img "ARAM Health Timers Overlay - Blitz.gg Feature" [ref=f57e132]
+          - generic [ref=f57e133]:
+            - generic [ref=f57e134]: In-Game Overlay
+            - heading "ARAM Health Timers Overlay" [level=3] [ref=f57e135]
+            - paragraph [ref=f57e136]: Track health relic respawn times in ARAM.
+        - generic [ref=f57e138]:
+          - generic [ref=f57e139]:
+            - img "Recommended Skill Order - Blitz.gg Feature" [ref=f57e140]
+            - img "Recommended Skill Order - Blitz.gg Feature" [ref=f57e142]
+          - generic [ref=f57e143]:
+            - generic [ref=f57e144]: In-Game Overlay
+            - heading "Recommended Skill Order" [level=3] [ref=f57e145]
+            - paragraph [ref=f57e146]: Show which skill to level up in game based on your selected Blitz build.
+        - generic [ref=f57e148]:
+          - generic [ref=f57e149]:
+            - img "Item Value Difference Overlay - Blitz.gg Feature" [ref=f57e150]
+            - img "Item Value Difference Overlay - Blitz.gg Feature" [ref=f57e152]
+          - generic [ref=f57e153]:
+            - generic [ref=f57e154]: In-Game Overlay
+            - heading "Item Value Difference Overlay" [level=3] [ref=f57e155]
+            - paragraph [ref=f57e156]: Easily evaluate and compare the value of players item inventories.
+        - generic [ref=f57e158]:
+          - generic [ref=f57e159]:
+            - img "Minimap Timers - Blitz.gg Feature" [ref=f57e160]
+            - img "Minimap Timers - Blitz.gg Feature" [ref=f57e162]
+          - generic [ref=f57e163]:
+            - generic [ref=f57e164]: In-Game Overlay
+            - heading "Minimap Timers" [level=3] [ref=f57e165]
+            - paragraph [ref=f57e166]: Know exactly why Jungle Camps, Inhibitors, and Dragon respawn times are in real time.
+        - generic [ref=f57e168]:
+          - generic [ref=f57e169]:
+            - img "Ultimate Timers Overlay - Blitz.gg Feature" [ref=f57e170]
+            - img "Ultimate Timers Overlay - Blitz.gg Feature" [ref=f57e172]
+          - generic [ref=f57e173]:
+            - generic [ref=f57e174]: In-Game Overlay
+            - heading "Ultimate Timers Overlay" [level=3] [ref=f57e175]
+            - paragraph [ref=f57e176]: Display teammate ultimate timers on their portrait allowing you to always know when they're available.
+        - generic [ref=f57e178]:
+          - generic [ref=f57e179]:
+            - img "Arena Augments Overlay - Blitz.gg Feature" [ref=f57e180]
+            - img "Arena Augments Overlay - Blitz.gg Feature" [ref=f57e182]
+          - generic [ref=f57e183]:
+            - generic [ref=f57e184]: In-Game Overlay
+            - heading "Arena Augments Overlay" [level=3] [ref=f57e185]
+            - paragraph [ref=f57e186]: Easy and direct access to Arena Augment stats as you pick them.
+        - generic [ref=f57e188]:
+          - generic [ref=f57e189]:
+            - img "Jungle Pathing Overlay - Blitz.gg Feature" [ref=f57e190]
+            - img "Jungle Pathing Overlay - Blitz.gg Feature" [ref=f57e192]
+          - generic [ref=f57e193]:
+            - generic [ref=f57e194]: In-Game Overlay
+            - heading "Jungle Pathing Overlay" [level=3] [ref=f57e195]
+            - paragraph [ref=f57e196]: Take the most effective jungle camps clearing route to dominate the game.
+        - generic [ref=f57e198]:
+          - generic [ref=f57e199]:
+            - img "Loading Screen Scouting - Blitz.gg Feature" [ref=f57e200]
+            - img "Loading Screen Scouting - Blitz.gg Feature" [ref=f57e202]
+          - generic [ref=f57e203]:
+            - generic [ref=f57e204]: In-Game Overlay
+            - heading "Loading Screen Scouting" [level=3] [ref=f57e205]
+            - paragraph [ref=f57e206]: Get key insights into allies, enemies, champion matchups and more.
+        - generic [ref=f57e208]:
+          - generic [ref=f57e209]:
+            - img "Trinket Reminder Overlay - Blitz.gg Feature" [ref=f57e210]
+            - img "Trinket Reminder Overlay - Blitz.gg Feature" [ref=f57e212]
+          - generic [ref=f57e213]:
+            - generic [ref=f57e214]: In-Game Overlay
+            - heading "Trinket Reminder Overlay" [level=3] [ref=f57e215]
+            - paragraph [ref=f57e216]: Minimize trinket ward downtime by highlighting your trinket when it's ready to be used.
+    - generic [ref=f57e220]:
+      - generic [ref=f57e221]:
+        - img [ref=f57e224]
+        - generic [ref=f57e228]:
+          - generic [ref=f57e229]: Company
+          - list [ref=f57e230]:
+            - listitem [ref=f57e231]:
+              - link "About Us" [ref=f57e232] [cursor=pointer]:
+                - /url: /about-us
+            - listitem [ref=f57e233]:
+              - link "Partnerships" [ref=f57e234] [cursor=pointer]:
+                - /url: /partnerships
+            - listitem [ref=f57e235]:
+              - link "Careers" [ref=f57e236] [cursor=pointer]:
+                - /url: /careers
+            - listitem [ref=f57e237]:
+              - link "Contact Support" [ref=f57e238] [cursor=pointer]:
+                - /url: /support
+            - listitem [ref=f57e239]:
+              - link "Privacy Policy" [ref=f57e240] [cursor=pointer]:
+                - /url: /legal/privacy-policy
+        - generic [ref=f57e241]:
+          - generic [ref=f57e242]: Socials
+          - list [ref=f57e243]:
+            - listitem [ref=f57e244]:
+              - link "X/Twitter" [ref=f57e245] [cursor=pointer]:
+                - /url: https://twitter.com/theblitzapp
+            - listitem [ref=f57e246]:
+              - link "Discord" [ref=f57e247] [cursor=pointer]:
+                - /url: https://discord.gg/theblitzapp
+            - listitem [ref=f57e248]:
+              - link "Facebook" [ref=f57e249] [cursor=pointer]:
+                - /url: https://www.facebook.com/theblitzapp/
+            - listitem [ref=f57e250]:
+              - link "Instagram" [ref=f57e251] [cursor=pointer]:
+                - /url: https://www.instagram.com/theblitzapp/
+            - listitem [ref=f57e252]:
+              - link "TikTok" [ref=f57e253] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@theblitzapp
+        - generic [ref=f57e254]:
+          - generic [ref=f57e255]: Games
+          - list [ref=f57e256]:
+            - listitem [ref=f57e257]:
+              - link "League of Legends" [ref=f57e258] [cursor=pointer]:
+                - /url: /lol
+            - listitem [ref=f57e259]:
+              - link "Teamfight Tactics" [ref=f57e260] [cursor=pointer]:
+                - /url: /tft
+            - listitem [ref=f57e261]:
+              - link "VALORANT" [ref=f57e262] [cursor=pointer]:
+                - /url: /valorant
+            - listitem [ref=f57e263]:
+              - link "Counter-Strike 2" [ref=f57e264] [cursor=pointer]:
+                - /url: /cs2
+            - listitem [ref=f57e265]:
+              - link "Fortnite" [ref=f57e266] [cursor=pointer]:
+                - /url: /fortnite
+            - listitem [ref=f57e267]:
+              - link "Escape From Tarkov" [ref=f57e268] [cursor=pointer]:
+                - /url: /eft
+            - listitem [ref=f57e269]:
+              - link "Apex Legends" [ref=f57e270] [cursor=pointer]:
+                - /url: /apex
+            - listitem [ref=f57e271]:
+              - link "Marvel Rivals" [ref=f57e272] [cursor=pointer]:
+                - /url: /marvel-rivals
+            - listitem [ref=f57e273]:
+              - link "Deadlock" [ref=f57e274] [cursor=pointer]:
+                - /url: /deadlock
+      - generic [ref=f57e275]:
+        - generic [ref=f57e276]: Made with Lots of Love and Tilt in San Francisco
+        - button "English" [ref=f57e277] [cursor=pointer]
+        - link "Terms of Service" [ref=f57e278] [cursor=pointer]:
+          - /url: /legal/terms-of-service
+        - link "Privacy Policy" [ref=f57e279] [cursor=pointer]:
+          - /url: /legal/privacy-policy

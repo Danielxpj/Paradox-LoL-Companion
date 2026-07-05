@@ -102,6 +102,12 @@ public sealed class ItemAdvisor
         var ownedIds = me.Items
             .SelectMany(i => Enumerable.Repeat(i.ItemID, Math.Max(i.Count, 1)))
             .ToList();
+        // Los 6 slots de items (el 7.º es el trinket) ocupados: no hay dónde poner
+        // una compra nueva salvo que consuma componentes que ya están en el inventario.
+        var inventoryFull = me.Items.Count(i => i.Slot is >= 0 and <= 5) >= 6;
+        var slotItemIds = new HashSet<int>(me.Items
+            .Where(i => i.Slot is >= 0 and <= 5)
+            .Select(i => i.ItemID));
 
         // "Ya lo tengo" incluye el árbol de construcción de lo que llevo: si tengo una
         // mejora/transformación (Muramana, item Obra Maestra de Ornn…), su item base y
@@ -187,6 +193,7 @@ public sealed class ItemAdvisor
             {
                 Priority = topScore > 0 ? Fuzzy.Clamp01(score / topScore) : 1.0,
                 Category = finalCategory,
+                BlockedByFullInventory = inventoryFull && !MergesOwnedComponent(item, slotItemIds),
             });
         }
 
@@ -201,11 +208,30 @@ public sealed class ItemAdvisor
             profile,
             threat,
             recommendations,
-            BootsFor(me, profile, threat, mapNumber, stats),
+            BootsFor(me, profile, threat, mapNumber, stats, ownedIds, gold),
             SellSuggestions(me, profile, threat, weights, sustainThreshold,
                 recommendations.Count > 0 ? recommendations[0] : null),
             StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats),
-            ShopAlertFor(me, isAram, recommendations));
+            ShopAlertFor(me, isAram, recommendations))
+        {
+            InventoryFull = inventoryFull,
+        };
+    }
+
+    /// <summary>
+    /// Comprar el item consumiría algún componente que HOY ocupa un slot del
+    /// inventario (la compra libera espacio aunque esté lleno).
+    /// </summary>
+    private bool MergesOwnedComponent(StaticItem item, IReadOnlySet<int> slotItemIds)
+    {
+        foreach (var id in item.From)
+        {
+            if (slotItemIds.Contains(id))
+                return true;
+            if (_data.ItemById(id) is { } component && MergesOwnedComponent(component, slotItemIds))
+                return true;
+        }
+        return false;
     }
 
     // --- Compra inicial (ARAM) ---
@@ -565,7 +591,7 @@ public sealed class ItemAdvisor
     // --- Botas ---
 
     private BootsAdvice? BootsFor(Player me, ChampionProfile profile, TeamThreat threat,
-        int mapNumber, ChampionBuildStats? stats)
+        int mapNumber, ChampionBuildStats? stats, IReadOnlyList<int> ownedIds, double gold)
     {
         var candidates = _data.FinishedBootsFor(mapNumber);
         if (candidates.Count == 0)
@@ -578,12 +604,21 @@ public sealed class ItemAdvisor
         if (hasFinished)
             return null;
 
+        // El consejo es accionable: trae el plan de compra (si no tenés ni las Botas
+        // básicas y el oro no llega al tier 2, el siguiente paso son las básicas).
+        BootsAdvice Advice(StaticItem boots, string reason)
+        {
+            var plan = BuildPathPlanner.Plan(_data, boots, ownedIds, gold);
+            return new BootsAdvice(boots, reason, plan,
+                (int)Math.Max(0, plan.RemainingCost - gold));
+        }
+
         if (threat.HeavyCcCount >= _config.CcCountForMercs
             || threat.MagicalShare >= _config.SkewedDamageShare)
         {
             var mercs = ByTag(candidates, "SpellBlock");
             if (mercs is not null)
-                return new BootsAdvice(mercs, threat.HeavyCcCount >= _config.CcCountForMercs
+                return Advice(mercs, threat.HeavyCcCount >= _config.CcCountForMercs
                     ? $"the enemy has {threat.HeavyCcCount} heavy-CC champions"
                     : $"{Pct(threat.MagicalShare)} of enemy damage is magic");
         }
@@ -592,7 +627,7 @@ public sealed class ItemAdvisor
         {
             var steelcaps = ByTag(candidates, "Armor");
             if (steelcaps is not null)
-                return new BootsAdvice(steelcaps,
+                return Advice(steelcaps,
                     $"heavy physical auto-attack damage ({threat.TopPhysicalName})");
         }
 
@@ -601,7 +636,7 @@ public sealed class ItemAdvisor
         {
             var popular = candidates.FirstOrDefault(c => statBoots.ItemIds.Contains(c.Id));
             if (popular is not null)
-                return new BootsAdvice(popular,
+                return Advice(popular,
                     $"most common boots on your champion ({Pct(statBoots.PickRate)} pick rate)");
         }
 
@@ -619,7 +654,7 @@ public sealed class ItemAdvisor
                 : ByTag(candidates, "SpellBlock"),
         };
         var pick = byArchetype ?? candidates[0];
-        return new BootsAdvice(pick, $"standard for your {ArchetypeLabel(profile.Archetype)} build");
+        return Advice(pick, $"standard for your {ArchetypeLabel(profile.Archetype)} build");
     }
 
     private static StaticItem? ByTag(IReadOnlyList<StaticItem> items, string tag) =>

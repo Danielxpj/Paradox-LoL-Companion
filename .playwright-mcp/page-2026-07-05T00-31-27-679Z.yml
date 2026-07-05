@@ -1,0 +1,1261 @@
+- generic [active] [ref=f97e1]:
+  - generic [ref=f97e6]:
+    - link "Go to Main Page" [ref=f97e7] [cursor=pointer]:
+      - /url: /
+      - img [ref=f97e8]
+    - generic [ref=f97e12]:
+      - text: Stats
+      - button "League of Legends" [ref=f97e13] [cursor=pointer]:
+        - text: League of Legends
+        - img [ref=f97e14]
+    - generic [ref=f97e16]:
+      - link "Desktop" [ref=f97e17] [cursor=pointer]:
+        - /url: https://op.gg/desktop
+        - generic [ref=f97e18]: Desktop
+      - link "Games New" [ref=f97e19] [cursor=pointer]:
+        - /url: https://games.op.gg
+        - generic [ref=f97e20]: Games
+        - generic [ref=f97e21]: New
+      - link "Duo" [ref=f97e22] [cursor=pointer]:
+        - /url: https://duo.op.gg
+        - generic [ref=f97e23]: Duo
+      - link "TalkG" [ref=f97e24] [cursor=pointer]:
+        - /url: https://talk.op.gg
+        - generic [ref=f97e25]: TalkG
+      - link "Esports" [ref=f97e26] [cursor=pointer]:
+        - /url: https://esports.op.gg
+        - generic [ref=f97e27]: Esports
+      - link "Gigs" [ref=f97e28] [cursor=pointer]:
+        - /url: https://gigs.op.gg
+        - generic [ref=f97e29]: Gigs
+      - link "Streamer Overlay New" [ref=f97e30] [cursor=pointer]:
+        - /url: https://streamer-overlay.op.gg
+        - generic [ref=f97e31]: Streamer Overlay
+        - generic [ref=f97e32]: New
+    - generic [ref=f97e33]:
+      - generic [ref=f97e34]:
+        - button "Show More" [ref=f97e37] [cursor=pointer]:
+          - img [ref=f97e38]
+        - button "Change Theme" [ref=f97e41] [cursor=pointer]:
+          - img [ref=f97e42]
+        - button "EN" [ref=f97e44] [cursor=pointer]:
+          - img [ref=f97e45]
+          - generic [ref=f97e47]: EN
+      - button "Sign in" [ref=f97e48] [cursor=pointer]
+  - generic [ref=f97e54]:
+    - generic [ref=f97e55]:
+      - button "searchSummonerRegionSelect-default" [ref=f97e59] [cursor=pointer]:
+        - generic [ref=f97e60]: LAS
+      - generic [ref=f97e61]:
+        - generic [ref=f97e62]: Search a summoner
+        - textbox "Search a summoner" [ref=f97e63]
+        - generic: "Game name + #LAS"
+      - button "Search a summoner" [ref=f97e64] [cursor=pointer]:
+        - img [ref=f97e65]
+    - button [ref=f97e67] [cursor=pointer]:
+      - generic [ref=f97e72]:
+        - img [ref=f97e73]
+        - img [ref=f97e76]
+  - navigation [ref=f97e82]:
+    - generic [ref=f97e85]:
+      - link "Champions" [ref=f97e86] [cursor=pointer]:
+        - /url: /lol/champions
+      - link "Game modes U" [ref=f97e87] [cursor=pointer]:
+        - /url: /lol/modes/aram
+        - text: Game modes
+        - generic [ref=f97e88]: U
+      - link "Skins leaderboard" [ref=f97e89] [cursor=pointer]:
+        - /url: /lol/skins/statistics
+      - link "Leaderboards" [ref=f97e90] [cursor=pointer]:
+        - /url: /lol/leaderboards/tier
+      - link "Pro spectate" [ref=f97e91] [cursor=pointer]:
+        - /url: /lol/spectate/live/pro-gamer
+      - link "Stats" [ref=f97e92] [cursor=pointer]:
+        - /url: /lol/statistics/champions
+      - link "Game Update" [ref=f97e93] [cursor=pointer]:
+        - /url: /lol/game-update/2026-26-locke
+      - link "Lessons" [ref=f97e94] [cursor=pointer]:
+        - /url: https://gigs.op.gg/products?game=LOL&?utm_source=opgg&utm_medium=lnb&utm_campaign=lol
+    - link "My page" [ref=f97e96] [cursor=pointer]:
+      - /url: /lol/mypage
+      - generic [ref=f97e97]: My page
+  - generic [ref=f97e98]:
+    - generic [ref=f97e101]:
+      - generic [ref=f97e103]:
+        - combobox "Top" [ref=f97e104]:
+          - option "Top" [selected]
+          - option "Jungle"
+        - generic [ref=f97e105] [cursor=pointer]:
+          - generic [ref=f97e106]: Top
+          - img [ref=f97e108]
+      - generic [ref=f97e110]:
+        - combobox "Global" [ref=f97e111]:
+          - option "Global" [selected]
+          - option "North America"
+          - option "Middle East"
+          - option "Europe West"
+          - option "Europe Nordic & East"
+          - option "Oceania"
+          - option "Korea"
+          - option "Japan"
+          - option "Brazil"
+          - option "LAS"
+          - option "LAN"
+          - option "Russia"
+          - option "Türkiye"
+          - option "Southeast Asia"
+          - option "Taiwan"
+          - option "Vietnam"
+        - generic [ref=f97e112] [cursor=pointer]:
+          - generic [ref=f97e113]:
+            - img [ref=f97e114]
+            - generic [ref=f97e116]: Global
+          - img [ref=f97e118]
+      - generic [ref=f97e120]:
+        - combobox "Emerald + Emerald +" [ref=f97e121]:
+          - option "All Tiers"
+          - option "Challenger"
+          - option "Grandmaster"
+          - option "Master +"
+          - option "Master"
+          - option "Diamond +"
+          - option "Diamond"
+          - option "Emerald +" [selected]
+          - option "Emerald"
+          - option "Platinum +"
+          - option "Platinum"
+          - option "Gold +"
+          - option "Gold"
+          - option "Silver"
+          - option "Bronze"
+          - option "Iron"
+        - generic [ref=f97e122] [cursor=pointer]:
+          - generic [ref=f97e123]:
+            - img "Emerald +" [ref=f97e124]
+            - generic [ref=f97e125]: Emerald +
+          - img [ref=f97e127]
+      - generic [ref=f97e129]:
+        - combobox "Class" [ref=f97e130]:
+          - option "Class" [selected]
+          - option "Mage"
+        - generic [ref=f97e131] [cursor=pointer]:
+          - generic [ref=f97e132]:
+            - img [ref=f97e133]
+            - generic [ref=f97e135]: Class
+          - img [ref=f97e137]
+      - generic [ref=f97e140] [cursor=pointer]:
+        - generic [ref=f97e142]:
+          - generic [ref=f97e143]: vs.
+          - generic [ref=f97e144]: Counter
+        - img [ref=f97e146]
+      - generic [ref=f97e148]:
+        - 'combobox "Ver: 16.13" [ref=f97e149]':
+          - 'option "Version: 16.13" [selected]'
+          - 'option "Version: 16.12"'
+        - generic [ref=f97e150] [cursor=pointer]:
+          - generic [ref=f97e152]: "Ver: 16.13"
+          - img [ref=f97e154]
+    - generic [ref=f97e158]:
+      - generic [ref=f97e159]:
+        - generic [ref=f97e160]:
+          - img [ref=f97e161]
+          - img "Gwen" [ref=f97e165]
+        - generic [ref=f97e166]:
+          - heading "Gwen Items for Top, Patch 16.13" [level=1] [ref=f97e167]:
+            - strong [ref=f97e168]: Gwen
+            - generic [ref=f97e169]: Items for Top, Patch 16.13
+          - generic [ref=f97e170]: 4 Tier
+          - generic [ref=f97e173]:
+            - img "Gwen's attacks deal bonus magic damage based on the targets health. She heals for a portion of the damage dealt to champions by this effect." [ref=f97e176] [cursor=pointer]
+            - generic [ref=f97e179] [cursor=pointer]:
+              - img "Snip Snip!" [ref=f97e180]
+              - strong [ref=f97e181]: Q
+            - generic [ref=f97e184] [cursor=pointer]:
+              - img "Hallowed Mist" [ref=f97e185]
+              - strong [ref=f97e186]: W
+            - generic [ref=f97e189] [cursor=pointer]:
+              - img "Skip 'n Slash" [ref=f97e190]
+              - strong [ref=f97e191]: E
+            - generic [ref=f97e194] [cursor=pointer]:
+              - img "Needlework" [ref=f97e195]
+              - strong [ref=f97e196]: R
+      - generic [ref=f97e198]:
+        - generic [ref=f97e199]:
+          - generic [ref=f97e200]:
+            - img [ref=f97e201]
+            - strong [ref=f97e206]: User-written champion tips
+          - generic [ref=f97e208]: Beta
+        - generic [ref=f97e209]: Keep using basic attacks to deal bonus damage and reset your abilities. Hit multiple enemies with your skills to maximise both damage and healing.
+      - list [ref=f97e210]:
+        - listitem [ref=f97e211]:
+          - emphasis [ref=f97e212]: Win rate
+          - generic [ref=f97e213]: 50.02%
+        - listitem [ref=f97e214]:
+          - emphasis [ref=f97e215]: Pick rate
+          - generic [ref=f97e216]: 1.98%
+        - listitem [ref=f97e217]:
+          - emphasis [ref=f97e218]: Ban rate
+          - generic [ref=f97e219]: 2.49%
+    - navigation [ref=f97e222]:
+      - link "Build" [ref=f97e223] [cursor=pointer]:
+        - /url: /lol/champions/gwen/build/top
+        - generic [ref=f97e224]: Build
+      - link "Counters N" [ref=f97e225] [cursor=pointer]:
+        - /url: /lol/champions/gwen/counters/top
+        - generic [ref=f97e226]: Counters
+        - strong [ref=f97e227]: "N"
+      - link "Items" [ref=f97e228] [cursor=pointer]:
+        - /url: /lol/champions/gwen/items/top
+        - generic [ref=f97e229]: Items
+      - link "Jungle paths" [ref=f97e230] [cursor=pointer]:
+        - /url: /lol/champions/gwen/jungle-paths/top
+        - generic [ref=f97e231]: Jungle paths
+      - link "Champion synergies" [ref=f97e232] [cursor=pointer]:
+        - /url: /lol/champions/gwen/synergies/top
+        - generic [ref=f97e233]: Champion synergies
+      - link "Runes" [ref=f97e234] [cursor=pointer]:
+        - /url: /lol/champions/gwen/runes/top
+        - generic [ref=f97e235]: Runes
+      - link "Skills" [ref=f97e236] [cursor=pointer]:
+        - /url: /lol/champions/gwen/skills/top
+        - generic [ref=f97e237]: Skills
+      - link "Tips" [ref=f97e238] [cursor=pointer]:
+        - /url: /lol/champions/gwen/tips/top
+        - generic [ref=f97e239]: Tips
+      - link "Trends" [ref=f97e240] [cursor=pointer]:
+        - /url: /lol/champions/gwen/trends/top
+        - generic [ref=f97e241]: Trends
+      - link "Masters build" [ref=f97e242] [cursor=pointer]:
+        - /url: /lol/champions/gwen/masters-build/top
+        - generic [ref=f97e243]: Masters build
+      - link "Pro builds" [ref=f97e244] [cursor=pointer]:
+        - /url: https://esports.op.gg/champions/887
+        - img [ref=f97e245]
+        - generic [ref=f97e248]: Pro builds
+  - generic [ref=f97e250]:
+    - generic [ref=f97e251]: ADVERTISEMENT
+    - link "OP.GG Premium Remove ads" [ref=f97e252] [cursor=pointer]:
+      - /url: https://member.op.gg/membership?utm_source=lol_web&utm_campaign=banner_frame
+      - img "OP.GG Premium" [ref=f97e253]
+      - strong [ref=f97e255]: Remove ads
+  - list [ref=f97e260]:
+    - listitem [ref=f97e261]:
+      - link "Ranked Solo/Duo" [ref=f97e262] [cursor=pointer]:
+        - /url: /lol/champions/gwen/build?type=ranked
+        - generic [ref=f97e263]: Ranked Solo/Duo
+    - listitem [ref=f97e264]:
+      - link "Ranked Flex" [ref=f97e265] [cursor=pointer]:
+        - /url: /lol/champions/gwen/build?type=flex
+        - generic [ref=f97e266]: Ranked Flex
+    - listitem [ref=f97e267]:
+      - link "ARAM" [ref=f97e268] [cursor=pointer]:
+        - /url: /lol/modes/aram/gwen/build
+        - generic [ref=f97e269]: ARAM
+    - listitem [ref=f97e270]:
+      - link "Arena U" [ref=f97e271] [cursor=pointer]:
+        - /url: /lol/modes/arena/gwen/build
+        - generic [ref=f97e272]: Arena
+        - generic [ref=f97e273]: U
+  - main [ref=f97e275]:
+    - generic [ref=f97e276]:
+      - generic [ref=f97e277]:
+        - generic [ref=f97e278]:
+          - generic [ref=f97e280]: Core builds
+          - table "Core Items Table" [ref=f97e282]:
+            - rowgroup [ref=f97e287]:
+              - row "Pick rate Win rate" [ref=f97e288]:
+                - columnheader [ref=f97e289]
+                - columnheader "Pick rate" [ref=f97e290]:
+                  - button "Pick rate" [ref=f97e291] [cursor=pointer]
+                - columnheader "Win rate" [ref=f97e292]:
+                  - button "Win rate" [ref=f97e293] [cursor=pointer]
+            - rowgroup [ref=f97e294]:
+              - row "Dusk and Dawn Shadowflame Rabadon's Deathcap 12.03% 2,488 Games 58.4%" [ref=f97e295]:
+                - cell "Dusk and Dawn Shadowflame Rabadon's Deathcap" [ref=f97e296]:
+                  - generic [ref=f97e297]:
+                    - img "Dusk and Dawn" [ref=f97e300]
+                    - img [ref=f97e301]
+                    - img "Shadowflame" [ref=f97e305]
+                    - img [ref=f97e306]
+                    - img "Rabadon's Deathcap" [ref=f97e310]
+                - cell "12.03% 2,488 Games" [ref=f97e311]:
+                  - generic [ref=f97e312]:
+                    - generic [ref=f97e313]: 12.03%
+                    - generic [ref=f97e314]: 2,488 Games
+                - cell "58.4%" [ref=f97e315]:
+                  - strong [ref=f97e316]: 58.4%
+              - row "Dusk and Dawn Nashor's Tooth Riftmaker 9.25% 1,914 Games 57%" [ref=f97e317]:
+                - cell "Dusk and Dawn Nashor's Tooth Riftmaker" [ref=f97e318]:
+                  - generic [ref=f97e319]:
+                    - img "Dusk and Dawn" [ref=f97e322]
+                    - img [ref=f97e323]
+                    - img "Nashor's Tooth" [ref=f97e327]
+                    - img [ref=f97e328]
+                    - img "Riftmaker" [ref=f97e332]
+                - cell "9.25% 1,914 Games" [ref=f97e333]:
+                  - generic [ref=f97e334]:
+                    - generic [ref=f97e335]: 9.25%
+                    - generic [ref=f97e336]: 1,914 Games
+                - cell "57%" [ref=f97e337]:
+                  - strong [ref=f97e338]: 57%
+              - row "Dusk and Dawn Nashor's Tooth Shadowflame 4.85% 1,004 Games 58.76%" [ref=f97e339]:
+                - cell "Dusk and Dawn Nashor's Tooth Shadowflame" [ref=f97e340]:
+                  - generic [ref=f97e341]:
+                    - img "Dusk and Dawn" [ref=f97e344]
+                    - img [ref=f97e345]
+                    - img "Nashor's Tooth" [ref=f97e349]
+                    - img [ref=f97e350]
+                    - img "Shadowflame" [ref=f97e354]
+                - cell "4.85% 1,004 Games" [ref=f97e355]:
+                  - generic [ref=f97e356]:
+                    - generic [ref=f97e357]: 4.85%
+                    - generic [ref=f97e358]: 1,004 Games
+                - cell "58.76%" [ref=f97e359]:
+                  - strong [ref=f97e360]: 58.76%
+              - row "Dusk and Dawn Riftmaker Shadowflame 3.77% 779 Games 57.25%" [ref=f97e361]:
+                - cell "Dusk and Dawn Riftmaker Shadowflame" [ref=f97e362]:
+                  - generic [ref=f97e363]:
+                    - img "Dusk and Dawn" [ref=f97e366]
+                    - img [ref=f97e367]
+                    - img "Riftmaker" [ref=f97e371]
+                    - img [ref=f97e372]
+                    - img "Shadowflame" [ref=f97e376]
+                - cell "3.77% 779 Games" [ref=f97e377]:
+                  - generic [ref=f97e378]:
+                    - generic [ref=f97e379]: 3.77%
+                    - generic [ref=f97e380]: 779 Games
+                - cell "57.25%" [ref=f97e381]:
+                  - strong [ref=f97e382]: 57.25%
+              - row "Dusk and Dawn Nashor's Tooth Rabadon's Deathcap 3.72% 770 Games 57.14%" [ref=f97e383]:
+                - cell "Dusk and Dawn Nashor's Tooth Rabadon's Deathcap" [ref=f97e384]:
+                  - generic [ref=f97e385]:
+                    - img "Dusk and Dawn" [ref=f97e388]
+                    - img [ref=f97e389]
+                    - img "Nashor's Tooth" [ref=f97e393]
+                    - img [ref=f97e394]
+                    - img "Rabadon's Deathcap" [ref=f97e398]
+                - cell "3.72% 770 Games" [ref=f97e399]:
+                  - generic [ref=f97e400]:
+                    - generic [ref=f97e401]: 3.72%
+                    - generic [ref=f97e402]: 770 Games
+                - cell "57.14%" [ref=f97e403]:
+                  - strong [ref=f97e404]: 57.14%
+              - row "Riftmaker Nashor's Tooth Shadowflame 3.46% 715 Games 54.55%" [ref=f97e405]:
+                - cell "Riftmaker Nashor's Tooth Shadowflame" [ref=f97e406]:
+                  - generic [ref=f97e407]:
+                    - img "Riftmaker" [ref=f97e410]
+                    - img [ref=f97e411]
+                    - img "Nashor's Tooth" [ref=f97e415]
+                    - img [ref=f97e416]
+                    - img "Shadowflame" [ref=f97e420]
+                - cell "3.46% 715 Games" [ref=f97e421]:
+                  - generic [ref=f97e422]:
+                    - generic [ref=f97e423]: 3.46%
+                    - generic [ref=f97e424]: 715 Games
+                - cell "54.55%" [ref=f97e425]:
+                  - strong [ref=f97e426]: 54.55%
+              - row "Riftmaker Dusk and Dawn Shadowflame 3.03% 626 Games 57.83%" [ref=f97e427]:
+                - cell "Riftmaker Dusk and Dawn Shadowflame" [ref=f97e428]:
+                  - generic [ref=f97e429]:
+                    - img "Riftmaker" [ref=f97e432]
+                    - img [ref=f97e433]
+                    - img "Dusk and Dawn" [ref=f97e437]
+                    - img [ref=f97e438]
+                    - img "Shadowflame" [ref=f97e442]
+                - cell "3.03% 626 Games" [ref=f97e443]:
+                  - generic [ref=f97e444]:
+                    - generic [ref=f97e445]: 3.03%
+                    - generic [ref=f97e446]: 626 Games
+                - cell "57.83%" [ref=f97e447]:
+                  - strong [ref=f97e448]: 57.83%
+              - row "Dusk and Dawn Riftmaker Rabadon's Deathcap 2.85% 589 Games 60.1%" [ref=f97e449]:
+                - cell "Dusk and Dawn Riftmaker Rabadon's Deathcap" [ref=f97e450]:
+                  - generic [ref=f97e451]:
+                    - img "Dusk and Dawn" [ref=f97e454]
+                    - img [ref=f97e455]
+                    - img "Riftmaker" [ref=f97e459]
+                    - img [ref=f97e460]
+                    - img "Rabadon's Deathcap" [ref=f97e464]
+                - cell "2.85% 589 Games" [ref=f97e465]:
+                  - generic [ref=f97e466]:
+                    - generic [ref=f97e467]: 2.85%
+                    - generic [ref=f97e468]: 589 Games
+                - cell "60.1%" [ref=f97e469]:
+                  - strong [ref=f97e470]: 60.1%
+              - row "Nashor's Tooth Riftmaker Shadowflame 1.95% 404 Games 51.98%" [ref=f97e471]:
+                - cell "Nashor's Tooth Riftmaker Shadowflame" [ref=f97e472]:
+                  - generic [ref=f97e473]:
+                    - img "Nashor's Tooth" [ref=f97e476]
+                    - img [ref=f97e477]
+                    - img "Riftmaker" [ref=f97e481]
+                    - img [ref=f97e482]
+                    - img "Shadowflame" [ref=f97e486]
+                - cell "1.95% 404 Games" [ref=f97e487]:
+                  - generic [ref=f97e488]:
+                    - generic [ref=f97e489]: 1.95%
+                    - generic [ref=f97e490]: 404 Games
+                - cell "51.98%" [ref=f97e491]:
+                  - strong [ref=f97e492]: 51.98%
+              - row "Riftmaker Nashor's Tooth Rabadon's Deathcap 1.94% 402 Games 58.71%" [ref=f97e493]:
+                - cell "Riftmaker Nashor's Tooth Rabadon's Deathcap" [ref=f97e494]:
+                  - generic [ref=f97e495]:
+                    - img "Riftmaker" [ref=f97e498]
+                    - img [ref=f97e499]
+                    - img "Nashor's Tooth" [ref=f97e503]
+                    - img [ref=f97e504]
+                    - img "Rabadon's Deathcap" [ref=f97e508]
+                - cell "1.94% 402 Games" [ref=f97e509]:
+                  - generic [ref=f97e510]:
+                    - generic [ref=f97e511]: 1.94%
+                    - generic [ref=f97e512]: 402 Games
+                - cell "58.71%" [ref=f97e513]:
+                  - strong [ref=f97e514]: 58.71%
+              - row "Dusk and Dawn Riftmaker Nashor's Tooth 1.83% 379 Games 59.37%" [ref=f97e515]:
+                - cell "Dusk and Dawn Riftmaker Nashor's Tooth" [ref=f97e516]:
+                  - generic [ref=f97e517]:
+                    - img "Dusk and Dawn" [ref=f97e520]
+                    - img [ref=f97e521]
+                    - img "Riftmaker" [ref=f97e525]
+                    - img [ref=f97e526]
+                    - img "Nashor's Tooth" [ref=f97e530]
+                - cell "1.83% 379 Games" [ref=f97e531]:
+                  - generic [ref=f97e532]:
+                    - generic [ref=f97e533]: 1.83%
+                    - generic [ref=f97e534]: 379 Games
+                - cell "59.37%" [ref=f97e535]:
+                  - strong [ref=f97e536]: 59.37%
+              - row "Dusk and Dawn Shadowflame Zhonya's Hourglass 1.78% 369 Games 51.76%" [ref=f97e537]:
+                - cell "Dusk and Dawn Shadowflame Zhonya's Hourglass" [ref=f97e538]:
+                  - generic [ref=f97e539]:
+                    - img "Dusk and Dawn" [ref=f97e542]
+                    - img [ref=f97e543]
+                    - img "Shadowflame" [ref=f97e547]
+                    - img [ref=f97e548]
+                    - img "Zhonya's Hourglass" [ref=f97e552]
+                - cell "1.78% 369 Games" [ref=f97e553]:
+                  - generic [ref=f97e554]:
+                    - generic [ref=f97e555]: 1.78%
+                    - generic [ref=f97e556]: 369 Games
+                - cell "51.76%" [ref=f97e557]:
+                  - strong [ref=f97e558]: 51.76%
+              - row "Nashor's Tooth Shadowflame Rabadon's Deathcap 1.73% 357 Games 54.34%" [ref=f97e559]:
+                - cell "Nashor's Tooth Shadowflame Rabadon's Deathcap" [ref=f97e560]:
+                  - generic [ref=f97e561]:
+                    - img "Nashor's Tooth" [ref=f97e564]
+                    - img [ref=f97e565]
+                    - img "Shadowflame" [ref=f97e569]
+                    - img [ref=f97e570]
+                    - img "Rabadon's Deathcap" [ref=f97e574]
+                - cell "1.73% 357 Games" [ref=f97e575]:
+                  - generic [ref=f97e576]:
+                    - generic [ref=f97e577]: 1.73%
+                    - generic [ref=f97e578]: 357 Games
+                - cell "54.34%" [ref=f97e579]:
+                  - strong [ref=f97e580]: 54.34%
+              - row "Nashor's Tooth Dusk and Dawn Riftmaker 1.72% 356 Games 53.37%" [ref=f97e581]:
+                - cell "Nashor's Tooth Dusk and Dawn Riftmaker" [ref=f97e582]:
+                  - generic [ref=f97e583]:
+                    - img "Nashor's Tooth" [ref=f97e586]
+                    - img [ref=f97e587]
+                    - img "Dusk and Dawn" [ref=f97e591]
+                    - img [ref=f97e592]
+                    - img "Riftmaker" [ref=f97e596]
+                - cell "1.72% 356 Games" [ref=f97e597]:
+                  - generic [ref=f97e598]:
+                    - generic [ref=f97e599]: 1.72%
+                    - generic [ref=f97e600]: 356 Games
+                - cell "53.37%" [ref=f97e601]:
+                  - strong [ref=f97e602]: 53.37%
+              - row "Dusk and Dawn Shadowflame Riftmaker 1.68% 347 Games 59.08%" [ref=f97e603]:
+                - cell "Dusk and Dawn Shadowflame Riftmaker" [ref=f97e604]:
+                  - generic [ref=f97e605]:
+                    - img "Dusk and Dawn" [ref=f97e608]
+                    - img [ref=f97e609]
+                    - img "Shadowflame" [ref=f97e613]
+                    - img [ref=f97e614]
+                    - img "Riftmaker" [ref=f97e618]
+                - cell "1.68% 347 Games" [ref=f97e619]:
+                  - generic [ref=f97e620]:
+                    - generic [ref=f97e621]: 1.68%
+                    - generic [ref=f97e622]: 347 Games
+                - cell "59.08%" [ref=f97e623]:
+                  - strong [ref=f97e624]: 59.08%
+        - generic [ref=f97e626]:
+          - generic [ref=f97e627]: ADVERTISEMENT
+          - link "OP.GG Premium Remove ads" [ref=f97e628] [cursor=pointer]:
+            - /url: https://member.op.gg/membership?utm_source=lol_web&utm_campaign=banner_frame
+            - img "OP.GG Premium" [ref=f97e629]
+            - strong [ref=f97e631]: Remove ads
+        - generic [ref=f97e632]:
+          - generic [ref=f97e634]: Boots
+          - table "Core Items Table" [ref=f97e636]:
+            - rowgroup [ref=f97e641]:
+              - row "Pick rate Win rate" [ref=f97e642]:
+                - columnheader [ref=f97e643]
+                - columnheader "Pick rate" [ref=f97e644]:
+                  - button "Pick rate" [ref=f97e645] [cursor=pointer]
+                - columnheader "Win rate" [ref=f97e646]:
+                  - button "Win rate" [ref=f97e647] [cursor=pointer]
+            - rowgroup [ref=f97e648]:
+              - row "Plated Steelcaps 34.79% 11,214 Games 48.54%" [ref=f97e649]:
+                - cell "Plated Steelcaps" [ref=f97e650]:
+                  - strong [ref=f97e654]: Plated Steelcaps
+                - cell "34.79% 11,214 Games" [ref=f97e655]:
+                  - generic [ref=f97e656]:
+                    - generic [ref=f97e657]: 34.79%
+                    - generic [ref=f97e658]: 11,214 Games
+                - cell "48.54%" [ref=f97e659]:
+                  - strong [ref=f97e660]: 48.54%
+              - row "Sorcerer's Shoes 32.18% 10,374 Games 51.71%" [ref=f97e661]:
+                - cell "Sorcerer's Shoes" [ref=f97e662]:
+                  - strong [ref=f97e666]: Sorcerer's Shoes
+                - cell "32.18% 10,374 Games" [ref=f97e667]:
+                  - generic [ref=f97e668]:
+                    - generic [ref=f97e669]: 32.18%
+                    - generic [ref=f97e670]: 10,374 Games
+                - cell "51.71%" [ref=f97e671]:
+                  - strong [ref=f97e672]: 51.71%
+              - row "Mercury's Treads 15.69% 5,058 Games 51.34%" [ref=f97e673]:
+                - cell "Mercury's Treads" [ref=f97e674]:
+                  - strong [ref=f97e678]: Mercury's Treads
+                - cell "15.69% 5,058 Games" [ref=f97e679]:
+                  - generic [ref=f97e680]:
+                    - generic [ref=f97e681]: 15.69%
+                    - generic [ref=f97e682]: 5,058 Games
+                - cell "51.34%" [ref=f97e683]:
+                  - strong [ref=f97e684]: 51.34%
+              - row "Gluttonous Greaves 10.87% 3,504 Games 55.22%" [ref=f97e685]:
+                - cell "Gluttonous Greaves" [ref=f97e686]:
+                  - strong [ref=f97e690]: Gluttonous Greaves
+                - cell "10.87% 3,504 Games" [ref=f97e691]:
+                  - generic [ref=f97e692]:
+                    - generic [ref=f97e693]: 10.87%
+                    - generic [ref=f97e694]: 3,504 Games
+                - cell "55.22%" [ref=f97e695]:
+                  - strong [ref=f97e696]: 55.22%
+              - row "Ionian Boots of Lucidity 3.99% 1,285 Games 52.76%" [ref=f97e697]:
+                - cell "Ionian Boots of Lucidity" [ref=f97e698]:
+                  - strong [ref=f97e702]: Ionian Boots of Lucidity
+                - cell "3.99% 1,285 Games" [ref=f97e703]:
+                  - generic [ref=f97e704]:
+                    - generic [ref=f97e705]: 3.99%
+                    - generic [ref=f97e706]: 1,285 Games
+                - cell "52.76%" [ref=f97e707]:
+                  - strong [ref=f97e708]: 52.76%
+        - generic [ref=f97e709]:
+          - generic [ref=f97e711]: Starter items
+          - table "Core Items Table" [ref=f97e713]:
+            - rowgroup [ref=f97e718]:
+              - row "Pick rate Win rate" [ref=f97e719]:
+                - columnheader [ref=f97e720]
+                - columnheader "Pick rate" [ref=f97e721]:
+                  - button "Pick rate" [ref=f97e722] [cursor=pointer]
+                - columnheader "Win rate" [ref=f97e723]:
+                  - button "Win rate" [ref=f97e724] [cursor=pointer]
+            - rowgroup [ref=f97e725]:
+              - row "Doran's Ring Health Potion 2 80.76% 28,289 Games 50.29%" [ref=f97e726]:
+                - cell "Doran's Ring Health Potion 2" [ref=f97e727]:
+                  - generic [ref=f97e728]:
+                    - img "Doran's Ring" [ref=f97e731]
+                    - generic [ref=f97e732]:
+                      - img "Health Potion" [ref=f97e734]
+                      - generic [ref=f97e735]: "2"
+                - cell "80.76% 28,289 Games" [ref=f97e736]:
+                  - generic [ref=f97e737]:
+                    - generic [ref=f97e738]: 80.76%
+                    - generic [ref=f97e739]: 28,289 Games
+                - cell "50.29%" [ref=f97e740]:
+                  - strong [ref=f97e741]: 50.29%
+              - row "Doran's Shield Health Potion 9.16% 3,207 Games 48.14%" [ref=f97e742]:
+                - cell "Doran's Shield Health Potion" [ref=f97e743]:
+                  - generic [ref=f97e744]:
+                    - img "Doran's Shield" [ref=f97e747]
+                    - img "Health Potion" [ref=f97e750]
+                - cell "9.16% 3,207 Games" [ref=f97e751]:
+                  - generic [ref=f97e752]:
+                    - generic [ref=f97e753]: 9.16%
+                    - generic [ref=f97e754]: 3,207 Games
+                - cell "48.14%" [ref=f97e755]:
+                  - strong [ref=f97e756]: 48.14%
+              - row "Doran's Helm Health Potion 7.24% 2,535 Games 49.19%" [ref=f97e757]:
+                - cell "Doran's Helm Health Potion" [ref=f97e758]:
+                  - generic [ref=f97e759]:
+                    - img "Doran's Helm" [ref=f97e762]
+                    - img "Health Potion" [ref=f97e765]
+                - cell "7.24% 2,535 Games" [ref=f97e766]:
+                  - generic [ref=f97e767]:
+                    - generic [ref=f97e768]: 7.24%
+                    - generic [ref=f97e769]: 2,535 Games
+                - cell "49.19%" [ref=f97e770]:
+                  - strong [ref=f97e771]: 49.19%
+              - row "Doran's Blade Health Potion 0.7% 244 Games 52.87%" [ref=f97e772]:
+                - cell "Doran's Blade Health Potion" [ref=f97e773]:
+                  - generic [ref=f97e774]:
+                    - img "Doran's Blade" [ref=f97e777]
+                    - img "Health Potion" [ref=f97e780]
+                - cell "0.7% 244 Games" [ref=f97e781]:
+                  - generic [ref=f97e782]:
+                    - generic [ref=f97e783]: 0.7%
+                    - generic [ref=f97e784]: 244 Games
+                - cell "52.87%" [ref=f97e785]:
+                  - strong [ref=f97e786]: 52.87%
+              - row "Doran's Bow Health Potion 2 0.53% 185 Games 50.27%" [ref=f97e787]:
+                - cell "Doran's Bow Health Potion 2" [ref=f97e788]:
+                  - generic [ref=f97e789]:
+                    - img "Doran's Bow" [ref=f97e792]
+                    - generic [ref=f97e793]:
+                      - img "Health Potion" [ref=f97e795]
+                      - generic [ref=f97e796]: "2"
+                - cell "0.53% 185 Games" [ref=f97e797]:
+                  - generic [ref=f97e798]:
+                    - generic [ref=f97e799]: 0.53%
+                    - generic [ref=f97e800]: 185 Games
+                - cell "50.27%" [ref=f97e801]:
+                  - strong [ref=f97e802]: 50.27%
+              - row "Doran's Ring Health Potion 3 0.24% 83 Games 45.78%" [ref=f97e803]:
+                - cell "Doran's Ring Health Potion 3" [ref=f97e804]:
+                  - generic [ref=f97e805]:
+                    - img "Doran's Ring" [ref=f97e808]
+                    - generic [ref=f97e809]:
+                      - img "Health Potion" [ref=f97e811]
+                      - generic [ref=f97e812]: "3"
+                - cell "0.24% 83 Games" [ref=f97e813]:
+                  - generic [ref=f97e814]:
+                    - generic [ref=f97e815]: 0.24%
+                    - generic [ref=f97e816]: 83 Games
+                - cell "45.78%" [ref=f97e817]:
+                  - strong [ref=f97e818]: 45.78%
+              - row "Doran's Ring Health Potion 0.19% 65 Games 53.85%" [ref=f97e819]:
+                - cell "Doran's Ring Health Potion" [ref=f97e820]:
+                  - generic [ref=f97e821]:
+                    - img "Doran's Ring" [ref=f97e824]
+                    - img "Health Potion" [ref=f97e827]
+                - cell "0.19% 65 Games" [ref=f97e828]:
+                  - generic [ref=f97e829]:
+                    - generic [ref=f97e830]: 0.19%
+                    - generic [ref=f97e831]: 65 Games
+                - cell "53.85%" [ref=f97e832]:
+                  - strong [ref=f97e833]: 53.85%
+              - row "Dark Seal Refillable Potion 0.16% 55 Games 52.73%" [ref=f97e834]:
+                - cell "Dark Seal Refillable Potion" [ref=f97e835]:
+                  - generic [ref=f97e836]:
+                    - img "Dark Seal" [ref=f97e839]
+                    - img "Refillable Potion" [ref=f97e842]
+                - cell "0.16% 55 Games" [ref=f97e843]:
+                  - generic [ref=f97e844]:
+                    - generic [ref=f97e845]: 0.16%
+                    - generic [ref=f97e846]: 55 Games
+                - cell "52.73%" [ref=f97e847]:
+                  - strong [ref=f97e848]: 52.73%
+              - row "Cull Health Potion 0.15% 54 Games 51.85%" [ref=f97e849]:
+                - cell "Cull Health Potion" [ref=f97e850]:
+                  - generic [ref=f97e851]:
+                    - img "Cull" [ref=f97e854]
+                    - img "Health Potion" [ref=f97e857]
+                - cell "0.15% 54 Games" [ref=f97e858]:
+                  - generic [ref=f97e859]:
+                    - generic [ref=f97e860]: 0.15%
+                    - generic [ref=f97e861]: 54 Games
+                - cell "51.85%" [ref=f97e862]:
+                  - strong [ref=f97e863]: 51.85%
+              - row "Amplifying Tome Doran's Ring Health Potion 2 0.14% 50 Games 46%" [ref=f97e864]:
+                - cell "Amplifying Tome Doran's Ring Health Potion 2" [ref=f97e865]:
+                  - generic [ref=f97e866]:
+                    - img "Amplifying Tome" [ref=f97e869]
+                    - img "Doran's Ring" [ref=f97e872]
+                    - generic [ref=f97e873]:
+                      - img "Health Potion" [ref=f97e875]
+                      - generic [ref=f97e876]: "2"
+                - cell "0.14% 50 Games" [ref=f97e877]:
+                  - generic [ref=f97e878]:
+                    - generic [ref=f97e879]: 0.14%
+                    - generic [ref=f97e880]: 50 Games
+                - cell "46%" [ref=f97e881]:
+                  - strong [ref=f97e882]: 46%
+              - row "Boots Doran's Ring Health Potion 2 0.06% 22 Games 54.55%" [ref=f97e883]:
+                - cell "Boots Doran's Ring Health Potion 2" [ref=f97e884]:
+                  - generic [ref=f97e885]:
+                    - img "Boots" [ref=f97e888]
+                    - img "Doran's Ring" [ref=f97e891]
+                    - generic [ref=f97e892]:
+                      - img "Health Potion" [ref=f97e894]
+                      - generic [ref=f97e895]: "2"
+                - cell "0.06% 22 Games" [ref=f97e896]:
+                  - generic [ref=f97e897]:
+                    - generic [ref=f97e898]: 0.06%
+                    - generic [ref=f97e899]: 22 Games
+                - cell "54.55%" [ref=f97e900]:
+                  - strong [ref=f97e901]: 54.55%
+              - row "Doran's Ring 0.06% 20 Games 55%" [ref=f97e902]:
+                - cell "Doran's Ring" [ref=f97e903]:
+                  - img "Doran's Ring" [ref=f97e907]
+                - cell "0.06% 20 Games" [ref=f97e908]:
+                  - generic [ref=f97e909]:
+                    - generic [ref=f97e910]: 0.06%
+                    - generic [ref=f97e911]: 20 Games
+                - cell "55%" [ref=f97e912]:
+                  - strong [ref=f97e913]: 55%
+              - row "Ruby Crystal Doran's Ring Health Potion 2 0.05% 17 Games 47.06%" [ref=f97e914]:
+                - cell "Ruby Crystal Doran's Ring Health Potion 2" [ref=f97e915]:
+                  - generic [ref=f97e916]:
+                    - img "Ruby Crystal" [ref=f97e919]
+                    - img "Doran's Ring" [ref=f97e922]
+                    - generic [ref=f97e923]:
+                      - img "Health Potion" [ref=f97e925]
+                      - generic [ref=f97e926]: "2"
+                - cell "0.05% 17 Games" [ref=f97e927]:
+                  - generic [ref=f97e928]:
+                    - generic [ref=f97e929]: 0.05%
+                    - generic [ref=f97e930]: 17 Games
+                - cell "47.06%" [ref=f97e931]:
+                  - strong [ref=f97e932]: 47.06%
+              - row "Dagger Doran's Ring Health Potion 2 0.05% 18 Games 50%" [ref=f97e933]:
+                - cell "Dagger Doran's Ring Health Potion 2" [ref=f97e934]:
+                  - generic [ref=f97e935]:
+                    - img "Dagger" [ref=f97e938]
+                    - img "Doran's Ring" [ref=f97e941]
+                    - generic [ref=f97e942]:
+                      - img "Health Potion" [ref=f97e944]
+                      - generic [ref=f97e945]: "2"
+                - cell "0.05% 18 Games" [ref=f97e946]:
+                  - generic [ref=f97e947]:
+                    - generic [ref=f97e948]: 0.05%
+                    - generic [ref=f97e949]: 18 Games
+                - cell "50%" [ref=f97e950]:
+                  - strong [ref=f97e951]: 50%
+              - row "Doran's Ring Dark Seal Health Potion 2 0.04% 15 Games 53.33%" [ref=f97e952]:
+                - cell "Doran's Ring Dark Seal Health Potion 2" [ref=f97e953]:
+                  - generic [ref=f97e954]:
+                    - img "Doran's Ring" [ref=f97e957]
+                    - img "Dark Seal" [ref=f97e960]
+                    - generic [ref=f97e961]:
+                      - img "Health Potion" [ref=f97e963]
+                      - generic [ref=f97e964]: "2"
+                - cell "0.04% 15 Games" [ref=f97e965]:
+                  - generic [ref=f97e966]:
+                    - generic [ref=f97e967]: 0.04%
+                    - generic [ref=f97e968]: 15 Games
+                - cell "53.33%" [ref=f97e969]:
+                  - strong [ref=f97e970]: 53.33%
+      - generic [ref=f97e971]:
+        - generic [ref=f97e973]:
+          - generic [ref=f97e974]: ADVERTISEMENT
+          - link "OP.GG Premium Remove ads" [ref=f97e975] [cursor=pointer]:
+            - /url: https://member.op.gg/membership?utm_source=lol_web&utm_campaign=banner_frame
+            - img "OP.GG Premium" [ref=f97e976]
+            - strong [ref=f97e978]: Remove ads
+        - generic [ref=f97e979]:
+          - generic [ref=f97e981]: Items
+          - table "Core Items Table" [ref=f97e983]:
+            - rowgroup [ref=f97e988]:
+              - row "Pick rate Win rate" [ref=f97e989]:
+                - columnheader [ref=f97e990]
+                - columnheader "Pick rate" [ref=f97e991]:
+                  - button "Pick rate" [ref=f97e992] [cursor=pointer]
+                - columnheader "Win rate" [ref=f97e993]:
+                  - button "Win rate" [ref=f97e994] [cursor=pointer]
+            - rowgroup [ref=f97e995]:
+              - row "Dusk and Dawn 69.05% 23,850 Games 51.94%" [ref=f97e996]:
+                - cell "Dusk and Dawn" [ref=f97e997]:
+                  - strong [ref=f97e1001]: Dusk and Dawn
+                - cell "69.05% 23,850 Games" [ref=f97e1002]:
+                  - generic [ref=f97e1003]:
+                    - generic [ref=f97e1004]: 69.05%
+                    - generic [ref=f97e1005]: 23,850 Games
+                - cell "51.94%" [ref=f97e1006]:
+                  - strong [ref=f97e1007]: 51.94%
+              - row "Riftmaker 49.61% 17,134 Games 51.16%" [ref=f97e1008]:
+                - cell "Riftmaker" [ref=f97e1009]:
+                  - strong [ref=f97e1013]: Riftmaker
+                - cell "49.61% 17,134 Games" [ref=f97e1014]:
+                  - generic [ref=f97e1015]:
+                    - generic [ref=f97e1016]: 49.61%
+                    - generic [ref=f97e1017]: 17,134 Games
+                - cell "51.16%" [ref=f97e1018]:
+                  - strong [ref=f97e1019]: 51.16%
+              - row "Nashor's Tooth 47.35% 16,356 Games 51.44%" [ref=f97e1020]:
+                - cell "Nashor's Tooth" [ref=f97e1021]:
+                  - strong [ref=f97e1025]: Nashor's Tooth
+                - cell "47.35% 16,356 Games" [ref=f97e1026]:
+                  - generic [ref=f97e1027]:
+                    - generic [ref=f97e1028]: 47.35%
+                    - generic [ref=f97e1029]: 16,356 Games
+                - cell "51.44%" [ref=f97e1030]:
+                  - strong [ref=f97e1031]: 51.44%
+              - row "Shadowflame 41.42% 14,308 Games 55.1%" [ref=f97e1032]:
+                - cell "Shadowflame" [ref=f97e1033]:
+                  - strong [ref=f97e1037]: Shadowflame
+                - cell "41.42% 14,308 Games" [ref=f97e1038]:
+                  - generic [ref=f97e1039]:
+                    - generic [ref=f97e1040]: 41.42%
+                    - generic [ref=f97e1041]: 14,308 Games
+                - cell "55.1%" [ref=f97e1042]:
+                  - strong [ref=f97e1043]: 55.1%
+              - row "Rabadon's Deathcap 29.61% 10,228 Games 59.53%" [ref=f97e1044]:
+                - cell "Rabadon's Deathcap" [ref=f97e1045]:
+                  - strong [ref=f97e1049]: Rabadon's Deathcap
+                - cell "29.61% 10,228 Games" [ref=f97e1050]:
+                  - generic [ref=f97e1051]:
+                    - generic [ref=f97e1052]: 29.61%
+                    - generic [ref=f97e1053]: 10,228 Games
+                - cell "59.53%" [ref=f97e1054]:
+                  - strong [ref=f97e1055]: 59.53%
+              - row "Zhonya's Hourglass 14.15% 4,886 Games 55.63%" [ref=f97e1056]:
+                - cell "Zhonya's Hourglass" [ref=f97e1057]:
+                  - strong [ref=f97e1061]: Zhonya's Hourglass
+                - cell "14.15% 4,886 Games" [ref=f97e1062]:
+                  - generic [ref=f97e1063]:
+                    - generic [ref=f97e1064]: 14.15%
+                    - generic [ref=f97e1065]: 4,886 Games
+                - cell "55.63%" [ref=f97e1066]:
+                  - strong [ref=f97e1067]: 55.63%
+              - row "Void Staff 9.16% 3,163 Games 57.48%" [ref=f97e1068]:
+                - cell "Void Staff" [ref=f97e1069]:
+                  - strong [ref=f97e1073]: Void Staff
+                - cell "9.16% 3,163 Games" [ref=f97e1074]:
+                  - generic [ref=f97e1075]:
+                    - generic [ref=f97e1076]: 9.16%
+                    - generic [ref=f97e1077]: 3,163 Games
+                - cell "57.48%" [ref=f97e1078]:
+                  - strong [ref=f97e1079]: 57.48%
+              - row "Dark Seal 8.37% 2,890 Games 54.81%" [ref=f97e1080]:
+                - cell "Dark Seal" [ref=f97e1081]:
+                  - strong [ref=f97e1085]: Dark Seal
+                - cell "8.37% 2,890 Games" [ref=f97e1086]:
+                  - generic [ref=f97e1087]:
+                    - generic [ref=f97e1088]: 8.37%
+                    - generic [ref=f97e1089]: 2,890 Games
+                - cell "54.81%" [ref=f97e1090]:
+                  - strong [ref=f97e1091]: 54.81%
+              - row "Oblivion Orb 7.4% 2,557 Games 43.84%" [ref=f97e1092]:
+                - cell "Oblivion Orb" [ref=f97e1093]:
+                  - strong [ref=f97e1097]: Oblivion Orb
+                - cell "7.4% 2,557 Games" [ref=f97e1098]:
+                  - generic [ref=f97e1099]:
+                    - generic [ref=f97e1100]: 7.4%
+                    - generic [ref=f97e1101]: 2,557 Games
+                - cell "43.84%" [ref=f97e1102]:
+                  - strong [ref=f97e1103]: 43.84%
+              - row "Lich Bane 6.53% 2,256 Games 52.35%" [ref=f97e1104]:
+                - cell "Lich Bane" [ref=f97e1105]:
+                  - strong [ref=f97e1109]: Lich Bane
+                - cell "6.53% 2,256 Games" [ref=f97e1110]:
+                  - generic [ref=f97e1111]:
+                    - generic [ref=f97e1112]: 6.53%
+                    - generic [ref=f97e1113]: 2,256 Games
+                - cell "52.35%" [ref=f97e1114]:
+                  - strong [ref=f97e1115]: 52.35%
+              - row "Malignance 4.22% 1,456 Games 54.4%" [ref=f97e1116]:
+                - cell "Malignance" [ref=f97e1117]:
+                  - strong [ref=f97e1121]: Malignance
+                - cell "4.22% 1,456 Games" [ref=f97e1122]:
+                  - generic [ref=f97e1123]:
+                    - generic [ref=f97e1124]: 4.22%
+                    - generic [ref=f97e1125]: 1,456 Games
+                - cell "54.4%" [ref=f97e1126]:
+                  - strong [ref=f97e1127]: 54.4%
+              - row "Seeker's Armguard 3.42% 1,181 Games 55.63%" [ref=f97e1128]:
+                - cell "Seeker's Armguard" [ref=f97e1129]:
+                  - strong [ref=f97e1133]: Seeker's Armguard
+                - cell "3.42% 1,181 Games" [ref=f97e1134]:
+                  - generic [ref=f97e1135]:
+                    - generic [ref=f97e1136]: 3.42%
+                    - generic [ref=f97e1137]: 1,181 Games
+                - cell "55.63%" [ref=f97e1138]:
+                  - strong [ref=f97e1139]: 55.63%
+              - row "Morellonomicon 1.68% 580 Games 52.24%" [ref=f97e1140]:
+                - cell "Morellonomicon" [ref=f97e1141]:
+                  - strong [ref=f97e1145]: Morellonomicon
+                - cell "1.68% 580 Games" [ref=f97e1146]:
+                  - generic [ref=f97e1147]:
+                    - generic [ref=f97e1148]: 1.68%
+                    - generic [ref=f97e1149]: 580 Games
+                - cell "52.24%" [ref=f97e1150]:
+                  - strong [ref=f97e1151]: 52.24%
+              - row "Mejai's Soulstealer 1.29% 445 Games 87.64%" [ref=f97e1152]:
+                - cell "Mejai's Soulstealer" [ref=f97e1153]:
+                  - strong [ref=f97e1157]: Mejai's Soulstealer
+                - cell "1.29% 445 Games" [ref=f97e1158]:
+                  - generic [ref=f97e1159]:
+                    - generic [ref=f97e1160]: 1.29%
+                    - generic [ref=f97e1161]: 445 Games
+                - cell "87.64%" [ref=f97e1162]:
+                  - strong [ref=f97e1163]: 87.64%
+              - row "Banshee's Veil 1% 344 Games 53.78%" [ref=f97e1164]:
+                - cell "Banshee's Veil" [ref=f97e1165]:
+                  - strong [ref=f97e1169]: Banshee's Veil
+                - cell "1% 344 Games" [ref=f97e1170]:
+                  - generic [ref=f97e1171]:
+                    - generic [ref=f97e1172]: 1%
+                    - generic [ref=f97e1173]: 344 Games
+                - cell "53.78%" [ref=f97e1174]:
+                  - strong [ref=f97e1175]: 53.78%
+              - row "Bloodletter's Curse 0.76% 264 Games 57.95%" [ref=f97e1176]:
+                - cell "Bloodletter's Curse" [ref=f97e1177]:
+                  - strong [ref=f97e1181]: Bloodletter's Curse
+                - cell "0.76% 264 Games" [ref=f97e1182]:
+                  - generic [ref=f97e1183]:
+                    - generic [ref=f97e1184]: 0.76%
+                    - generic [ref=f97e1185]: 264 Games
+                - cell "57.95%" [ref=f97e1186]:
+                  - strong [ref=f97e1187]: 57.95%
+              - row "Stormsurge 0.67% 233 Games 56.65%" [ref=f97e1188]:
+                - cell "Stormsurge" [ref=f97e1189]:
+                  - strong [ref=f97e1193]: Stormsurge
+                - cell "0.67% 233 Games" [ref=f97e1194]:
+                  - generic [ref=f97e1195]:
+                    - generic [ref=f97e1196]: 0.67%
+                    - generic [ref=f97e1197]: 233 Games
+                - cell "56.65%" [ref=f97e1198]:
+                  - strong [ref=f97e1199]: 56.65%
+              - row "Bramble Vest 0.61% 212 Games 41.04%" [ref=f97e1200]:
+                - cell "Bramble Vest" [ref=f97e1201]:
+                  - strong [ref=f97e1205]: Bramble Vest
+                - cell "0.61% 212 Games" [ref=f97e1206]:
+                  - generic [ref=f97e1207]:
+                    - generic [ref=f97e1208]: 0.61%
+                    - generic [ref=f97e1209]: 212 Games
+                - cell "41.04%" [ref=f97e1210]:
+                  - strong [ref=f97e1211]: 41.04%
+              - row "Hextech Rocketbelt 0.58% 199 Games 56.28%" [ref=f97e1212]:
+                - cell "Hextech Rocketbelt" [ref=f97e1213]:
+                  - strong [ref=f97e1217]: Hextech Rocketbelt
+                - cell "0.58% 199 Games" [ref=f97e1218]:
+                  - generic [ref=f97e1219]:
+                    - generic [ref=f97e1220]: 0.58%
+                    - generic [ref=f97e1221]: 199 Games
+                - cell "56.28%" [ref=f97e1222]:
+                  - strong [ref=f97e1223]: 56.28%
+              - row "Randuin's Omen 0.55% 191 Games 54.97%" [ref=f97e1224]:
+                - cell "Randuin's Omen" [ref=f97e1225]:
+                  - strong [ref=f97e1229]: Randuin's Omen
+                - cell "0.55% 191 Games" [ref=f97e1230]:
+                  - generic [ref=f97e1231]:
+                    - generic [ref=f97e1232]: 0.55%
+                    - generic [ref=f97e1233]: 191 Games
+                - cell "54.97%" [ref=f97e1234]:
+                  - strong [ref=f97e1235]: 54.97%
+              - row "Cosmic Drive 0.49% 168 Games 64.88%" [ref=f97e1236]:
+                - cell "Cosmic Drive" [ref=f97e1237]:
+                  - strong [ref=f97e1241]: Cosmic Drive
+                - cell "0.49% 168 Games" [ref=f97e1242]:
+                  - generic [ref=f97e1243]:
+                    - generic [ref=f97e1244]: 0.49%
+                    - generic [ref=f97e1245]: 168 Games
+                - cell "64.88%" [ref=f97e1246]:
+                  - strong [ref=f97e1247]: 64.88%
+              - row "Spirit Visage 0.42% 145 Games 54.48%" [ref=f97e1248]:
+                - cell "Spirit Visage" [ref=f97e1249]:
+                  - strong [ref=f97e1253]: Spirit Visage
+                - cell "0.42% 145 Games" [ref=f97e1254]:
+                  - generic [ref=f97e1255]:
+                    - generic [ref=f97e1256]: 0.42%
+                    - generic [ref=f97e1257]: 145 Games
+                - cell "54.48%" [ref=f97e1258]:
+                  - strong [ref=f97e1259]: 54.48%
+              - row "Kaenic Rookern 0.31% 107 Games 53.27%" [ref=f97e1260]:
+                - cell "Kaenic Rookern" [ref=f97e1261]:
+                  - strong [ref=f97e1265]: Kaenic Rookern
+                - cell "0.31% 107 Games" [ref=f97e1266]:
+                  - generic [ref=f97e1267]:
+                    - generic [ref=f97e1268]: 0.31%
+                    - generic [ref=f97e1269]: 107 Games
+                - cell "53.27%" [ref=f97e1270]:
+                  - strong [ref=f97e1271]: 53.27%
+              - row "Cryptbloom 0.3% 104 Games 65.38%" [ref=f97e1272]:
+                - cell "Cryptbloom" [ref=f97e1273]:
+                  - strong [ref=f97e1277]: Cryptbloom
+                - cell "0.3% 104 Games" [ref=f97e1278]:
+                  - generic [ref=f97e1279]:
+                    - generic [ref=f97e1280]: 0.3%
+                    - generic [ref=f97e1281]: 104 Games
+                - cell "65.38%" [ref=f97e1282]:
+                  - strong [ref=f97e1283]: 65.38%
+              - row "Hextech Gunblade 0.26% 90 Games 52.22%" [ref=f97e1284]:
+                - cell "Hextech Gunblade" [ref=f97e1285]:
+                  - strong [ref=f97e1289]: Hextech Gunblade
+                - cell "0.26% 90 Games" [ref=f97e1290]:
+                  - generic [ref=f97e1291]:
+                    - generic [ref=f97e1292]: 0.26%
+                    - generic [ref=f97e1293]: 90 Games
+                - cell "52.22%" [ref=f97e1294]:
+                  - strong [ref=f97e1295]: 52.22%
+              - row "Jak'Sho, The Protean 0.23% 81 Games 51.85%" [ref=f97e1296]:
+                - cell "Jak'Sho, The Protean" [ref=f97e1297]:
+                  - strong [ref=f97e1301]: Jak'Sho, The Protean
+                - cell "0.23% 81 Games" [ref=f97e1302]:
+                  - generic [ref=f97e1303]:
+                    - generic [ref=f97e1304]: 0.23%
+                    - generic [ref=f97e1305]: 81 Games
+                - cell "51.85%" [ref=f97e1306]:
+                  - strong [ref=f97e1307]: 51.85%
+              - row "Liandry's Torment 0.19% 66 Games 59.09%" [ref=f97e1308]:
+                - cell "Liandry's Torment" [ref=f97e1309]:
+                  - strong [ref=f97e1313]: Liandry's Torment
+                - cell "0.19% 66 Games" [ref=f97e1314]:
+                  - generic [ref=f97e1315]:
+                    - generic [ref=f97e1316]: 0.19%
+                    - generic [ref=f97e1317]: 66 Games
+                - cell "59.09%" [ref=f97e1318]:
+                  - strong [ref=f97e1319]: 59.09%
+              - row "Frozen Heart 0.16% 54 Games 57.41%" [ref=f97e1320]:
+                - cell "Frozen Heart" [ref=f97e1321]:
+                  - strong [ref=f97e1325]: Frozen Heart
+                - cell "0.16% 54 Games" [ref=f97e1326]:
+                  - generic [ref=f97e1327]:
+                    - generic [ref=f97e1328]: 0.16%
+                    - generic [ref=f97e1329]: 54 Games
+                - cell "57.41%" [ref=f97e1330]:
+                  - strong [ref=f97e1331]: 57.41%
+              - row "Thornmail 0.15% 52 Games 53.85%" [ref=f97e1332]:
+                - cell "Thornmail" [ref=f97e1333]:
+                  - strong [ref=f97e1337]: Thornmail
+                - cell "0.15% 52 Games" [ref=f97e1338]:
+                  - generic [ref=f97e1339]:
+                    - generic [ref=f97e1340]: 0.15%
+                    - generic [ref=f97e1341]: 52 Games
+                - cell "53.85%" [ref=f97e1342]:
+                  - strong [ref=f97e1343]: 53.85%
+              - row "Abyssal Mask 0.11% 37 Games 48.65%" [ref=f97e1344]:
+                - cell "Abyssal Mask" [ref=f97e1345]:
+                  - strong [ref=f97e1349]: Abyssal Mask
+                - cell "0.11% 37 Games" [ref=f97e1350]:
+                  - generic [ref=f97e1351]:
+                    - generic [ref=f97e1352]: 0.11%
+                    - generic [ref=f97e1353]: 37 Games
+                - cell "48.65%" [ref=f97e1354]:
+                  - strong [ref=f97e1355]: 48.65%
+  - generic [ref=f97e1358]:
+    - generic [ref=f97e1359]: ADVERTISEMENT
+    - link "OP.GG Premium Remove ads" [ref=f97e1360] [cursor=pointer]:
+      - /url: https://member.op.gg/membership?utm_source=lol_web&utm_campaign=banner_frame
+      - img "OP.GG Premium" [ref=f97e1361]
+      - strong [ref=f97e1363]: Remove ads
+  - contentinfo [ref=f97e1364]:
+    - generic [ref=f97e1365]:
+      - generic [ref=f97e1366]:
+        - generic [ref=f97e1367]:
+          - generic [ref=f97e1368]: OP.GG
+          - navigation [ref=f97e1369]:
+            - link "About OP.GG" [ref=f97e1371] [cursor=pointer]:
+              - /url: /lol/about
+            - link "Company" [ref=f97e1373] [cursor=pointer]:
+              - /url: https://log.op.gg/company_en
+            - link "Blog" [ref=f97e1375] [cursor=pointer]:
+              - /url: https://log.op.gg/
+            - link "Logo history" [ref=f97e1377] [cursor=pointer]:
+              - /url: /lol/logos
+        - generic [ref=f97e1378]:
+          - generic [ref=f97e1379]: Products
+          - navigation [ref=f97e1380]:
+            - generic [ref=f97e1381]:
+              - link "League of Legends" [ref=f97e1382] [cursor=pointer]:
+                - /url: https://op.gg
+              - img [ref=f97e1383]
+            - generic [ref=f97e1388]:
+              - link "Teamfight Tactics" [ref=f97e1389] [cursor=pointer]:
+                - /url: https://op.gg/tft
+              - img [ref=f97e1390]
+            - generic [ref=f97e1395]:
+              - link "Valorant" [ref=f97e1396] [cursor=pointer]:
+                - /url: https://op.gg/valorant
+              - img [ref=f97e1397]
+            - generic [ref=f97e1402]:
+              - link "OVERWATCH2" [ref=f97e1403] [cursor=pointer]:
+                - /url: https://op.gg/overwatch
+              - img [ref=f97e1404]
+            - generic [ref=f97e1409]:
+              - link "PUBG" [ref=f97e1410] [cursor=pointer]:
+                - /url: https://op.gg/pubg
+              - img [ref=f97e1411]
+            - generic [ref=f97e1416]:
+              - link "2XKO" [ref=f97e1417] [cursor=pointer]:
+                - /url: https://op.gg/2xko
+              - img [ref=f97e1418]
+            - generic [ref=f97e1423]:
+              - link "Marvel Rivals" [ref=f97e1424] [cursor=pointer]:
+                - /url: https://op.gg/marvel-rivals
+              - img [ref=f97e1425]
+            - generic [ref=f97e1430]:
+              - link "Fortnite" [ref=f97e1431] [cursor=pointer]:
+                - /url: https://op.gg/fortnite
+              - img [ref=f97e1432]
+            - generic [ref=f97e1437]:
+              - link "Counter Strike 2" [ref=f97e1438] [cursor=pointer]:
+                - /url: https://op.gg/cs2
+              - img [ref=f97e1439]
+            - generic [ref=f97e1444]:
+              - link "Arc Raiders" [ref=f97e1445] [cursor=pointer]:
+                - /url: https://op.gg/arc-raiders
+              - img [ref=f97e1446]
+            - generic [ref=f97e1451]:
+              - link "ROBLOX" [ref=f97e1452] [cursor=pointer]:
+                - /url: https://op.gg/roblox
+              - img [ref=f97e1453]
+            - generic [ref=f97e1458]:
+              - link "Pokémon Pokopia" [ref=f97e1459] [cursor=pointer]:
+                - /url: https://op.gg/pokemon-pokopia
+              - img [ref=f97e1460]
+            - generic [ref=f97e1465]:
+              - link "Slay The Spire 2" [ref=f97e1466] [cursor=pointer]:
+                - /url: https://op.gg/slay-the-spire2
+              - img [ref=f97e1467]
+            - generic [ref=f97e1472]:
+              - link "Time Takers" [ref=f97e1473] [cursor=pointer]:
+                - /url: https://op.gg/time-takers
+              - img [ref=f97e1474]
+            - generic [ref=f97e1479]:
+              - link "Pokémon Champions" [ref=f97e1480] [cursor=pointer]:
+                - /url: https://op.gg/pokemon-champions
+              - img [ref=f97e1481]
+            - generic [ref=f97e1486]:
+              - link "Diablo 4" [ref=f97e1487] [cursor=pointer]:
+                - /url: https://op.gg/diablo4
+              - img [ref=f97e1488]
+            - generic [ref=f97e1493]:
+              - link "Desktop" [ref=f97e1494] [cursor=pointer]:
+                - /url: https://op.gg/desktop
+              - img [ref=f97e1495]
+            - generic [ref=f97e1500]:
+              - link "Games" [ref=f97e1501] [cursor=pointer]:
+                - /url: https://games.op.gg
+              - img [ref=f97e1502]
+            - generic [ref=f97e1507]:
+              - link "Duo" [ref=f97e1508] [cursor=pointer]:
+                - /url: https://duo.op.gg
+              - img [ref=f97e1509]
+            - generic [ref=f97e1514]:
+              - link "TalkG" [ref=f97e1515] [cursor=pointer]:
+                - /url: https://talk.op.gg
+              - img [ref=f97e1516]
+            - generic [ref=f97e1521]:
+              - link "Esports" [ref=f97e1522] [cursor=pointer]:
+                - /url: https://esports.op.gg
+              - img [ref=f97e1523]
+            - generic [ref=f97e1528]:
+              - link "Gigs" [ref=f97e1529] [cursor=pointer]:
+                - /url: https://gigs.op.gg
+              - img [ref=f97e1530]
+            - generic [ref=f97e1535]:
+              - link "Streamer Overlay" [ref=f97e1536] [cursor=pointer]:
+                - /url: https://streamer-overlay.op.gg
+              - img [ref=f97e1537]
+        - generic [ref=f97e1542]:
+          - generic [ref=f97e1543]: Apps
+          - navigation [ref=f97e1544]:
+            - generic [ref=f97e1545]:
+              - link "OP.GG for Mobile Android" [ref=f97e1546] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=gg.op.lol.android
+              - img [ref=f97e1547]
+            - generic [ref=f97e1552]:
+              - link "OP.GG for Mobile iOS" [ref=f97e1553] [cursor=pointer]:
+                - /url: https://itunes.apple.com/app/id605722237
+              - img [ref=f97e1554]
+            - generic [ref=f97e1559]:
+              - link "AllT Android" [ref=f97e1560] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=gg.op.tft
+              - img [ref=f97e1561]
+            - generic [ref=f97e1566]:
+              - link "AllT iOS" [ref=f97e1567] [cursor=pointer]:
+                - /url: https://apps.apple.com/kr/app/allt/id6448737621
+              - img [ref=f97e1568]
+            - generic [ref=f97e1573]:
+              - link "Valorant Android" [ref=f97e1574] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=gg.op.valornento
+              - img [ref=f97e1575]
+            - generic [ref=f97e1580]:
+              - link "Valorant iOS" [ref=f97e1581] [cursor=pointer]:
+                - /url: https://apps.apple.com/kr/app/valornento/id6468704189
+              - img [ref=f97e1582]
+            - generic [ref=f97e1587]:
+              - link "Gigs Android" [ref=f97e1588] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=gg.op.gigs
+              - img [ref=f97e1589]
+            - generic [ref=f97e1594]:
+              - link "Gigs iOS" [ref=f97e1595] [cursor=pointer]:
+                - /url: https://apps.apple.com/kr/app/id6468980658
+              - img [ref=f97e1596]
+            - generic [ref=f97e1601]:
+              - link "TalkG Android" [ref=f97e1602] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=gg.op.talk&hl=ko-KR
+              - img [ref=f97e1603]
+            - generic [ref=f97e1608]:
+              - link "TalkG iOS" [ref=f97e1609] [cursor=pointer]:
+                - /url: https://apps.apple.com/kr/app/id6475250505
+              - img [ref=f97e1610]
+            - generic [ref=f97e1615]:
+              - link "Esports Android" [ref=f97e1616] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=gg.op.esports
+              - img [ref=f97e1617]
+            - generic [ref=f97e1622]:
+              - link "Esports iOS" [ref=f97e1623] [cursor=pointer]:
+                - /url: https://apps.apple.com/kr/app/id1557184148
+              - img [ref=f97e1624]
+        - generic [ref=f97e1629]:
+          - generic [ref=f97e1630]: Resources
+          - navigation [ref=f97e1631]:
+            - link "Privacy policy" [ref=f97e1633] [cursor=pointer]:
+              - /url: /lol/policies/privacy
+            - link "Terms of use" [ref=f97e1635] [cursor=pointer]:
+              - /url: /lol/policies/agreement
+            - link "Help" [ref=f97e1637] [cursor=pointer]:
+              - /url: https://help.op.gg/hc/en-us
+            - link "Email inquiry" [ref=f97e1639] [cursor=pointer]:
+              - /url: mailto:service@op.gg
+            - button "Contact us" [ref=f97e1641] [cursor=pointer]
+        - generic [ref=f97e1642]:
+          - generic [ref=f97e1643]: More
+          - navigation [ref=f97e1644]:
+            - link "Business" [ref=f97e1646] [cursor=pointer]:
+              - /url: mailto:contact@op.gg
+            - link "Advertise" [ref=f97e1648] [cursor=pointer]:
+              - /url: https://opgg.notion.site/Advertising-on-OP-GG-47e02da6b7eb438288730c92c14ef8f0
+            - link "Recruit" [ref=f97e1650] [cursor=pointer]:
+              - /url: https://opgg.team/?lang=en
+      - generic [ref=f97e1652]:
+        - combobox "English" [ref=f97e1653]:
+          - option "English" [selected]
+          - option "한국어"
+          - option "日本語"
+          - option "język polski"
+          - option "français"
+          - option "Deutsch"
+          - option "español"
+          - option "Nederlands"
+          - option "dansk"
+          - option "Svenska"
+          - option "Norsk"
+          - option "русский язык"
+          - option "magyar"
+          - option "suomi"
+          - option "Türkçe"
+          - option "limba română"
+          - option "português"
+          - option "简体中文"
+          - option "繁體中文"
+          - option "العربية"
+          - option "српски језик"
+          - option "italiano"
+          - option "ไทย"
+          - option "Tiếng Việt"
+        - generic [ref=f97e1654] [cursor=pointer]:
+          - generic [ref=f97e1655]: English
+          - img [ref=f97e1657]
+      - generic [ref=f97e1659]:
+        - paragraph [ref=f97e1661]: © 2012-2026 OP.GG. OP.GG is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
+        - navigation [ref=f97e1662]:
+          - link "instagram account" [ref=f97e1663] [cursor=pointer]:
+            - /url: https://www.instagram.com/opgg_official
+            - img "instagram account" [ref=f97e1664]
+          - link "youtube account" [ref=f97e1665] [cursor=pointer]:
+            - /url: https://www.youtube.com/@opgg_official
+            - img "youtube account" [ref=f97e1666]
+          - link "x account" [ref=f97e1667] [cursor=pointer]:
+            - /url: https://twitter.com/opgg_official
+            - img "x account" [ref=f97e1668]
+          - link "facebook account" [ref=f97e1669] [cursor=pointer]:
+            - /url: https://www.facebook.com/opgg.official/
+            - img "facebook account" [ref=f97e1670]
+          - link "overwolf" [ref=f97e1671] [cursor=pointer]:
+            - /url: https://www.overwolf.com/oneapp/opgg-electron-app
+            - img "overwolf" [ref=f97e1672]

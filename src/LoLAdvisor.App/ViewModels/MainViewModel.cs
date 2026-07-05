@@ -661,10 +661,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
 
         ItemPanelHint = "";
-        ThreatSummary = plan.ThreatSummary;
+        ThreatSummary = plan.InventoryFull
+            ? plan.ThreatSummary + "  |  Inventory FULL — sell before buying"
+            : plan.ThreatSummary;
         foreach (var reco in plan.Recommendations)
             ItemRecos.Add(new ItemRecoRowViewModel(reco));
-        BootsLine = plan.Boots is null ? "" : $"Boots: {plan.Boots.Boots.Name} — {plan.Boots.Reason}";
+        BootsLine = plan.Boots is null ? "" : FormatBoots(plan.Boots);
         SellLine = plan.Sells.Count == 0
             ? ""
             : "Sell: " + string.Join("  ·  ", plan.Sells.Select(s =>
@@ -673,6 +675,18 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             ? ""
             : $"Start: {plan.Starter.Item.Name} ({plan.Starter.Item.GoldTotal.ToString("N0", CultureInfo.InvariantCulture)}) — {plan.Starter.Reason}";
         ShopAlertLine = plan.ShopAlert ?? "";
+    }
+
+    /// <summary>Línea de botas accionable: qué comprar YA y cuánto falta, no solo el nombre.</summary>
+    private static string FormatBoots(BootsAdvice b)
+    {
+        var cost = b.Boots.GoldTotal.ToString("N0", CultureInfo.InvariantCulture);
+        var status = b.Purchase.CanFinishNow
+            ? "✓ buy them now"
+            : b.Purchase.NextComponent is { } component
+                ? $"buy now: {component.Name} · need {b.MissingGold.ToString("N0", CultureInfo.InvariantCulture)} more"
+                : $"need {b.MissingGold.ToString("N0", CultureInfo.InvariantCulture)} more gold";
+        return $"Boots: {b.Boots.Name} ({cost}) — {status} — {b.Reason}";
     }
 
     /// <summary>

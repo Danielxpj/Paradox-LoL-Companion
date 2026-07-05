@@ -34,10 +34,16 @@ public sealed record ItemRecommendation(
     public bool Affordable => Purchase.CanFinishNow;
     /// <summary>Oro que falta gastar para terminarlo (0 si alcanza).</summary>
     public int RemainingCost => Purchase.RemainingCost;
+    /// <summary>
+    /// Inventario lleno y comprar este item no consume ningún componente que ya
+    /// tengas: literalmente no hay slot donde ponerlo — hay que vender antes.
+    /// </summary>
+    public bool BlockedByFullInventory { get; init; }
 }
 
-/// <summary>Consejo de botas (solo cuando aún no hay botas terminadas).</summary>
-public sealed record BootsAdvice(StaticItem Boots, string Reason);
+/// <summary>Consejo de botas (solo cuando aún no hay botas terminadas), con su plan de compra.</summary>
+/// <param name="MissingGold">Oro que falta juntar para terminarlas (0 si ya alcanza).</param>
+public sealed record BootsAdvice(StaticItem Boots, string Reason, PurchasePlan Purchase, int MissingGold);
 
 /// <summary>Sugerencia de venta: un item ya comprado que dejó de ser coherente con la build.</summary>
 public sealed record SellSuggestion(StaticItem Item, int SellGold, string Reason);
@@ -62,4 +68,7 @@ public sealed record ItemAdvicePlan(
 {
     /// <summary>La recomendación principal (la de mayor puntaje), si hay alguna.</summary>
     public ItemRecommendation? Top => Recommendations.Count > 0 ? Recommendations[0] : null;
+
+    /// <summary>Los 6 slots de items están ocupados: comprar exige vender o fusionar componentes.</summary>
+    public bool InventoryFull { get; init; }
 }

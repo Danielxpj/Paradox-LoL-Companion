@@ -115,7 +115,13 @@ public sealed class ItemRecoRowViewModel
     {
         Name = reco.Item.Name;
         Cost = reco.Item.GoldTotal.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
-        if (reco.Affordable)
+        if (reco.BlockedByFullInventory)
+        {
+            // Sin slot libre y la compra no fusiona nada del inventario: primero vender.
+            AffordText = "inventory full — sell something first";
+            AffordBrush = Palette.Red;
+        }
+        else if (reco.Affordable)
         {
             AffordText = "✓ you can buy it now";
             AffordBrush = Palette.Green;

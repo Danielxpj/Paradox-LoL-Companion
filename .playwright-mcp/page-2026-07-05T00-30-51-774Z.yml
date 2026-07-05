@@ -1,0 +1,465 @@
+- generic [active] [ref=f73e1]:
+  - generic [ref=f73e5]:
+    - link "Go to Main Page" [ref=f73e6] [cursor=pointer]:
+      - /url: /
+      - img [ref=f73e7]
+    - button "Stats" [ref=f73e12] [cursor=pointer]:
+      - text: Stats
+      - img [ref=f73e13]
+    - generic [ref=f73e15]:
+      - link "Desktop" [ref=f73e16] [cursor=pointer]:
+        - /url: https://op.gg/desktop
+        - generic [ref=f73e17]: Desktop
+      - link "Games New" [ref=f73e18] [cursor=pointer]:
+        - /url: https://games.op.gg
+        - generic [ref=f73e19]: Games
+        - generic [ref=f73e20]: New
+      - link "Duo" [ref=f73e21] [cursor=pointer]:
+        - /url: https://duo.op.gg
+        - generic [ref=f73e22]: Duo
+      - link "TalkG" [ref=f73e23] [cursor=pointer]:
+        - /url: https://talk.op.gg
+        - generic [ref=f73e24]: TalkG
+      - link "Esports" [ref=f73e25] [cursor=pointer]:
+        - /url: https://esports.op.gg
+        - generic [ref=f73e26]: Esports
+      - link "Gigs" [ref=f73e27] [cursor=pointer]:
+        - /url: https://gigs.op.gg
+        - generic [ref=f73e28]: Gigs
+      - link "Streamer Overlay New" [ref=f73e29] [cursor=pointer]:
+        - /url: https://streamer-overlay.op.gg
+        - generic [ref=f73e30]: Streamer Overlay
+        - generic [ref=f73e31]: New
+    - button "View More" [ref=f73e35] [cursor=pointer]:
+      - img [ref=f73e36]
+    - button "EN" [ref=f73e43] [cursor=pointer]:
+      - img [ref=f73e44]
+      - generic [ref=f73e46]: EN
+  - banner [ref=f73e47]:
+    - generic [ref=f73e48]:
+      - navigation "Main Navigation" [ref=f73e49]:
+        - link [ref=f73e50] [cursor=pointer]:
+          - /url: /desktop/en
+          - img [ref=f73e52]
+        - list [ref=f73e54]:
+          - listitem [ref=f73e55]:
+            - generic [ref=f73e56] [cursor=pointer]:
+              - button "Features" [ref=f73e57]
+              - img [ref=f73e59]
+          - listitem [ref=f73e61]:
+            - link "Patch notes" [ref=f73e62] [cursor=pointer]:
+              - /url: /desktop/en/patch-notes
+          - listitem [ref=f73e63]:
+            - link "Events" [ref=f73e64] [cursor=pointer]:
+              - /url: /desktop/en/events
+          - listitem [ref=f73e65]:
+            - link "Service status" [ref=f73e66] [cursor=pointer]:
+              - /url: /desktop/en/status
+          - listitem [ref=f73e67]:
+            - link "Downloads" [ref=f73e68] [cursor=pointer]:
+              - /url: /desktop/en/downloads
+      - generic [ref=f73e69]:
+        - link [ref=f73e70] [cursor=pointer]:
+          - /url: https://discord.gg/yb89N2JPkD
+          - img [ref=f73e72]
+        - link "Download" [ref=f73e74] [cursor=pointer]:
+          - /url: https://op.gg/desktop/download/latest
+    - generic [ref=f73e76]:
+      - generic [ref=f73e77]:
+        - link "Games" [ref=f73e78] [cursor=pointer]:
+          - /url: /desktop/en/games
+          - heading "Games" [level=2] [ref=f73e79]:
+            - img [ref=f73e82]
+            - text: Games
+          - img [ref=f73e85]
+        - list [ref=f73e87]:
+          - listitem [ref=f73e88]: League of Legends
+          - listitem [ref=f73e89]: Teamfight Tactics
+          - listitem [ref=f73e90]: Valorant
+          - listitem [ref=f73e91]: Palworld
+          - listitem [ref=f73e92]: MapleStory (KMS)
+      - generic [ref=f73e93]:
+        - link "LOL Overlays" [ref=f73e94] [cursor=pointer]:
+          - /url: /desktop/en/overlays/lol
+          - heading "LOL Overlays" [level=2] [ref=f73e95]:
+            - img [ref=f73e98]
+            - text: LOL Overlays
+          - img [ref=f73e102]
+        - generic [ref=f73e104]:
+          - heading "League of Legends" [level=3] [ref=f73e105]
+          - list [ref=f73e106]:
+            - listitem [ref=f73e107]: Jungle Path
+            - listitem [ref=f73e108]: Jungle timers
+            - listitem [ref=f73e109]: Inhibitor timers
+            - listitem [ref=f73e110]: Spell tracker
+            - listitem [ref=f73e111]: Real-time stats
+            - listitem [ref=f73e112]: Gold & item comparison
+            - listitem [ref=f73e113]: Healing item tracker
+            - listitem [ref=f73e114]: Item builds
+            - listitem [ref=f73e115]: Skill recommendations
+            - listitem [ref=f73e116]: Ward count
+            - listitem [ref=f73e117]: Loading screen
+            - listitem [ref=f73e118]: ARAM Health Timers
+      - generic [ref=f73e119]:
+        - link "Overlays" [ref=f73e120] [cursor=pointer]:
+          - /url: /desktop/en/overlays
+          - heading "Overlays" [level=2] [ref=f73e121]:
+            - img [ref=f73e124]
+            - text: Overlays
+          - img [ref=f73e128]
+        - generic [ref=f73e130]:
+          - heading "Teamfight Tactics" [level=3] [ref=f73e131]
+          - list [ref=f73e132]:
+            - listitem [ref=f73e133]: Shop Highlights
+            - listitem [ref=f73e134]: Comps info
+            - listitem [ref=f73e135]: Item recipes
+          - heading "Valorant" [level=3] [ref=f73e136]
+          - list [ref=f73e137]:
+            - listitem [ref=f73e138]: Spike Tracker
+            - listitem [ref=f73e139]: Agent stats
+            - listitem [ref=f73e140]: Map Callouts
+            - listitem [ref=f73e141]: Round Report
+            - listitem [ref=f73e142]: Stream Overlays
+          - heading "Palworld" [level=3] [ref=f73e143]
+          - list [ref=f73e144]:
+            - listitem [ref=f73e145]: (Steam)Palworld Minimap Overlay
+    - generic [ref=f73e147]:
+      - generic [ref=f73e148]: The one launcher for all your game — on the OP.GG Desktop App
+      - link "Download" [ref=f73e149] [cursor=pointer]:
+        - /url: https://op.gg/desktop/download/latest
+  - main [ref=f73e150]:
+    - heading "Overlays" [level=1] [ref=f73e153]
+    - generic [ref=f73e154]:
+      - heading "League of Legends" [level=1] [ref=f73e155]:
+        - img [ref=f73e157]
+        - text: League of Legends
+      - generic [ref=f73e159]:
+        - generic [ref=f73e160]:
+          - img "Jungle timers" [ref=f73e161]
+          - generic [ref=f73e162]: Jungle timers
+          - generic [ref=f73e163]:
+            - generic [ref=f73e164]: New!
+            - generic [ref=f73e165]: Ranked
+          - generic [ref=f73e166]: Track jungle monster and Scuttle Crab respawn timers on the minimap. (Herald/Baron excluded)
+        - generic [ref=f73e167]:
+          - img "Jungle Path" [ref=f73e168]
+          - generic [ref=f73e169]: Jungle Path
+          - generic [ref=f73e171]: New!
+          - generic [ref=f73e172]: You can view the most commonly used jungle path for your selected champion on the minimap. Clear the jungle more easily and efficiently!
+        - generic [ref=f73e173]:
+          - img "Inhibitor timers" [ref=f73e174]
+          - generic [ref=f73e175]: Inhibitor timers
+          - generic [ref=f73e176]:
+            - generic [ref=f73e177]: New!
+            - generic [ref=f73e178]: Ranked
+            - generic [ref=f73e179]: ARAM
+          - generic [ref=f73e180]: You can check the respawn time of allied and enemy inhibitors after they are destroyed.
+        - generic [ref=f73e181]:
+          - img "Real-time stats" [ref=f73e182]
+          - generic [ref=f73e183]: Real-time stats
+          - generic [ref=f73e185]: Ranked
+          - generic [ref=f73e186]: You can compare your current skill level using key metrics based on the lane you selected and the average tier.
+        - generic [ref=f73e187]:
+          - img "Gold & item comparison" [ref=f73e188]
+          - generic [ref=f73e189]: Gold & item comparison
+          - generic [ref=f73e190]:
+            - generic [ref=f73e191]: Ranked
+            - generic [ref=f73e192]: ARAM
+          - generic [ref=f73e193]: Compare the total items and gold difference between teams.
+        - generic [ref=f73e194]:
+          - img "Healing item tracker" [ref=f73e195]
+          - generic [ref=f73e196]: Healing item tracker
+          - generic [ref=f73e197]:
+            - generic [ref=f73e198]: Ranked
+            - generic [ref=f73e199]: ARAM
+          - generic [ref=f73e200]: Check the enemy team's healing items and your team's healing reduction items.
+        - generic [ref=f73e201]:
+          - generic [ref=f73e202]: Your browser does not support the video tag.
+          - generic [ref=f73e203]: Item builds
+          - generic [ref=f73e204]:
+            - generic [ref=f73e205]: Ranked
+            - generic [ref=f73e206]: ARAM
+          - generic [ref=f73e207]: Check out the most popular item builds for champions based on OP.GG stats.
+        - generic [ref=f73e208]:
+          - generic [ref=f73e209]: Your browser does not support the video tag.
+          - generic [ref=f73e210]: Skill recommendations
+          - generic [ref=f73e211]:
+            - generic [ref=f73e212]: Ranked
+            - generic [ref=f73e213]: ARAM
+          - generic [ref=f73e214]: See the optimized skill order for champions based on OP.GG stats.
+        - generic [ref=f73e215]:
+          - img "Ward count" [ref=f73e216]
+          - generic [ref=f73e217]: Ward count
+          - generic [ref=f73e218]: Check the number of control wards used by your team.
+        - generic [ref=f73e219]:
+          - img "Loading screen" [ref=f73e220]
+          - generic [ref=f73e221]: Loading screen
+          - generic [ref=f73e222]: Check recent match details, overall AD/AP ratio for all champions and more.
+        - generic [ref=f73e223]:
+          - img "ARAM Health Timers" [ref=f73e224]
+          - generic [ref=f73e225]: ARAM Health Timers
+          - generic [ref=f73e226]: Keep track of health relic respawn timers in Howling Abyss and never miss a clutch heal.
+        - generic [ref=f73e227]:
+          - img "Augment Tier" [ref=f73e228]
+          - generic [ref=f73e229]: Augment Tier
+          - generic [ref=f73e230]: You can quickly see the tier of augments that fit your current champion.
+    - generic [ref=f73e231]:
+      - heading "Teamfight Tactics" [level=1] [ref=f73e232]:
+        - img [ref=f73e234]
+        - text: Teamfight Tactics
+      - generic [ref=f73e237]:
+        - generic [ref=f73e238]:
+          - img "Shop Highlights" [ref=f73e239]
+          - generic [ref=f73e240]: Shop Highlights
+          - generic [ref=f73e241]:
+            - generic [ref=f73e242]: New!
+            - generic [ref=f73e243]: info
+          - generic [ref=f73e244]: When Shop Highlights are on, champions in your selected comps are highlighted in-game.
+        - generic [ref=f73e245]:
+          - img "Comps info" [ref=f73e246]
+          - generic [ref=f73e247]: Comps info
+          - generic [ref=f73e249]: Guide
+          - generic [ref=f73e250]: Easily check your TFT comps in-game.
+        - generic [ref=f73e251]:
+          - img "Player History" [ref=f73e252]
+          - generic [ref=f73e253]: Player History
+          - generic [ref=f73e254]: Check their rank, top-4 rate, and recent 5 match history to analyze their playstyle and prepare your strategy.
+        - generic [ref=f73e255]:
+          - img "Augments" [ref=f73e256]
+          - generic [ref=f73e257]: Augments
+          - generic [ref=f73e258]: Check average place, first place rate, top 4 rate, and more stats for each augment.
+    - generic [ref=f73e259]:
+      - heading "Valorant" [level=1] [ref=f73e260]:
+        - img [ref=f73e262]
+        - text: Valorant
+      - generic [ref=f73e264]:
+        - generic [ref=f73e265]:
+          - img "Agent stats" [ref=f73e266]
+          - generic [ref=f73e267]: Agent stats
+          - generic [ref=f73e269]: info
+          - generic [ref=f73e270]: Explore player rankings and stats during the loading screen and in-game.
+        - generic [ref=f73e271]:
+          - img "Map Callouts" [ref=f73e272]
+          - generic [ref=f73e273]: Map Callouts
+          - generic [ref=f73e275]: info
+          - generic [ref=f73e276]: If you haven't learned all the map locations yet, use this overlay to practice giving fast and accurate briefings. Quick and precise briefings are crucial for victory.
+        - generic [ref=f73e277]:
+          - img "Round Report" [ref=f73e278]
+          - generic [ref=f73e279]: Round Report
+          - generic [ref=f73e280]: Check your round-by-round combat stats — including kills/deaths, damage dealt, and headshot ratio — in real time with the overlay. Track your performance as you play and stay on top of the round flow.
+        - generic [ref=f73e281]:
+          - img "Spike Tracker" [ref=f73e282]
+          - generic [ref=f73e283]: Spike Tracker
+          - generic [ref=f73e285]: New!
+          - generic [ref=f73e286]: You can check spike possession and pickup status in real-time beneath the health bar. Don’t miss the spike—plant it quickly!
+    - generic [ref=f73e287]:
+      - heading "Palworld" [level=1] [ref=f73e288]:
+        - img [ref=f73e290]
+        - text: Palworld
+      - generic [ref=f73e293]:
+        - img "(Steam)Palworld Minimap Overlay" [ref=f73e294]
+        - generic [ref=f73e295]: (Steam)Palworld Minimap Overlay
+        - generic [ref=f73e296]: Explore Palworld easier with minimap overlay. Shows player world location, all fast travel points, lifmunk effigies, dungeons, bosses on minimap.
+  - contentinfo [ref=f73e297]:
+    - generic [ref=f73e298]:
+      - img [ref=f73e301]
+      - generic [ref=f73e303]:
+        - generic [ref=f73e304]: OP.GG
+        - navigation [ref=f73e305]:
+          - link "About" [ref=f73e306] [cursor=pointer]:
+            - /url: https://www.op.gg/about
+          - link "Company" [ref=f73e307] [cursor=pointer]:
+            - /url: https://log.op.gg/company_en
+          - link "Blog" [ref=f73e308] [cursor=pointer]:
+            - /url: https://log.op.gg
+          - link "Logo History" [ref=f73e309] [cursor=pointer]:
+            - /url: https://www.op.gg/logos
+      - generic [ref=f73e310]:
+        - generic [ref=f73e311]: Product
+        - navigation [ref=f73e312]:
+          - link "League of Legends" [ref=f73e313] [cursor=pointer]:
+            - /url: https://op.gg
+            - text: League of Legends
+            - img [ref=f73e315]
+          - link "Teamfight Tactics" [ref=f73e317] [cursor=pointer]:
+            - /url: https://tft.op.gg
+            - text: Teamfight Tactics
+            - img [ref=f73e319]
+          - link "Valorant" [ref=f73e321] [cursor=pointer]:
+            - /url: https://valorant.op.gg
+            - text: Valorant
+            - img [ref=f73e323]
+          - link "OVERWATCH2" [ref=f73e325] [cursor=pointer]:
+            - /url: https://overwatch.op.gg
+            - text: OVERWATCH2
+            - img [ref=f73e327]
+          - link "PUBG" [ref=f73e329] [cursor=pointer]:
+            - /url: https://pubg.op.gg
+            - text: PUBG
+            - img [ref=f73e331]
+          - link "Desktop" [ref=f73e333] [cursor=pointer]:
+            - /url: https://op.gg/desktop
+            - text: Desktop
+            - img [ref=f73e335]
+          - link "Duo" [ref=f73e337] [cursor=pointer]:
+            - /url: https://duo.op.gg
+            - text: Duo
+            - img [ref=f73e339]
+          - link "TalkG" [ref=f73e341] [cursor=pointer]:
+            - /url: https://talk.op.gg
+            - text: TalkG
+            - img [ref=f73e343]
+          - link "Esports" [ref=f73e345] [cursor=pointer]:
+            - /url: https://esports.op.gg
+            - text: Esports
+            - img [ref=f73e347]
+          - link "Games" [ref=f73e349] [cursor=pointer]:
+            - /url: https://games.op.gg
+            - text: Games
+            - img [ref=f73e351]
+          - link "Gigs" [ref=f73e353] [cursor=pointer]:
+            - /url: https://gigs.op.gg
+            - text: Gigs
+            - img [ref=f73e355]
+      - generic [ref=f73e357]:
+        - generic [ref=f73e358]: Apps
+        - navigation [ref=f73e359]:
+          - link "OP.GG for Mobile Android" [ref=f73e360] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=gg.op.lol.android
+            - text: OP.GG for Mobile Android
+            - img [ref=f73e362]
+          - link "OP.GG for Mobile iOS" [ref=f73e364] [cursor=pointer]:
+            - /url: https://itunes.apple.com/app/id605722237
+            - text: OP.GG for Mobile iOS
+            - img [ref=f73e366]
+          - link "AllT Android" [ref=f73e368] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=gg.op.tft
+            - text: AllT Android
+            - img [ref=f73e370]
+          - link "AllT iOS" [ref=f73e372] [cursor=pointer]:
+            - /url: https://apps.apple.com/kr/app/allt/id6448737621
+            - text: AllT iOS
+            - img [ref=f73e374]
+          - link "Valorant Android" [ref=f73e376] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=gg.op.valornento
+            - text: Valorant Android
+            - img [ref=f73e378]
+          - link "Valorant iOS" [ref=f73e380] [cursor=pointer]:
+            - /url: https://apps.apple.com/kr/app/valornento/id6468704189
+            - text: Valorant iOS
+            - img [ref=f73e382]
+          - link "Gigs Android" [ref=f73e384] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=gg.op.gigs
+            - text: Gigs Android
+            - img [ref=f73e386]
+          - link "Gigs iOS" [ref=f73e388] [cursor=pointer]:
+            - /url: https://apps.apple.com/kr/app/id6468980658
+            - text: Gigs iOS
+            - img [ref=f73e390]
+          - link "TalkG Android" [ref=f73e392] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=gg.op.talk
+            - text: TalkG Android
+            - img [ref=f73e394]
+          - link "TalkG iOS" [ref=f73e396] [cursor=pointer]:
+            - /url: https://apps.apple.com/kr/app/id6475250505
+            - text: TalkG iOS
+            - img [ref=f73e398]
+          - link "Esports Android" [ref=f73e400] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=gg.op.esports
+            - text: Esports Android
+            - img [ref=f73e402]
+          - link "Esports iOS" [ref=f73e404] [cursor=pointer]:
+            - /url: https://apps.apple.com/kr/app/id1557184148
+            - text: Esports iOS
+            - img [ref=f73e406]
+      - generic [ref=f73e408]:
+        - generic [ref=f73e409]: Resources
+        - navigation [ref=f73e410]:
+          - link "Privacy Policy" [ref=f73e411] [cursor=pointer]:
+            - /url: https://www.op.gg/policies/privacy
+          - link "Terms of Use" [ref=f73e412] [cursor=pointer]:
+            - /url: https://www.op.gg/policies/agreement
+          - link "Help" [ref=f73e413] [cursor=pointer]:
+            - /url: https://help.op.gg/hc/en-us
+          - link "Email inquiry" [ref=f73e414] [cursor=pointer]:
+            - /url: mailto:service@op.gg
+      - generic [ref=f73e415]:
+        - generic [ref=f73e416]: More
+        - navigation [ref=f73e417]:
+          - link "Business" [ref=f73e418] [cursor=pointer]:
+            - /url: mailto:contact@op.gg
+          - link "Advertise" [ref=f73e419] [cursor=pointer]:
+            - /url: https://opgg.notion.site/Advertising-on-OP-GG-47e02da6b7eb438288730c92c14ef8f0
+          - link "Recruit" [ref=f73e420] [cursor=pointer]:
+            - /url: https://opgg.team/?lang=en
+    - generic [ref=f73e422]:
+      - generic [ref=f73e423]: © 2012-2024 OP.GG. OP.GG is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
+      - generic [ref=f73e424]:
+        - link [ref=f73e425] [cursor=pointer]:
+          - /url: https://www.youtube.com/@opgg_official
+          - img [ref=f73e427]
+        - link [ref=f73e430] [cursor=pointer]:
+          - /url: https://x.com/opgg_official
+          - img [ref=f73e432]
+        - link [ref=f73e435] [cursor=pointer]:
+          - /url: https://www.instagram.com/opgg_official
+          - img [ref=f73e437]
+        - link [ref=f73e447] [cursor=pointer]:
+          - /url: https://www.facebook.com/opgg.official
+          - img [ref=f73e449]
+        - link [ref=f73e452] [cursor=pointer]:
+          - /url: https://www.overwolf.com/app/opgg-electron-app
+          - img [ref=f73e454]
+  - generic [ref=f73e459]:
+    - button "Close" [ref=f73e461] [cursor=pointer]:
+      - img [ref=f73e462]
+    - generic [ref=f73e464]:
+      - button "English" [disabled] [ref=f73e465]:
+        - generic [ref=f73e466]: English
+      - button "한국어" [ref=f73e467] [cursor=pointer]:
+        - generic [ref=f73e468]: 한국어
+      - button "日本語" [ref=f73e469] [cursor=pointer]:
+        - generic [ref=f73e470]: 日本語
+      - button "język polski" [ref=f73e471] [cursor=pointer]:
+        - generic [ref=f73e472]: język polski
+      - button "français" [ref=f73e473] [cursor=pointer]:
+        - generic [ref=f73e474]: français
+      - button "Deutsch" [ref=f73e475] [cursor=pointer]:
+        - generic [ref=f73e476]: Deutsch
+      - button "español" [ref=f73e477] [cursor=pointer]:
+        - generic [ref=f73e478]: español
+      - button "Nederlands" [ref=f73e479] [cursor=pointer]:
+        - generic [ref=f73e480]: Nederlands
+      - button "dansk" [ref=f73e481] [cursor=pointer]:
+        - generic [ref=f73e482]: dansk
+      - button "Svenska" [ref=f73e483] [cursor=pointer]:
+        - generic [ref=f73e484]: Svenska
+      - button "Norsk" [ref=f73e485] [cursor=pointer]:
+        - generic [ref=f73e486]: Norsk
+      - button "русский язык" [ref=f73e487] [cursor=pointer]:
+        - generic [ref=f73e488]: русский язык
+      - button "magyar" [ref=f73e489] [cursor=pointer]:
+        - generic [ref=f73e490]: magyar
+      - button "suomi" [ref=f73e491] [cursor=pointer]:
+        - generic [ref=f73e492]: suomi
+      - button "Türkçe" [ref=f73e493] [cursor=pointer]:
+        - generic [ref=f73e494]: Türkçe
+      - button "limba română" [ref=f73e495] [cursor=pointer]:
+        - generic [ref=f73e496]: limba română
+      - button "português" [ref=f73e497] [cursor=pointer]:
+        - generic [ref=f73e498]: português
+      - button "简体中文" [ref=f73e499] [cursor=pointer]:
+        - generic [ref=f73e500]: 简体中文
+      - button "繁體中文" [ref=f73e501] [cursor=pointer]:
+        - generic [ref=f73e502]: 繁體中文
+      - button "العربية" [ref=f73e503] [cursor=pointer]:
+        - generic [ref=f73e504]: العربية
+      - button "српски језик" [ref=f73e505] [cursor=pointer]:
+        - generic [ref=f73e506]: српски језик
+      - button "italiano" [ref=f73e507] [cursor=pointer]:
+        - generic [ref=f73e508]: italiano
+      - button "ไทย" [ref=f73e509] [cursor=pointer]:
+        - generic [ref=f73e510]: ไทย
+      - button "Tiếng Việt" [ref=f73e511] [cursor=pointer]:
+        - generic [ref=f73e512]: Tiếng Việt
+  - alert [ref=f73e514]
