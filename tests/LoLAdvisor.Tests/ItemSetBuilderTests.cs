@@ -20,12 +20,25 @@ public class ItemSetBuilderTests
         SixthItems = new[] { Set(0.21, 181, 3026) },
     };
 
+    private static string? ItemName(int id) => id switch
+    {
+        6694 => "Serylda's Grudge",
+        3814 => "Edge of Night",
+        6699 => "Voltaic Cyclosword",
+        3026 => "Guardian Angel",
+        _ => null,
+    };
+
     [Fact]
     public void Builds_three_variants_with_all_blocks()
     {
-        var pages = ItemSetBuilder.Build(FullStats(), "Jayce");
+        var pages = ItemSetBuilder.Build(FullStats(), "Jayce", ItemName);
         Assert.Equal(3, pages.Count);
-        Assert.Equal("Paradox: Jayce #1", pages[0].Title);
+        // La primera es el meta puro; las alternativas se nombran por el item
+        // que las distingue (nunca "#2" a secas).
+        Assert.Equal("Paradox: Jayce · Meta", pages[0].Title);
+        Assert.Equal("Paradox: Jayce · Edge of Night", pages[1].Title);
+        Assert.Equal("Paradox: Jayce · Voltaic Cyclosword", pages[2].Title);
         Assert.Equal(
             new[] { "Starter", "Boots", "Core build", "4th item", "5th item", "6th item" },
             pages[0].Blocks.Select(b => b.Title).ToArray());
@@ -50,7 +63,18 @@ public class ItemSetBuilderTests
         };
         var pages = ItemSetBuilder.Build(stats, "Test");
         Assert.Single(pages);
+        Assert.Equal("Paradox: Test · Meta", pages[0].Title);
         Assert.Equal(new[] { "Core build", "4th item" }, pages[0].Blocks.Select(b => b.Title).ToArray());
+    }
+
+    [Fact]
+    public void Alt_without_resolvable_name_falls_back_to_alt_number()
+    {
+        // Sin resolver de nombres, las alternativas usan "Alt N" (nunca ids crudos).
+        var pages = ItemSetBuilder.Build(FullStats(), "Jayce");
+        Assert.Equal("Paradox: Jayce · Meta", pages[0].Title);
+        Assert.Equal("Paradox: Jayce · Alt 2", pages[1].Title);
+        Assert.Equal("Paradox: Jayce · Alt 3", pages[2].Title);
     }
 
     [Fact]

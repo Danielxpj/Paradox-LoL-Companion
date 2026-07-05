@@ -17,7 +17,10 @@ public static class ItemSetBuilder
     public const string TitlePrefix = "Paradox: ";
     private const int MaxVariants = 3;
 
-    public static IReadOnlyList<ItemSetPage> Build(ChampionBuildStats stats, string championName)
+    /// <param name="itemName">Resuelve id → nombre (catálogo) para nombrar las alternativas;
+    /// sin él, las variantes caen a "Alt N".</param>
+    public static IReadOnlyList<ItemSetPage> Build(ChampionBuildStats stats, string championName,
+        Func<int, string?>? itemName = null)
     {
         if (stats.CoreItems is not { } core || core.ItemIds.Count == 0)
             return Array.Empty<ItemSetPage>();
@@ -38,9 +41,32 @@ public static class ItemSetBuilder
                 blocks.Select(b => b.Title + ":" + string.Join(",", b.ItemIds)));
             if (!seen.Add(signature))
                 continue;
-            pages.Add(new ItemSetPage($"{TitlePrefix}{championName} #{pages.Count + 1}", blocks));
+            pages.Add(new ItemSetPage(
+                $"{TitlePrefix}{championName} · {VariantLabel(stats, i, itemName)}", blocks));
         }
         return pages;
+    }
+
+    /// <summary>
+    /// Nombre legible de la variante: la primera es "Meta"; las alternativas llevan
+    /// el nombre del primer item que las distingue de la meta ("· Edge of Night").
+    /// </summary>
+    private static string VariantLabel(ChampionBuildStats stats, int variant,
+        Func<int, string?>? itemName)
+    {
+        if (variant == 0)
+            return "Meta";
+        foreach (var slot in new[] { stats.FourthItems, stats.FifthItems, stats.SixthItems })
+        {
+            var pick = Candidate(slot, variant);
+            var meta = Candidate(slot, 0);
+            if (pick is null || meta is null || pick.SequenceEqual(meta))
+                continue;
+            if (itemName?.Invoke(pick[0]) is { Length: > 0 } name)
+                return name;
+            break;
+        }
+        return $"Alt {variant + 1}";
     }
 
     /// <summary>Candidato i-ésimo del slot; si el slot tiene menos, cae al último disponible.</summary>

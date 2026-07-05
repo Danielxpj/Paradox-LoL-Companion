@@ -14,7 +14,9 @@ namespace LoLAdvisor.Core.Connectors.Lcu;
 /// </summary>
 public sealed class LcuRuneWriter
 {
-    public const string PagePrefix = "LoLAdvisor: ";
+    public const string PagePrefix = "Paradox: ";
+    /// <summary>Prefijo del nombre anterior de la app: sus páginas también se limpian.</summary>
+    private const string LegacyPagePrefix = "LoLAdvisor: ";
     private const string PagesPath = "/lol-perks/v1/pages";
 
     private readonly LockfileLocator _locator;
@@ -43,9 +45,13 @@ public sealed class LcuRuneWriter
                     var json = await listResp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                     using var doc = JsonDocument.Parse(json);
                     foreach (var page in doc.RootElement.EnumerateArray())
-                        if (page.GetProperty("name").GetString()?.StartsWith(PagePrefix, StringComparison.Ordinal) == true)
+                    {
+                        var name = page.GetProperty("name").GetString() ?? "";
+                        if (name.StartsWith(PagePrefix, StringComparison.Ordinal)
+                            || name.StartsWith(LegacyPagePrefix, StringComparison.Ordinal))
                             (await SendAsync(creds, HttpMethod.Delete,
                                 $"{PagesPath}/{page.GetProperty("id").GetInt64()}", null, ct).ConfigureAwait(false)).Dispose();
+                    }
                 }
             }
 

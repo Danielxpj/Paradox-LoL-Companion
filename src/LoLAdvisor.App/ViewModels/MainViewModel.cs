@@ -633,7 +633,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (key == _itemSetsWrittenKey)
             return;
         _itemSetsWrittenKey = key;
-        var pages = ItemSetBuilder.Build(stats, champ.Name);
+        var pages = ItemSetBuilder.Build(stats, champ.Name, id => _catalog.ItemById(id)?.Name);
         if (pages.Count == 0)
             return;
         _ = ApplyItemSetsAsync(pages, champ, mapNumber, key);
