@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using LoLAdvisor.App.Diagnostics;
+using LoLAdvisor.App.Update;
 using LoLAdvisor.App.ViewModels;
 using LoLAdvisor.Core.Config;
 
@@ -14,12 +15,24 @@ public partial class App : Application
     private MainViewModel? _viewModel;
     private bool _errorDialogShown;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
         FileLog.Init();
         WireGlobalExceptionHandlers();
+
+        // Mientras corre el chequeo de update, el splash puede abrirse y cerrarse sin que
+        // exista aún la ventana principal: sin esto, cerrarlo dispararía OnLastWindowClose
+        // y la app se apagaría. Volvemos al modo normal recién con la ventana principal ya arriba.
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        // Auto-actualización: primero limpiamos restos de un update previo y luego
+        // revisamos si hay una versión más nueva. Si la hay, se descarga, se aplica y la
+        // app se relanza (salimos acá sin abrir la ventana principal). Todo fail-open.
+        Updater.CleanupOldVersions();
+        if (await Updater.TryUpdateAsync(Dispatcher))
+            return;
 
         var samples = new ReplaySamples(
             RiftGame: LoadAsset("sample-allgamedata.json"),
@@ -31,6 +44,7 @@ public partial class App : Application
         var window = new MainWindow { DataContext = _viewModel };
         MainWindow = window;
         window.Show();
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
 
         _viewModel.Start();
     }

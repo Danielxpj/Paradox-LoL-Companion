@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:LoLAdvisor.App"
         mc:Ignorable="d"
         Title="Paradox LoL Companion" Height="780" Width="1220" MinHeight="640" MinWidth="1000"
+        Icon="img/app.ico"
         Background="{StaticResource PageBg}">
     <DockPanel>
 

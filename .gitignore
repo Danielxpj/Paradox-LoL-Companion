@@ -15,6 +15,9 @@ TestResults/
 ## Salida de publicar.bat (exe portable)
 publish/
 
+## Salida del instalador (Inno Setup)
+installer/output/
+
 ## Claude Code / editor local state
 .claude/
 ## Artefactos del navegador de agentes
