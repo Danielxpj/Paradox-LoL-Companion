@@ -17,3 +17,5 @@ publish/
 
 ## Claude Code / editor local state
 .claude/
+## Artefactos del navegador de agentes
+.playwright-mcp/
