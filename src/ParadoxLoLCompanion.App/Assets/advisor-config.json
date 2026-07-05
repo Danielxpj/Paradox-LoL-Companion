@@ -23,7 +23,7 @@
     "excludeItemTags": ["Boots", "Trinket", "GoldPer"],
 
     // Description-text detection (en + es keywords, in case the catalog language changes).
-    "grievousWoundsKeywords": ["Grievous", "Heridas graves", "% de Heridas"],
+    "grievousWoundsKeywords": ["Grievous", "Wounds", "Heridas graves", "% de Heridas"],
     "cleanseKeywords": ["crowd control debuffs", "debilitaciones de control", "pérdida de control"],
     "shieldBreakerKeywords": ["Shield Reaver", "Rompeescudos"],
 

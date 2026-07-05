@@ -59,6 +59,13 @@ public sealed class StaticItem
     /// <summary>Su pasiva reduce el daño crítico que recibes (Presagio de Randuin).</summary>
     public bool ReducesCritDamage { get; init; }
 
+    /// <summary>
+    /// Nombres de las pasivas del item (etiquetas <c>&lt;passive&gt;</c> de la descripción).
+    /// Dos items que comparten una pasiva con nombre (Cleave, Lifeline, Annul, Immolate,
+    /// Awe…) no conviven en una build: el juego los limita a 1 o el efecto no se acumula.
+    /// </summary>
+    public IReadOnlySet<string> PassiveNames { get; init; } = new HashSet<string>();
+
     /// <summary>Profundidad en el árbol de construcción (1 = básico).</summary>
     public int Depth { get; init; } = 1;
     /// <summary>Ids de los componentes directos con los que se construye.</summary>

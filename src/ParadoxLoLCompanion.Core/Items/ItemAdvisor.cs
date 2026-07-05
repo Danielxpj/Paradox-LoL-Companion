@@ -134,6 +134,17 @@ public sealed class ItemAdvisor
         var myChampion = _data.ResolveChampion(me.ChampionName, me.RawChampionName);
         var skipManaItems = myChampion is { UsesMana: false };
         var champName = string.IsNullOrEmpty(me.ChampionName) ? "your champion" : me.ChampionName;
+
+        // Items ya comprados con pasiva con nombre: un candidato que comparta la pasiva
+        // (Cleave, Lifeline, Annul, Immolate, Awe…) es ilegal o redundante — el juego los
+        // limita a 1 y el efecto no se acumula. Se exceptúan los componentes del propio
+        // candidato (Tiamat → Hidra: mejorar siempre es legal).
+        var ownedWithPassives = ownedIds
+            .Select(_data.ItemById)
+            .Where(i => i is { PassiveNames.Count: > 0 })
+            .Cast<StaticItem>()
+            .ToList();
+
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons, RecommendationCategory Category)>();
 
         foreach (var item in _data.CompletedItemsFor(mapNumber))
@@ -141,6 +152,12 @@ public sealed class ItemAdvisor
             if (owned.Contains(item.Id) || ownedNames.Contains(item.Name))
                 continue;
             if (skipManaItems && (item.HasTag("Mana") || item.HasTag("ManaRegen")))
+                continue;
+            // Un item cuyo único stat ofensivo no existe ni en tu kit ni en tu build
+            // nunca es coherente (Morello para Darius): fuera del pool por completo.
+            if (OffensiveMismatch(item, profile))
+                continue;
+            if (BlockedByOwnedPassive(item, ownedWithPassives))
                 continue;
 
             var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw, stats, champName);
@@ -162,6 +179,7 @@ public sealed class ItemAdvisor
 
         var recommendations = new List<ItemRecommendation>();
         var recommendedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var takenPassives = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var gwTaken = false;
         var topScore = 0.0;
         foreach (var (item, score, reasons, category, plan) in ranked)
@@ -171,13 +189,19 @@ public sealed class ItemAdvisor
             // Nunca dos recomendaciones con el mismo nombre (ids duplicados del catálogo).
             if (!recommendedNames.Add(item.Name))
                 continue;
+            // Ni dos items del mismo grupo excluyente (misma pasiva con nombre): dos
+            // Hidras, dos Lifeline, dos Immolate… no pueden convivir en una build.
+            if (item.PassiveNames.Count > 0 && item.PassiveNames.Overlaps(takenPassives))
+                continue;
             if (item.AppliesGrievousWounds)
             {
-                // Un solo item de Heridas Graves: el efecto no se acumula.
+                // Un solo item de Heridas Graves: el efecto no se acumula (aunque las
+                // pasivas tengan nombres distintos: Hackshorn, Thorns…).
                 if (gwTaken)
                     continue;
                 gwTaken = true;
             }
+            takenPassives.UnionWith(item.PassiveNames);
 
             if (reasons.Count == 0)
                 reasons.Add(FitReason(item, profile.Archetype, weights));
@@ -416,8 +440,9 @@ public sealed class ItemAdvisor
         var df = DefenseFactor(me);
         double offense = 0, defense = 0;
 
-        // Anti-curación (grado de sustain, ya calibrado por mapa), con bono si además pega
-        // con tu perfil de daño (Morello AP / Recordatorio AD / Cota tanque).
+        // Anti-curación (grado de sustain, ya calibrado por mapa), con bono si además
+        // aporta fit. Los items anti-heal de un perfil de daño ajeno (Morello para un
+        // AD puro) ya quedaron fuera del pool por OffensiveMismatch.
         if (item.AppliesGrievousWounds && !teamHasGw && threat.Sustain > MuGate)
         {
             offense += (AntiHealMag + (fit > 0 ? 0.5 : 0)) * threat.Sustain;
@@ -541,6 +566,47 @@ public sealed class ItemAdvisor
 
     private static bool OffensiveMatch(StaticItem item, ChampionProfile me) =>
         (me.DealsMagical && HasAp(item)) || (me.DealsPhysical && HasAd(item));
+
+    /// <summary>
+    /// El único stat ofensivo del item no existe ni en el kit del campeón ni en el
+    /// arquetipo de su build (Morello para un luchador AD puro). Los híbridos AD+AP y
+    /// los items sin ofensa (tanque/soporte) nunca se filtran; el arquetipo forzado o
+    /// detectado cuenta como evidencia de daño (AP Tristana forzada a Mage compra AP).
+    /// </summary>
+    private static bool OffensiveMismatch(StaticItem item, ChampionProfile me)
+    {
+        var buildDealsMagic = me.DealsMagical || me.Archetype
+            is BuildArchetype.Mage or BuildArchetype.ApFighter or BuildArchetype.Enchanter;
+        var buildDealsPhysical = me.DealsPhysical || me.Archetype
+            is BuildArchetype.Marksman or BuildArchetype.AdFighter or BuildArchetype.AdAssassin;
+        return (HasAp(item) && !HasAd(item) && !buildDealsMagic)
+            || (HasAd(item) && !HasAp(item) && !buildDealsPhysical);
+    }
+
+    /// <summary>
+    /// Algún item ya comprado comparte una pasiva con nombre con el candidato y no es
+    /// componente suyo: comprar el candidato sería ilegal (grupos "límite de 1") o
+    /// redundante (la pasiva no se acumula).
+    /// </summary>
+    private bool BlockedByOwnedPassive(StaticItem item, IReadOnlyList<StaticItem> ownedWithPassives)
+    {
+        if (item.PassiveNames.Count == 0 || ownedWithPassives.Count == 0)
+            return false;
+        HashSet<int>? buildTree = null;
+        foreach (var ownedItem in ownedWithPassives)
+        {
+            if (!item.PassiveNames.Overlaps(ownedItem.PassiveNames))
+                continue;
+            if (buildTree is null)
+            {
+                buildTree = new HashSet<int>();
+                AddBuildTree(item.Id, buildTree);
+            }
+            if (!buildTree.Contains(ownedItem.Id))
+                return true;
+        }
+        return false;
+    }
 
     /// <summary>Item que "atraviesa" tanques: penetración para tu tipo de daño, u on-hit.</summary>
     private static bool AntiTankItem(StaticItem item, ChampionProfile me) =>

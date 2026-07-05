@@ -89,10 +89,11 @@ public sealed class ItemsConfig
     public List<string> SustainTags { get; set; } = new() { "LifeSteal", "SpellVamp", "Omnivamp" };
     public List<string> ExcludeItemTags { get; set; } = new() { "Boots", "Trinket", "GoldPer" };
 
-    // Detección por descripción (localizable: se incluyen es + en). Nota: en es_MX
-    // algunos items dicen "40% de Heridas" sin "Graves" (Cota de Espinas, Quimpunk).
+    // Detección por descripción (localizable: se incluyen es + en). Nota: los items
+    // nuevos ya no dicen "Grievous"/"Heridas graves": en_US dice "40% Wounds" (Quimpunk,
+    // Cota de Espinas) y es_MX "40% de Heridas" — por eso las variantes cortas.
     public List<string> GrievousWoundsKeywords { get; set; } = new()
-        { "Grievous", "Heridas graves", "% de Heridas" };
+        { "Grievous", "Wounds", "Heridas graves", "% de Heridas" };
     public List<string> CleanseKeywords { get; set; } = new()
         { "crowd control debuffs", "debilitaciones de control", "pérdida de control" };
     public List<string> ShieldBreakerKeywords { get; set; } = new() { "Shield Reaver", "Rompeescudos" };

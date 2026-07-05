@@ -75,4 +75,44 @@ public class RealCatalogSmokeTests
             i => Assert.False(i.HasTag("GoldPer") || i.HasTag("Jungle"), $"{i.Name} no es starter"));
         Assert.Contains(catalog.AramStarterItems, i => i.Id == 3112); // Orbe del Guardián
     }
+
+    [Fact]
+    public async Task RealCatalog_ItemAdviceIsCoherent_ForAdFighter()
+    {
+        var catalog = await new DataDragonClient(cacheDir: CacheDir).LoadCachedAsync();
+        if (catalog is null)
+            return; // sin caché local
+
+        // Los items nuevos de Heridas dicen "40% Wounds" sin "Grievous": Quimpunk (6609)
+        // y Cota de Espinas (3075) deben detectarse igual que Morello/Recordatorio.
+        Assert.True(catalog.ItemById(6609)?.AppliesGrievousWounds, "Chempunk Chainsword");
+        Assert.True(catalog.ItemById(3075)?.AppliesGrievousWounds, "Thornmail");
+
+        // Las pasivas con nombre (grupos "límite de 1") se parsean del catálogo real.
+        Assert.Contains("Cleave", catalog.ItemById(3074)!.PassiveNames);   // Hidra Voraz
+        Assert.Contains("Lifeline", catalog.ItemById(3053)!.PassiveNames); // Sterak
+
+        // Darius (físico puro) contra un curador fed: el anti-heal recomendado debe ser
+        // de su perfil (Quimpunk/Recordatorio), jamás Morello (bug real reportado).
+        var advisor = new ItemAdvisor(catalog);
+        var state = TestCatalog.State(3000,
+            ("Darius", "ORDER", 2, new int[0]),
+            ("Warwick", "CHAOS", 6, new int[0]),
+            ("Vladimir", "CHAOS", 4, new int[0]),
+            ("Soraka", "CHAOS", 0, new int[0]),
+            ("Jinx", "CHAOS", 3, new int[0]),
+            ("Malphite", "CHAOS", 1, new int[0]));
+        var plan = advisor.Advise(state);
+        Assert.NotNull(plan);
+        Assert.NotEmpty(plan!.Recommendations);
+        Assert.Contains(plan.Recommendations, r => r.Item.AppliesGrievousWounds);
+        Assert.DoesNotContain(plan.Recommendations,
+            r => r.Item.HasTag("SpellDamage") && !r.Item.HasTag("Damage"));
+
+        // Y nunca dos recomendaciones del mismo grupo excluyente (misma pasiva).
+        var passives = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var r in plan.Recommendations)
+            foreach (var name in r.Item.PassiveNames)
+                Assert.True(passives.Add(name), $"{r.Item.Name} repite la pasiva '{name}'");
+    }
 }

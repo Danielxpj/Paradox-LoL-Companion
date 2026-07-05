@@ -191,6 +191,7 @@ public sealed class DataDragonCatalog : IStaticData
                 RemovesCc = MentionsAny(entry.Description, config.CleanseKeywords),
                 BreaksShields = MentionsAny(entry.Description, config.ShieldBreakerKeywords),
                 ReducesCritDamage = MentionsAny(entry.Description, config.CritReductionKeywords),
+                PassiveNames = ParsePassiveNames(entry.Description),
                 Depth = entry.Depth ?? 1,
                 From = ParseIds(entry.From),
                 Armor = Stat(entry.Stats, "FlatArmorMod"),
@@ -236,6 +237,27 @@ public sealed class DataDragonCatalog : IStaticData
             if (int.TryParse(s, out var id))
                 result.Add(id);
         return result;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex PassiveTag =
+        new(@"<passive>([^<]+)</passive>", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>
+    /// Extrae los nombres de pasiva de la descripción. Son la única marca que queda en
+    /// ddragon de los grupos "límite de 1" del juego (el texto de reglas ya no viene).
+    /// </summary>
+    private static IReadOnlySet<string> ParsePassiveNames(string? description)
+    {
+        if (string.IsNullOrEmpty(description))
+            return new HashSet<string>();
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (System.Text.RegularExpressions.Match m in PassiveTag.Matches(description))
+        {
+            var name = m.Groups[1].Value.Trim();
+            if (name.Length > 0)
+                names.Add(name);
+        }
+        return names;
     }
 
     /// <summary>Detecta si la descripción menciona alguna de las palabras clave (según config/idioma).</summary>
