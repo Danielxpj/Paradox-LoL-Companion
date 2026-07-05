@@ -176,6 +176,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private string _sellLine = "";
     public string SellLine { get => _sellLine; private set => SetProperty(ref _sellLine, value); }
 
+    private string _lateTipsLine = "";
+    public string LateTipsLine { get => _lateTipsLine; private set => SetProperty(ref _lateTipsLine, value); }
+
     private string _starterLine = "";
     public string StarterLine { get => _starterLine; private set => SetProperty(ref _starterLine, value); }
 
@@ -652,6 +655,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             ThreatSummary = "";
             BootsLine = "";
             SellLine = "";
+            LateTipsLine = "";
             StarterLine = "";
             ShopAlertLine = "";
             ItemPanelHint = _catalog.IsLoaded
@@ -675,6 +679,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             ? ""
             : $"Start: {plan.Starter.Item.Name} ({plan.Starter.Item.GoldTotal.ToString("N0", CultureInfo.InvariantCulture)}) — {plan.Starter.Reason}";
         ShopAlertLine = plan.ShopAlert ?? "";
+        LateTipsLine = string.Join("   ·   ", plan.LateTips);
     }
 
     /// <summary>Línea de botas accionable: qué comprar YA y cuánto falta, no solo el nombre.</summary>

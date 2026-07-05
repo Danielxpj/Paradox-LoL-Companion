@@ -293,6 +293,20 @@
                                 <TextBlock Text="{Binding SellLine}" FontSize="13" TextWrapping="Wrap"
                                            Foreground="{StaticResource Amber}" />
                             </Border>
+                            <!-- Consejos de late game: elixir con build completa, Control Ward. -->
+                            <Border Padding="16,10">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding LateTipsLine}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding LateTipsLine}" FontSize="13" TextWrapping="Wrap"
+                                           FontWeight="SemiBold" Foreground="{StaticResource Cyan}" />
+                            </Border>
 
                             <!-- Las runas viven SOLO en la pestaña Champ Select (se eligen antes
                                  de la partida); aquí en Match solo queda el orden de skills. -->

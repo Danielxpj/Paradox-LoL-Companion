@@ -33,7 +33,11 @@ public class ItemAdvisorCoherenceTests
           "4005":{"name":"Other AP Item","gold":{"total":2900,"sell":2030,"purchasable":true},
                   "tags":["SpellDamage"],"maps":{"11":true,"12":true},
                   "from":["1026"],"depth":2,
-                  "stats":{"FlatMagicDamageMod":60}}}}
+                  "stats":{"FlatMagicDamageMod":60}},
+          "2139":{"name":"Elixir of Sorcery","gold":{"total":500,"sell":200,"purchasable":true},
+                  "tags":["Consumable"],"maps":{"11":true,"12":true},"consumed":true},
+          "2055":{"name":"Control Ward","gold":{"total":75,"sell":30,"purchasable":true},
+                  "tags":["Consumable","Vision"],"maps":{"11":true},"consumed":true}}}
         """);
 
     private static GameState State(double gold, params Item[] items)
@@ -97,6 +101,45 @@ public class ItemAdvisorCoherenceTests
         var plan = advisor.Advise(state, BuildArchetype.Mage)!;
         Assert.False(plan.InventoryFull);
         Assert.All(plan.Recommendations, r => Assert.False(r.BlockedByFullInventory));
+    }
+
+    [Fact]
+    public void Full_build_suggests_the_archetype_elixir()
+    {
+        var advisor = new ItemAdvisor(Catalog());
+        var state = State(gold: 1000,
+            Slot(0, 9001), Slot(1, 9002), Slot(2, 9003),
+            Slot(3, 9004), Slot(4, 9005), Slot(5, 9006));
+
+        var plan = advisor.Advise(state, BuildArchetype.Mage)!;
+        Assert.Contains(plan.LateTips, t => t.Contains("Elixir of Sorcery"));
+    }
+
+    [Fact]
+    public void No_elixir_tip_without_gold_or_with_free_slots()
+    {
+        var advisor = new ItemAdvisor(Catalog());
+        // Lleno pero sin oro para el elixir.
+        var poor = advisor.Advise(State(gold: 300,
+            Slot(0, 9001), Slot(1, 9002), Slot(2, 9003),
+            Slot(3, 9004), Slot(4, 9005), Slot(5, 9006)), BuildArchetype.Mage)!;
+        Assert.DoesNotContain(poor.LateTips, t => t.Contains("Elixir"));
+        // Con slots libres tampoco (la build no está completa).
+        var open = advisor.Advise(State(gold: 1000, Slot(0, 9001)), BuildArchetype.Mage)!;
+        Assert.DoesNotContain(open.LateTips, t => t.Contains("Elixir"));
+    }
+
+    [Fact]
+    public void Mid_game_without_control_ward_suggests_one_on_rift()
+    {
+        var advisor = new ItemAdvisor(Catalog());
+        // t=900s, sin Control Ward en el inventario, oro de sobra.
+        var plan = advisor.Advise(State(gold: 1000, Slot(0, 9001)), BuildArchetype.Mage)!;
+        Assert.Contains(plan.LateTips, t => t.Contains("Control Ward"));
+
+        // Con uno encima, no insiste.
+        var carrying = advisor.Advise(State(gold: 1000, Slot(0, 2055)), BuildArchetype.Mage)!;
+        Assert.DoesNotContain(carrying.LateTips, t => t.Contains("Control Ward"));
     }
 
     [Fact]

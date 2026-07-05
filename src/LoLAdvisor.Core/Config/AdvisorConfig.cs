@@ -105,6 +105,14 @@ public sealed class ItemsConfig
     /// <summary>Nombres localizados del recurso maná en champion.json (partype). en + es.</summary>
     public List<string> ManaResourceNames { get; set; } = new() { "Mana", "Maná" };
 
+    // Consejos de late game. Ids estables de ddragon: elixires por perfil y Control Ward.
+    public int ElixirOfIronId { get; set; } = 2138;
+    public int ElixirOfSorceryId { get; set; } = 2139;
+    public int ElixirOfWrathId { get; set; } = 2140;
+    public int ControlWardId { get; set; } = 2055;
+    /// <summary>Desde cuándo (segundos) insistir con la Control Ward en la Grieta.</summary>
+    public double ControlWardAdviceSeconds { get; set; } = 480;
+
     /// <summary>
     /// Evolución → forma comprable. OP.GG registra la evolución (Muramana) pero el
     /// catálogo recomienda lo que se puede comprar (Manamune); ddragon NO enlaza

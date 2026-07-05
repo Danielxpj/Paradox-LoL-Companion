@@ -215,7 +215,39 @@ public sealed class ItemAdvisor
             ShopAlertFor(me, isAram, recommendations))
         {
             InventoryFull = inventoryFull,
+            LateTips = LateTips(profile, inventoryFull, mapNumber,
+                state.GameData.GameTime, gold, ownedIds),
         };
+    }
+
+    /// <summary>
+    /// Consejos de late game que ninguna app da: con la build completa, el oro
+    /// sobrante va a elixires; y en la Grieta, jugar sin Control Ward regala visión.
+    /// </summary>
+    private List<string> LateTips(ChampionProfile profile, bool inventoryFull,
+        int mapNumber, double gameTime, double gold, IReadOnlyList<int> ownedIds)
+    {
+        var tips = new List<string>();
+
+        if (inventoryFull)
+        {
+            var elixirId = profile.Archetype == BuildArchetype.Tank
+                ? _config.ElixirOfIronId
+                : profile.Archetype is BuildArchetype.Marksman or BuildArchetype.AdFighter
+                    or BuildArchetype.AdAssassin
+                    ? _config.ElixirOfWrathId
+                    : _config.ElixirOfSorceryId;
+            if (_data.ItemById(elixirId) is { } elixir
+                && gold >= elixir.GoldTotal && !ownedIds.Contains(elixirId))
+                tips.Add($"Build complete — drink {elixir.Name} ({GoldFmt(elixir.GoldTotal)} g) before big fights.");
+        }
+
+        if (mapNumber == 11 && gameTime >= _config.ControlWardAdviceSeconds
+            && !ownedIds.Contains(_config.ControlWardId)
+            && _data.ItemById(_config.ControlWardId) is { } ward && gold >= ward.GoldTotal * 2)
+            tips.Add($"No Control Ward — keep one ({GoldFmt(ward.GoldTotal)} g) for objectives.");
+
+        return tips;
     }
 
     /// <summary>

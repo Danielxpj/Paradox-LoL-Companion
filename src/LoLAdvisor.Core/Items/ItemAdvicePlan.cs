@@ -71,4 +71,7 @@ public sealed record ItemAdvicePlan(
 
     /// <summary>Los 6 slots de items están ocupados: comprar exige vender o fusionar componentes.</summary>
     public bool InventoryFull { get; init; }
+
+    /// <summary>Consejos de late game (elixir con build completa, Control Ward en la Grieta).</summary>
+    public IReadOnlyList<string> LateTips { get; init; } = Array.Empty<string>();
 }
