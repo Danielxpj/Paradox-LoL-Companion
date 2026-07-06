@@ -27,9 +27,9 @@
 
     <!-- Versión: la usa el auto-update para comparar contra version.txt.
          Al publicar una nueva release, subí este número Y el de version.txt. -->
-    <Version>1.0.2</Version>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
+    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
     <Product>Paradox LoL Companion</Product>
     <AssemblyTitle>Paradox LoL Companion</AssemblyTitle>
   </PropertyGroup>
