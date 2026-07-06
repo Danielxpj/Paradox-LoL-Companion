@@ -46,6 +46,8 @@ public sealed record TeamThreat
     public double PhysicalSkew { get; init; }
     /// <summary>Qué tan sesgado a daño mágico va el enemigo.</summary>
     public double MagicalSkew { get; init; }
+    /// <summary>Qué tan MIXTO es el daño enemigo (1 = 50/50): la vida cruda defiende ambos.</summary>
+    public double MixedDamage { get; init; }
     /// <summary>Cuánto apila el enemigo la armadura que frena tu daño físico.</summary>
     public double ArmorStack { get; init; }
     /// <summary>Cuánto apila el enemigo la RM que frena tu daño mágico.</summary>

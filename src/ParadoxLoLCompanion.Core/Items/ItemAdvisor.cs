@@ -33,6 +33,7 @@ public sealed class ItemAdvisor
     private const double AntiTankMag = 2.0;
     private const double HardEngageMag = 1.5;
     private const double LifestealDevalMag = 0.6;
+    private const double LethalityDevalMag = 0.6;
     // Prior estadístico (OP.GG): magnitud del bono por "esto es lo que compran los
     // jugadores de tu campeón", escalada ±25 % por win rate. Calibrado para
     // reforzar el fit sin aplastar counters (bono máximo = 2.5 × 1.25 = 3.125).
@@ -145,6 +146,29 @@ public sealed class ItemAdvisor
             .Cast<StaticItem>()
             .ToList();
 
+        // Crítico actual: el dato vivo del juego si está (incluye pasivas tipo Yasuo
+        // y runas); si falta (replays/datos viejos), la suma del crítico comprado.
+        var liveCrit = state.ActivePlayer?.ChampionStats.CritChance ?? 0;
+        if (liveCrit > 1)
+            liveCrit /= 100;
+        var currentCrit = Math.Max(liveCrit,
+            ownedIds.Sum(id => _data.ItemById(id)?.CritChance ?? 0));
+
+        // Items de dupla/soporte (Zeke's, Locket, Knight's Vow…): sus efectos viven
+        // pegados a un aliado — fuera del pool salvo que seas el soporte del equipo.
+        var isSupport = profile.Archetype == BuildArchetype.Enchanter
+            || string.Equals(me.Position, "UTILITY", StringComparison.OrdinalIgnoreCase)
+            || ownedIds.Any(id => _data.ItemById(id)?.HasTag("GoldPer") == true);
+        var supportOnlyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var supportId in _config.SupportOnlyItemIds)
+            if (_data.ItemById(supportId) is { } supportItem)
+                supportOnlyNames.Add(supportItem.Name);
+
+        // Mejai's exige ir bien: recomendarle stacks a alguien que viene muriendo
+        // es regalar oro (los stacks se pierden al morir).
+        var snowballing = me.Scores.Kills + me.Scores.Assists >= _config.SnowballMinTakedowns
+            && me.Scores.Deaths <= _config.SnowballMaxDeaths;
+
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons, RecommendationCategory Category)>();
 
         foreach (var item in _data.CompletedItemsFor(mapNumber))
@@ -159,8 +183,14 @@ public sealed class ItemAdvisor
                 continue;
             if (BlockedByOwnedPassive(item, ownedWithPassives))
                 continue;
+            if (!isSupport && (supportOnlyNames.Contains(item.Name)
+                || _config.SupportOnlyItemIds.Contains(item.Id)))
+                continue;
+            if (!snowballing && _config.SnowballItemIds.Contains(item.Id))
+                continue;
 
-            var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw, stats, champName);
+            var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw,
+                stats, champName, currentCrit);
             if (score > 0)
                 scored.Add((item, score, reasons, category));
         }
@@ -234,7 +264,7 @@ public sealed class ItemAdvisor
             recommendations,
             BootsFor(me, profile, threat, mapNumber, stats, ownedIds, gold),
             SellSuggestions(me, profile, threat, weights, sustainThreshold,
-                recommendations.Count > 0 ? recommendations[0] : null),
+                recommendations.Count > 0 ? recommendations[0] : null, inventoryFull),
             StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats),
             ShopAlertFor(me, isAram, recommendations))
         {
@@ -346,7 +376,7 @@ public sealed class ItemAdvisor
     private List<SellSuggestion> SellSuggestions(
         Player me, ChampionProfile profile, TeamThreat threat,
         IReadOnlyDictionary<string, double> myWeights, double sustainThreshold,
-        ItemRecommendation? top)
+        ItemRecommendation? top, bool inventoryFull)
     {
         var allWeights = ArchetypeWeights.All
             .ToDictionary(a => a, a => ArchetypeWeights.For(a, _config));
@@ -357,11 +387,35 @@ public sealed class ItemAdvisor
         foreach (var slot in me.Items)
         {
             var item = _data.ItemById(slot.ItemID);
+            if (item is null || item.SellGold <= 0)
+                continue;
+
+            // Reglas explícitas, ANTES de los filtros de "item final":
+            // Item de stacks (Mejai's/Dark Seal) cuando venís muriendo: los stacks se
+            // pierden en cada muerte — el oro invertido no vuelve.
+            if (_config.SnowballItemIds.Contains(item.Id)
+                && me.Scores.Deaths >= _config.SnowballSellDeaths
+                && me.Scores.Kills < me.Scores.Deaths)
+            {
+                if (seenNames.Add(item.Name))
+                    candidates.Add(new SellSuggestion(item, item.SellGold,
+                        "dying too often — its stacks keep resetting"));
+                continue;
+            }
+            // Starter con el inventario lleno: su slot vale más que sus stats.
+            if (inventoryFull && item.HasTag("Lane"))
+            {
+                if (seenNames.Add(item.Name))
+                    candidates.Add(new SellSuggestion(item, item.SellGold,
+                        "starter outlived its value — selling frees the slot"));
+                continue;
+            }
+
             // Solo items finales con valor real: componentes, botas, consumibles,
             // trinkets e items de quest no son decisiones de venta interesantes.
-            if (item is null || item.IsBoots || item.Consumable || item.BuildsIntoSomething
+            if (item.IsBoots || item.Consumable || item.BuildsIntoSomething
                 || item.HasTag("Trinket") || item.HasTag("GoldPer")
-                || item.SellGold <= 0 || item.GoldTotal < _config.MinCompletedItemGold)
+                || item.GoldTotal < _config.MinCompletedItemGold)
                 continue;
             if (!seenNames.Add(item.Name))
                 continue;
@@ -430,13 +484,18 @@ public sealed class ItemAdvisor
     private (double Score, List<string> Reasons, RecommendationCategory Category) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
         IReadOnlyDictionary<string, double> weights, bool teamHasGw,
-        ChampionBuildStats? stats, string champName)
+        ChampionBuildStats? stats, string champName, double currentCrit = 0)
     {
         var reasons = new List<string>();
         var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t));
+        // Crítico saturado: solo puntúa la fracción que NO desborda el cap de 100%
+        // (a 75% un item de 25% entra entero; a 100% su crítico vale cero).
+        var critWaste = CritWaste(item, currentCrit);
+        if (critWaste > 0)
+            fit = Math.Max(0, fit - weights.GetValueOrDefault("CriticalStrike") * critWaste);
         // Raíz cuadrada: comprime el fit para que apilar tags no aplaste a los bonos
         // situacionales (un counter necesario debe poder ganarle a más stats crudos).
-        var core = 3 * Math.Sqrt(fit) * (0.8 + 0.4 * Math.Min(Efficiency(item), 1.2));
+        var core = 3 * Math.Sqrt(fit) * (0.8 + 0.4 * Math.Min(Efficiency(item, critWaste), 1.2));
         var df = DefenseFactor(me);
         double offense = 0, defense = 0;
 
@@ -450,7 +509,9 @@ public sealed class ItemAdvisor
         }
 
         // Penetración cuando el enemigo apila la resistencia que bloquea tu daño.
-        if (me.DealsPhysical && item.HasTag("ArmorPenetration") && threat.ArmorStack > MuGate)
+        // La letalidad NO responde a la armadura apilada (pen plana): solo el %pen.
+        if (me.DealsPhysical && item.HasTag("ArmorPenetration") && !item.HasLethality
+            && threat.ArmorStack > MuGate)
         {
             offense += PenMag * threat.ArmorStack;
             reasons.Add($"enemies already bought {threat.EnemyBonusArmor:0} armor");
@@ -473,6 +534,22 @@ public sealed class ItemAdvisor
         {
             defense += DefenseMag * threat.MagicalSkew * df * wallDamp;
             reasons.Add($"{Pct(threat.MagicalShare)} of enemy damage is magic ({threat.TopMagicalName})");
+        }
+
+        // Muro de HP puro (Heartsteel/Warmog): la vida defiende contra AMBOS tipos de
+        // daño — a pleno contra comps mixtas (donde un solo muro rinde menos), parcial
+        // contra sesgadas — pero pierde contra daño por % de vida, que escala con tu HP.
+        // Solo items sin resistencias ni ofensa: el resto ya cobra por Armor/SpellBlock.
+        if (item.HasTag("Health") && !item.HasTag("Armor") && !item.HasTag("SpellBlock")
+            && !HasAd(item) && !HasAp(item))
+        {
+            var hpDegree = Math.Max(threat.MixedDamage,
+                0.4 * Math.Max(threat.PhysicalSkew, threat.MagicalSkew));
+            if (hpDegree > MuGate)
+            {
+                defense += DefenseMag * hpDegree * df * (1 - 0.6 * threat.PercentHpTrue);
+                reasons.Add("raw health holds against both damage types");
+            }
         }
 
         // Híbridos defensa+ofensa contra un asesino fed (Zhonya / Ángel / Fauces / Banshee).
@@ -548,8 +625,12 @@ public sealed class ItemAdvisor
             }
         }
 
-        // Devaluación del robo de vida si el enemigo YA compró anti-curación contra vos.
-        var penalty = LifestealDevalMag * threat.EnemyAntiHeal * SustainTagWeight(item, weights);
+        // Devaluaciones: robo de vida si el enemigo YA compró anti-curación, y
+        // letalidad contra un equipo gordo (la pen plana se diluye contra armadura alta).
+        var penalty = LifestealDevalMag * threat.EnemyAntiHeal * SustainTagWeight(item, weights)
+            + (item.HasLethality
+                ? LethalityDevalMag * threat.EnemyTankiness * weights.GetValueOrDefault("ArmorPenetration")
+                : 0);
 
         var score = core + offense + defense + statBonus - penalty;
         // Categoría = qué explica el puntaje: si lo situacional es una fracción relevante
@@ -608,10 +689,23 @@ public sealed class ItemAdvisor
         return false;
     }
 
-    /// <summary>Item que "atraviesa" tanques: penetración para tu tipo de daño, u on-hit.</summary>
+    /// <summary>
+    /// Item que "atraviesa" tanques: %pen u on-hit para físico, pen mágica para AP.
+    /// La letalidad queda fuera: es pen plana, se diluye contra armadura alta.
+    /// </summary>
     private static bool AntiTankItem(StaticItem item, ChampionProfile me) =>
-        (me.DealsPhysical && (item.HasTag("ArmorPenetration") || item.HasTag("OnHit")))
+        (me.DealsPhysical && ((item.HasTag("ArmorPenetration") && !item.HasLethality)
+            || item.HasTag("OnHit")))
         || (me.DealsMagical && item.HasTag("MagicPenetration"));
+
+    /// <summary>Fracción del crítico del item que desbordaría el cap de 100% (1 = sobra todo).</summary>
+    private static double CritWaste(StaticItem item, double currentCrit)
+    {
+        if (item.CritChance <= 0)
+            return currentCrit >= 1 && item.HasTag("CriticalStrike") ? 1 : 0;
+        var headroom = Math.Max(0, 1 - currentCrit);
+        return 1 - Math.Min(item.CritChance, headroom) / item.CritChance;
+    }
 
     /// <summary>Peso de los tags de sustain del item (para devaluarlos si el enemigo tiene anti-heal).</summary>
     private double SustainTagWeight(StaticItem item, IReadOnlyDictionary<string, double> weights) =>
@@ -638,13 +732,14 @@ public sealed class ItemAdvisor
 
     /// <summary>
     /// Valor en oro de los stats planos del item vs. su costo (eficiencia clásica de oro;
-    /// las pasivas no cuentan, por eso solo modula suavemente el fit).
+    /// las pasivas no cuentan, por eso solo modula suavemente el fit). El crítico que
+    /// desbordaría el cap de 100% no vale nada.
     /// </summary>
-    private static double Efficiency(StaticItem item)
+    private static double Efficiency(StaticItem item, double critWaste = 0)
     {
         var value = item.AttackDamage * 35 + item.AbilityPower * 21.75
                   + item.Armor * 20 + item.SpellBlock * 18 + item.Health * 2.67
-                  + item.AttackSpeedPct * 2500 + item.CritChance * 4000;
+                  + item.AttackSpeedPct * 2500 + item.CritChance * 4000 * (1 - critWaste);
         return value / Math.Max(item.GoldTotal, 1);
     }
 

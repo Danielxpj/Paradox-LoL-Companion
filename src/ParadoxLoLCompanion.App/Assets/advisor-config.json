@@ -26,6 +26,14 @@
     "grievousWoundsKeywords": ["Grievous", "Wounds", "Heridas graves", "% de Heridas"],
     "cleanseKeywords": ["crowd control debuffs", "debilitaciones de control", "pérdida de control"],
     "shieldBreakerKeywords": ["Shield Reaver", "Rompeescudos"],
+    "lethalityKeywords": ["Lethality", "letalidad"],
+
+    // Duo/support items (never for laners) and snowball-stack items (require going well).
+    "supportOnlyItemIds": [3050, 3109, 3190, 3107],
+    "snowballItemIds": [3041, 1082],
+    "snowballMinTakedowns": 3,
+    "snowballMaxDeaths": 3,
+    "snowballSellDeaths": 4,
 
     // Champion knowledge (keys = Data Dragon text id, e.g. "MonkeyKing").
     "healerChampions": ["Aatrox", "Briar", "DrMundo", "Fiora", "Illaoi", "Kayn", "Maokai", "Nami",

@@ -60,6 +60,12 @@ public sealed class StaticItem
     public bool ReducesCritDamage { get; init; }
 
     /// <summary>
+    /// Da letalidad (penetración plana): rinde contra squishies, NO contra tanques —
+    /// el anti-tanque físico real es la penetración porcentual.
+    /// </summary>
+    public bool HasLethality { get; init; }
+
+    /// <summary>
     /// Nombres de las pasivas del item (etiquetas <c>&lt;passive&gt;</c> de la descripción).
     /// Dos items que comparten una pasiva con nombre (Cleave, Lifeline, Annul, Immolate,
     /// Awe…) no conviven en una build: el juego los limita a 1 o el efecto no se acumula.

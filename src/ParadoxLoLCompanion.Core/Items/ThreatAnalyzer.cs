@@ -162,6 +162,11 @@ public sealed class ThreatAnalyzer
             // --- Defuzzificación de perceptos ---
             PhysicalSkew = Fuzzy.Ramp(physicalShare, SkewFoot, SkewShoulder),
             MagicalSkew = Fuzzy.Ramp(magicalShare, SkewFoot, SkewShoulder),
+            // Mixto = ambos tipos presentes con peso real (50/50 → 1): un solo muro de
+            // resistencia rinde menos y la vida cruda (Heartsteel/Warmog) rinde más.
+            MixedDamage = Fuzzy.And(
+                Fuzzy.Ramp(physicalShare, 0.30, 0.50),
+                Fuzzy.Ramp(magicalShare, 0.30, 0.50)),
             ArmorStack = Fuzzy.Ramp(bonusArmor,
                 _config.ArmorStackThreshold * 0.4, _config.ArmorStackThreshold * 2),
             MrStack = Fuzzy.Ramp(bonusMr,

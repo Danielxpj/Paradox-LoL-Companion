@@ -115,4 +115,36 @@ public class RealCatalogSmokeTests
             foreach (var name in r.Item.PassiveNames)
                 Assert.True(passives.Add(name), $"{r.Item.Name} repite la pasiva '{name}'");
     }
+
+    [Fact]
+    public async Task RealCatalog_TankAdviceIsCoherent_ForShen()
+    {
+        var catalog = await new DataDragonClient(cacheDir: CacheDir).LoadCachedAsync();
+        if (catalog is null)
+            return; // sin caché local
+
+        // Shen top contra daño mixto, con Heartsteel core en las stats (como op.gg).
+        var advisor = new ItemAdvisor(catalog);
+        var state = TestCatalog.State(3200,
+            ("Shen", "ORDER", 1, new int[0]),
+            ("Darius", "CHAOS", 2, new int[0]),
+            ("Ahri", "CHAOS", 2, new int[0]),
+            ("Jinx", "CHAOS", 1, new int[0]),
+            ("Vladimir", "CHAOS", 2, new int[0]));
+        var stats = new Core.Stats.ChampionBuildStats
+        {
+            ChampionKey = "Shen", Position = "top",
+            CoreItems = new Core.Stats.ItemSetStats(
+                new[] { 3084, 3068, 3075 }, PickRate: 0.22, Play: 8000, Win: 4200),
+        };
+
+        var plan = advisor.Advise(state, null, stats);
+        Assert.NotNull(plan);
+
+        // Heartsteel (HP puro, core del campeón) tiene que aparecer en el top.
+        Assert.Contains(plan!.Recommendations, r => r.Item.Id == 3084);
+        // Y los items de dupla/soporte no van a un laner (Zeke's, Locket, Knight's Vow).
+        Assert.DoesNotContain(plan.Recommendations,
+            r => r.Item.Id is 3050 or 3109 or 3190 or 3107);
+    }
 }

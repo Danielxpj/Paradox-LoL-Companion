@@ -102,6 +102,23 @@ public sealed class ItemsConfig
     // (Filo Infinito dice "tus golpes críticos infligen…", que no contiene estas frases).
     public List<string> CritReductionKeywords { get; set; } = new()
         { "from critical strikes", "de los golpes críticos", "de golpes críticos" };
+    /// <summary>Detecta items de letalidad (pen plana: mata squishies, no tanques).</summary>
+    public List<string> LethalityKeywords { get; set; } = new() { "Lethality", "letalidad" };
+
+    /// <summary>
+    /// Items de dupla/soporte (escudan o potencian a un aliado): solo tienen sentido
+    /// en el soporte — fuera del pool para laners. Zeke's, Knight's Vow, Locket, Redemption.
+    /// </summary>
+    public List<int> SupportOnlyItemIds { get; set; } = new() { 3050, 3109, 3190, 3107 };
+
+    /// <summary>Items de stacks que se pierden al morir (Mejai's + Dark Seal).</summary>
+    public List<int> SnowballItemIds { get; set; } = new() { 3041, 1082 };
+    /// <summary>Kills+asistencias mínimas para recomendar un item de stacks.</summary>
+    public int SnowballMinTakedowns { get; set; } = 3;
+    /// <summary>Muertes máximas para recomendar un item de stacks.</summary>
+    public int SnowballMaxDeaths { get; set; } = 3;
+    /// <summary>Muertes desde las que se sugiere vender el item de stacks (si K &lt; D).</summary>
+    public int SnowballSellDeaths { get; set; } = 4;
 
     /// <summary>Nombres localizados del recurso maná en champion.json (partype). en + es.</summary>
     public List<string> ManaResourceNames { get; set; } = new() { "Mana", "Maná" };

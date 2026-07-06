@@ -24,6 +24,11 @@ public sealed class ChampionStats
     public double Armor { get; set; }
     public double MagicResist { get; set; }
     public double MoveSpeed { get; set; }
+    /// <summary>
+    /// Prob. de crítico EFECTIVA (incluye pasivas tipo Yasuo/Yone y runas). La API la
+    /// reporta como fracción; ausente en datos viejos → 0 (el asesor cae a sumar items).
+    /// </summary>
+    public double CritChance { get; set; }
 }
 
 /// <summary>Entrada de <c>allPlayers</c>: datos públicos de cada jugador de la partida.</summary>

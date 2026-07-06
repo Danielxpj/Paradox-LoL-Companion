@@ -191,6 +191,7 @@ public sealed class DataDragonCatalog : IStaticData
                 RemovesCc = MentionsAny(entry.Description, config.CleanseKeywords),
                 BreaksShields = MentionsAny(entry.Description, config.ShieldBreakerKeywords),
                 ReducesCritDamage = MentionsAny(entry.Description, config.CritReductionKeywords),
+                HasLethality = MentionsAny(entry.Description, config.LethalityKeywords),
                 PassiveNames = ParsePassiveNames(entry.Description),
                 Depth = entry.Depth ?? 1,
                 From = ParseIds(entry.From),
