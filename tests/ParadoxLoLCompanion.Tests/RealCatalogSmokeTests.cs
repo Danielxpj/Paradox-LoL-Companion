@@ -117,6 +117,40 @@ public class RealCatalogSmokeTests
     }
 
     [Fact]
+    public async Task RealCatalog_VoidPenGroup_IsExclusive()
+    {
+        var catalog = await new DataDragonClient(cacheDir: CacheDir).LoadCachedAsync();
+        if (catalog is null)
+            return; // sin caché local
+
+        // Bug real reportado: teniendo Void Staff, el plan ofrecía Cryptbloom y
+        // Bloodletter's Curse (el juego los limita a 1, pero ddragon no expone el
+        // grupo: sin pasiva compartida y 8010 ni siquiera sale de Blighting Jewel).
+        var advisor = new ItemAdvisor(catalog);
+        var state = TestCatalog.State(6000,
+            ("Ahri", "ORDER", 3, new[] { 3135 }),               // Void Staff comprado
+            ("Malphite", "CHAOS", 2, new[] { 3065 }),           // RM apilada
+            ("Galio", "CHAOS", 2, new[] { 3065, 3111 }),
+            ("Jinx", "CHAOS", 1, new int[0]),
+            ("Soraka", "CHAOS", 0, new int[0]));
+        var plan = advisor.Advise(state);
+
+        Assert.NotNull(plan);
+        Assert.DoesNotContain(plan!.Recommendations, r => r.Item.Id is 3135 or 3137 or 8010);
+
+        // Y sin tener ninguno, jamás dos del trío en la misma lista.
+        var fresh = TestCatalog.State(6000,
+            ("Ahri", "ORDER", 3, new int[0]),
+            ("Malphite", "CHAOS", 2, new[] { 3065 }),
+            ("Galio", "CHAOS", 2, new[] { 3065, 3111 }),
+            ("Jinx", "CHAOS", 1, new int[0]),
+            ("Soraka", "CHAOS", 0, new int[0]));
+        var freshPlan = advisor.Advise(fresh)!;
+        Assert.True(freshPlan.Recommendations.Count(r => r.Item.Id is 3135 or 3137 or 8010) <= 1,
+            "dos items del grupo del Vacío recomendados juntos");
+    }
+
+    [Fact]
     public async Task RealCatalog_TankAdviceIsCoherent_ForShen()
     {
         var catalog = await new DataDragonClient(cacheDir: CacheDir).LoadCachedAsync();

@@ -28,6 +28,11 @@
     "shieldBreakerKeywords": ["Shield Reaver", "Rompeescudos"],
     "lethalityKeywords": ["Lethality", "letalidad"],
 
+    // "Limited to 1" shop groups that ddragon exposes in NO field (no shared passive, no
+    // common component): Void pen (Void Staff / Cryptbloom / Bloodletter's Curse) and
+    // Last Whisper (Lord Dominik's / Mortal Reminder / Serylda's Grudge).
+    "exclusiveItemGroups": [[3135, 3137, 8010], [3036, 3033, 6694]],
+
     // Duo/support items (never for laners) and snowball-stack items (require going well).
     "supportOnlyItemIds": [3050, 3109, 3190, 3107],
     "snowballItemIds": [3041, 1082],

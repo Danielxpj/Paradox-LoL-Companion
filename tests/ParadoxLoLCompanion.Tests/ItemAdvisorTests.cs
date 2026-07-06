@@ -181,9 +181,41 @@ public class ItemAdvisorTests
             ("Amumu", "CHAOS", 0, new[] { 3065 }));        // 50 RM
         var plan = Advisor().Advise(state)!;
 
-        Assert.Contains(plan.Recommendations, r => r.Item.Id == 3135); // Void Staff
-        var voidStaff = plan.Recommendations.First(r => r.Item.Id == 3135);
-        Assert.Contains(voidStaff.Reasons, r => r.Contains("magic resist"));
+        // Un item de pen mágica (del grupo del Vacío sobrevive uno solo al dedup:
+        // el que mejor puntúe, no necesariamente Void Staff).
+        Assert.Contains(plan.Recommendations, r => r.Item.HasTag("MagicPenetration"));
+        var pen = plan.Recommendations.First(r => r.Item.HasTag("MagicPenetration"));
+        Assert.Contains(pen.Reasons, r => r.Contains("magic resist"));
+    }
+
+    [Fact]
+    public void OwnedExclusiveGroupItem_BlocksTheWholeGroup()
+    {
+        // El juego limita a 1 los items de pen mágica del Vacío (Void Staff /
+        // Cryptbloom / Bloodletter's Curse): teniendo uno, comprar otro es ilegal.
+        // ddragon no expone el grupo (ni pasiva compartida ni componente común).
+        var state = TestCatalog.State(5000,
+            ("Ahri", "ORDER", 0, new[] { 3135 }),          // ya tengo Void Staff
+            ("Leona", "CHAOS", 0, new[] { 3065, 3111 }),
+            ("Amumu", "CHAOS", 0, new[] { 3065 }));
+        var plan = Advisor().Advise(state)!;
+
+        Assert.DoesNotContain(plan.Recommendations, r => r.Item.Id is 3137 or 8010);
+    }
+
+    [Fact]
+    public void ExclusiveGroup_NeverRecommendsTwoTogether()
+    {
+        // Sin tener ninguno, la lista tampoco puede ofrecer dos del mismo grupo
+        // excluyente a la vez: comprar uno vuelve ilegales a los otros.
+        var state = TestCatalog.State(5000,
+            ("Ahri", "ORDER", 0, None),
+            ("Leona", "CHAOS", 0, new[] { 3065, 3111 }),
+            ("Amumu", "CHAOS", 0, new[] { 3065 }));
+        var plan = Advisor().Advise(state)!;
+
+        Assert.True(plan.Recommendations.Count(r => r.Item.Id is 3135 or 3137 or 8010) <= 1,
+            "two Void-pen items recommended together");
     }
 
     [Fact]

@@ -124,6 +124,28 @@ public sealed class ItemAdvisor
             if (_data.ItemById(id) is { } ownedItem)
                 ownedNames.Add(ownedItem.Name);
 
+        // Grupos "límite de 1" que ddragon no expone (el trío de pen mágica del Vacío no
+        // comparte ni pasiva ni componente): vienen explícitos de la config. La membresía
+        // se resuelve por id Y por nombre (variantes con id duplicado del catálogo).
+        var exclusiveGroups = _config.ExclusiveItemGroups
+            .Select(g => (Ids: new HashSet<int>(g),
+                Names: new HashSet<string>(
+                    g.Select(id => _data.ItemById(id)?.Name).OfType<string>(),
+                    StringComparer.OrdinalIgnoreCase)))
+            .ToList();
+        int ExclusiveGroupOf(StaticItem item)
+        {
+            for (var g = 0; g < exclusiveGroups.Count; g++)
+                if (exclusiveGroups[g].Ids.Contains(item.Id)
+                    || exclusiveGroups[g].Names.Contains(item.Name))
+                    return g;
+            return -1;
+        }
+        var ownedExclusiveGroups = new HashSet<int>();
+        foreach (var id in ownedIds)
+            if (_data.ItemById(id) is { } groupOwned && ExclusiveGroupOf(groupOwned) is >= 0 and var og)
+                ownedExclusiveGroups.Add(og);
+
         var teamHasGw = state.AllPlayers
             .Where(p => p.Team == me.Team)
             .SelectMany(p => p.Items)
@@ -183,6 +205,10 @@ public sealed class ItemAdvisor
                 continue;
             if (BlockedByOwnedPassive(item, ownedWithPassives))
                 continue;
+            // Ya tenés un item de su grupo excluyente ("límite de 1"): comprarlo es ilegal.
+            if (ExclusiveGroupOf(item) is >= 0 and var itemGroup
+                && ownedExclusiveGroups.Contains(itemGroup))
+                continue;
             if (!isSupport && (supportOnlyNames.Contains(item.Name)
                 || _config.SupportOnlyItemIds.Contains(item.Id)))
                 continue;
@@ -210,6 +236,7 @@ public sealed class ItemAdvisor
         var recommendations = new List<ItemRecommendation>();
         var recommendedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var takenPassives = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var takenExclusiveGroups = new HashSet<int>();
         var gwTaken = false;
         var topScore = 0.0;
         foreach (var (item, score, reasons, category, plan) in ranked)
@@ -222,6 +249,11 @@ public sealed class ItemAdvisor
             // Ni dos items del mismo grupo excluyente (misma pasiva con nombre): dos
             // Hidras, dos Lifeline, dos Immolate… no pueden convivir en una build.
             if (item.PassiveNames.Count > 0 && item.PassiveNames.Overlaps(takenPassives))
+                continue;
+            // Ni dos del mismo grupo "límite de 1" de la config: comprar el primero
+            // vuelve ilegal al segundo (Void Staff / Cryptbloom / Bloodletter's Curse).
+            if (ExclusiveGroupOf(item) is >= 0 and var rankedGroup
+                && !takenExclusiveGroups.Add(rankedGroup))
                 continue;
             if (item.AppliesGrievousWounds)
             {

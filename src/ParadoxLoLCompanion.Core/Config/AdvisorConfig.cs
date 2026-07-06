@@ -111,6 +111,19 @@ public sealed class ItemsConfig
     /// </summary>
     public List<int> SupportOnlyItemIds { get; set; } = new() { 3050, 3109, 3190, 3107 };
 
+    /// <summary>
+    /// Grupos "límite de 1" del juego que ddragon no expone de NINGUNA forma (ni pasiva
+    /// compartida ni componente común): pen mágica del Vacío (Void Staff / Cryptbloom /
+    /// Bloodletter's Curse) y Last Whisper (Lord Dominik's / Mortal Reminder / Serylda's).
+    /// Teniendo uno, comprar otro del grupo es ilegal en la tienda. La membresía también
+    /// se resuelve por nombre, para cubrir las variantes con id duplicado del catálogo.
+    /// </summary>
+    public List<List<int>> ExclusiveItemGroups { get; set; } = new()
+    {
+        new() { 3135, 3137, 8010 },   // Void Staff, Cryptbloom, Bloodletter's Curse
+        new() { 3036, 3033, 6694 },   // Lord Dominik's, Mortal Reminder, Serylda's Grudge
+    };
+
     /// <summary>Items de stacks que se pierden al morir (Mejai's + Dark Seal).</summary>
     public List<int> SnowballItemIds { get; set; } = new() { 3041, 1082 };
     /// <summary>Kills+asistencias mínimas para recomendar un item de stacks.</summary>

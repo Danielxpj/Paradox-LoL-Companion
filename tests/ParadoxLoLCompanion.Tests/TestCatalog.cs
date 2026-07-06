@@ -11,7 +11,9 @@ namespace ParadoxLoLCompanion.Tests;
 /// Maestra: no comprable, se construye desde 3031), 9068 (duplicado de nombre de
 /// Sunfire Aegis con otro id, como los que trae el catálogo real), 994403/223069/663172
 /// (items de modos/perks: ddragon los marca comprables en un mapa pero no tienen árbol
-/// de construcción) y 3173 (botas tier 3 de Hazañas de Fuerza, mejora de 3111).
+/// de construcción), 3173 (botas tier 3 de Hazañas de Fuerza, mejora de 3111) y
+/// 3135/3137/8010 (grupo "límite de 1" del Vacío: sin pasiva compartida ni componente
+/// común entre los tres — la exclusividad no se puede derivar de ddragon).
 /// </summary>
 internal static class TestCatalog
 {
@@ -40,13 +42,15 @@ internal static class TestCatalog
     {
       "data": {
         "1001": { "name":"Boots","gold":{"total":300,"purchasable":true},"tags":["Boots"],"maps":{"11":true,"12":true},"into":["3111","3047","3006","3020","3158"] },
-        "1011": { "name":"Giant's Belt","gold":{"total":900,"purchasable":true},"tags":["Health"],"maps":{"11":true,"12":true},"into":["3075","3068","3083","6653"],"stats":{"FlatHPPoolMod":350} },
+        "1011": { "name":"Giant's Belt","gold":{"total":900,"purchasable":true},"tags":["Health"],"maps":{"11":true,"12":true},"into":["3075","3068","3083","6653","8010"],"stats":{"FlatHPPoolMod":350} },
         "1018": { "name":"Cloak of Agility","gold":{"total":600,"purchasable":true},"tags":["CriticalStrike"],"maps":{"11":true,"12":true},"into":["3031","3033","3036"],"stats":{"FlatCritChanceMod":0.15} },
         "1029": { "name":"Chain Vest","gold":{"total":800,"purchasable":true},"tags":["Armor"],"maps":{"11":true,"12":true},"into":["3157","3026","3075","3068","3047"],"stats":{"FlatArmorMod":40} },
         "1033": { "name":"Null-Magic Mantle","gold":{"total":450,"purchasable":true},"tags":["SpellBlock"],"maps":{"11":true,"12":true},"into":["3102","3156","3139","3111","3065"],"stats":{"FlatSpellBlockMod":25} },
         "1036": { "name":"Long Sword","gold":{"total":350,"purchasable":true},"tags":["Damage"],"maps":{"11":true,"12":true},"into":["6695","3033","3123"],"stats":{"FlatPhysicalDamageMod":10} },
         "1038": { "name":"B.F. Sword","gold":{"total":1300,"purchasable":true},"tags":["Damage"],"maps":{"11":true,"12":true},"into":["3031","3026","3156","3036"],"stats":{"FlatPhysicalDamageMod":40} },
-        "1052": { "name":"Amplifying Tome","gold":{"total":435,"purchasable":true},"tags":["SpellDamage"],"maps":{"11":true,"12":true},"into":["3089","3135","3165"],"stats":{"FlatMagicDamageMod":20} },
+        "1026": { "name":"Blasting Wand","gold":{"total":850,"purchasable":true},"tags":["SpellDamage"],"maps":{"11":true,"12":true},"into":["3135"],"stats":{"FlatMagicDamageMod":45} },
+        "1052": { "name":"Amplifying Tome","gold":{"total":435,"purchasable":true},"tags":["SpellDamage"],"maps":{"11":true,"12":true},"into":["3089","4630","3165","3137","8010"],"stats":{"FlatMagicDamageMod":20} },
+        "4630": { "name":"Blighting Jewel","gold":{"total":1100,"purchasable":true},"tags":["SpellDamage","MagicPenetration"],"maps":{"11":true,"12":true},"into":["3135","3137"],"from":["1052"],"depth":2,"stats":{"FlatMagicDamageMod":25} },
         "1053": { "name":"Vampiric Scepter","gold":{"total":900,"purchasable":true},"tags":["Damage","LifeSteal"],"maps":{"11":true,"12":true},"into":["3139"],"stats":{"FlatPhysicalDamageMod":15} },
         "1058": { "name":"Needlessly Large Rod","gold":{"total":1250,"purchasable":true},"tags":["SpellDamage"],"maps":{"11":true,"12":true},"into":["3089","3157","3102","3115","6653"],"stats":{"FlatMagicDamageMod":60} },
         "3123": { "name":"Executioner's Calling","description":"Passive: inflicts Grievous Wounds","gold":{"total":800,"purchasable":true},"tags":["Damage","LifeSteal"],"maps":{"11":true,"12":true},"into":["3033"],"from":["1036"],"depth":2,"stats":{"FlatPhysicalDamageMod":15} },
@@ -56,7 +60,9 @@ internal static class TestCatalog
         "3033": { "name":"Mortal Reminder","description":"Passive: inflicts Grievous Wounds","gold":{"total":3300,"purchasable":true},"tags":["Damage","CriticalStrike","ArmorPenetration"],"maps":{"11":true,"12":true},"from":["3123","1018","1036"],"depth":3,"stats":{"FlatPhysicalDamageMod":35,"FlatCritChanceMod":0.25} },
         "3036": { "name":"Lord Dominik's Regards","gold":{"total":3100,"purchasable":true},"tags":["Damage","CriticalStrike","ArmorPenetration"],"maps":{"11":true,"12":true},"from":["1038","1018"],"depth":3,"stats":{"FlatPhysicalDamageMod":35,"FlatCritChanceMod":0.25} },
         "3089": { "name":"Rabadon's Deathcap","gold":{"total":3600,"purchasable":true},"tags":["SpellDamage"],"maps":{"11":true,"12":true},"from":["1058","1052"],"depth":3,"stats":{"FlatMagicDamageMod":130} },
-        "3135": { "name":"Void Staff","gold":{"total":3000,"purchasable":true},"tags":["SpellDamage","MagicPenetration"],"maps":{"11":true,"12":true},"from":["1052"],"depth":2,"stats":{"FlatMagicDamageMod":95} },
+        "3135": { "name":"Void Staff","gold":{"total":3000,"purchasable":true},"tags":["SpellDamage","MagicPenetration"],"maps":{"11":true,"12":true},"from":["4630","1026"],"depth":3,"stats":{"FlatMagicDamageMod":95} },
+        "3137": { "name":"Cryptbloom","description":"<mainText><passive>Life from Death</passive><br>When a champion that you damaged dies, a nova heals allies.</mainText>","gold":{"total":2850,"purchasable":true},"tags":["SpellDamage","MagicPenetration","AbilityHaste"],"maps":{"11":true,"12":true},"from":["4630","1052"],"depth":3,"stats":{"FlatMagicDamageMod":75} },
+        "8010": { "name":"Bloodletter's Curse","description":"<mainText><passive>Vile Decay</passive><br>Dealing magic damage reduces Magic Resist by 7.5% for 6 seconds.</mainText>","gold":{"total":2900,"purchasable":true},"tags":["Health","SpellDamage","CooldownReduction","MagicPenetration"],"maps":{"11":true,"12":true},"from":["1052","1011"],"depth":3,"stats":{"FlatMagicDamageMod":65,"FlatHPPoolMod":400} },
         "3165": { "name":"Morellonomicon","description":"Passive: inflicts Grievous Wounds","gold":{"total":2200,"purchasable":true},"tags":["SpellDamage","Health"],"maps":{"11":true,"12":true},"from":["3916","1052"],"depth":3,"stats":{"FlatMagicDamageMod":75,"FlatHPPoolMod":200} },
         "3157": { "name":"Zhonya's Hourglass","gold":{"total":3250,"purchasable":true},"tags":["SpellDamage","Armor"],"maps":{"11":true,"12":true},"from":["1058","1029"],"depth":3,"stats":{"FlatMagicDamageMod":105,"FlatArmorMod":50} },
         "3026": { "name":"Guardian Angel","gold":{"total":3200,"purchasable":true},"tags":["Damage","Armor"],"maps":{"11":true,"12":true},"from":["1038","1029"],"depth":3,"stats":{"FlatPhysicalDamageMod":55,"FlatArmorMod":45} },
