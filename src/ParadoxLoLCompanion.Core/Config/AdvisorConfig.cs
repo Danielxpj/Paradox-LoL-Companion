@@ -198,6 +198,12 @@ public sealed class ItemsConfig
         ["Sylas"] = "Magical",
         ["Kennen"] = "Magical",
         ["Kaisa"] = "Mixed",
+        // AP con info.attack−magic en (−3, 0]: sin esto caen en AdAssassin/AdFighter
+        // y el asesor les ofrece items AD (Terminus a Ekko).
+        ["Ekko"] = "Magical",
+        ["Nidalee"] = "Magical",
+        ["Elise"] = "Magical",
+        ["Gragas"] = "Magical",
     };
 
     /// <summary>Correcciones al arquetipo de build inferido de los tags.</summary>

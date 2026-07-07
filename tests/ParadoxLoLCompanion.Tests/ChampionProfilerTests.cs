@@ -42,6 +42,21 @@ public class ChampionProfilerTests
         Assert.Equal(BuildArchetype.ApFighter, profile.Archetype);
     }
 
+    [Theory]
+    [InlineData("Ekko", BuildArchetype.Mage)]
+    [InlineData("Nidalee", BuildArchetype.Mage)]
+    [InlineData("Elise", BuildArchetype.Mage)]
+    [InlineData("Gragas", BuildArchetype.ApFighter)]
+    public void ApChampionsShortOfTheMagicThreshold_AreOverriddenToMagical(
+        string key, BuildArchetype archetype)
+    {
+        // info.attack−magic queda en (−3, 0]: sin override caerían en AdAssassin/AdFighter
+        // y el asesor les ofrecería items AD (Terminus a Ekko en Mayhem).
+        var profile = Profiler().Profile(TestCatalog.Catalog().ChampionByKey(key));
+        Assert.Equal(DamageProfile.Magical, profile.Damage);
+        Assert.Equal(archetype, profile.Archetype);
+    }
+
     [Fact]
     public void ArchetypeOverride_WinsOverTags()
     {

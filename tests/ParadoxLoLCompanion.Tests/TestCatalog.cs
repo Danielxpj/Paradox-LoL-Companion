@@ -33,7 +33,11 @@ internal static class TestCatalog
         "Karma":      { "id":"Karma","key":"43","name":"Karma","tags":["Mage","Support"],"info":{"attack":1,"defense":7,"magic":8} },
         "Vayne":      { "id":"Vayne","key":"67","name":"Vayne","tags":["Marksman","Assassin"],"info":{"attack":10,"defense":1,"magic":1} },
         "Pyke":       { "id":"Pyke","key":"555","name":"Pyke","tags":["Support","Assassin"],"info":{"attack":9,"defense":3,"magic":1} },
-        "MonkeyKing": { "id":"MonkeyKing","key":"62","name":"Wukong","tags":["Fighter","Tank"],"info":{"attack":8,"defense":5,"magic":2} }
+        "MonkeyKing": { "id":"MonkeyKing","key":"62","name":"Wukong","tags":["Fighter","Tank"],"info":{"attack":8,"defense":5,"magic":2} },
+        "Ekko":       { "id":"Ekko","key":"245","name":"Ekko","tags":["Assassin","Mage"],"info":{"attack":5,"defense":3,"magic":7} },
+        "Nidalee":    { "id":"Nidalee","key":"76","name":"Nidalee","tags":["Assassin","Mage"],"info":{"attack":5,"defense":4,"magic":7} },
+        "Elise":      { "id":"Elise","key":"60","name":"Elise","tags":["Assassin","Mage"],"info":{"attack":6,"defense":5,"magic":7} },
+        "Gragas":     { "id":"Gragas","key":"79","name":"Gragas","tags":["Fighter","Mage"],"info":{"attack":4,"defense":7,"magic":6} }
       }
     }
     """;

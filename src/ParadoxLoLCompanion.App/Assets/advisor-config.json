@@ -55,7 +55,13 @@
       "Fizz": "Magical",
       "Sylas": "Magical",
       "Kennen": "Magical",
-      "Kaisa": "Mixed"
+      "Kaisa": "Mixed",
+      // AP champs whose info.attack-magic gap misses the -3 Magical threshold: without
+      // this they profile as AD assassin/fighter and get AD items (Terminus on Ekko).
+      "Ekko": "Magical",
+      "Nidalee": "Magical",
+      "Elise": "Magical",
+      "Gragas": "Magical"
     },
     // Archetypes: Marksman / Mage / AdAssassin / AdFighter / ApFighter / Tank / Enchanter.
     "archetypeOverrides": {},
