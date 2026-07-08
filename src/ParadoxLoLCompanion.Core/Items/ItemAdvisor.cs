@@ -838,32 +838,48 @@ public sealed class ItemAdvisor
                 (int)Math.Max(0, plan.RemainingCost - gold));
         }
 
+        // La amenaza ya no decide sola: queda como candidata, y si la meta
+        // (op.gg) recomienda otra bota, acompaña como nota en la razón.
+        (StaticItem Boots, string Reason)? threatPick = null;
         if (threat.HeavyCcCount >= _config.CcCountForMercs
             || threat.MagicalShare >= _config.SkewedDamageShare)
         {
             var mercs = ByTag(candidates, "SpellBlock");
             if (mercs is not null)
-                return Advice(mercs, threat.HeavyCcCount >= _config.CcCountForMercs
+                threatPick = (mercs, threat.HeavyCcCount >= _config.CcCountForMercs
                     ? $"the enemy has {threat.HeavyCcCount} heavy-CC champions"
                     : $"{Pct(threat.MagicalShare)} of enemy damage is magic");
         }
 
-        if (threat.PhysicalShare >= _config.SkewedDamageShare && threat.AutoAttackShare >= 0.35)
+        if (threatPick is null
+            && threat.PhysicalShare >= _config.SkewedDamageShare && threat.AutoAttackShare >= 0.35)
         {
             var steelcaps = ByTag(candidates, "Armor");
             if (steelcaps is not null)
-                return Advice(steelcaps,
+                threatPick = (steelcaps,
                     $"heavy physical auto-attack damage ({threat.TopPhysicalName})");
         }
 
-        // Sin amenaza que decida: las botas que más compran los jugadores de tu campeón.
+        // La meta manda: las botas que más compran los jugadores de tu campeón,
+        // en el orden de op.gg (popularidad), no en el orden del catálogo.
         if (stats?.Boots is { } statBoots)
         {
-            var popular = candidates.FirstOrDefault(c => statBoots.ItemIds.Contains(c.Id));
+            var popular = statBoots.ItemIds
+                .Select(id => candidates.FirstOrDefault(c => c.Id == id))
+                .FirstOrDefault(c => c is not null);
             if (popular is not null)
-                return Advice(popular,
-                    $"most common boots on your champion ({Pct(statBoots.PickRate)} pick rate)");
+            {
+                var reason =
+                    $"most common boots on your champion ({Pct(statBoots.PickRate)} pick rate)";
+                if (threatPick is { } alt && alt.Boots.Id != popular.Id)
+                    reason += $" — but {alt.Reason}: consider {alt.Boots.Name}";
+                return Advice(popular, reason);
+            }
         }
+
+        // Sin datos de op.gg: la amenaza decide como hasta ahora.
+        if (threatPick is { } picked)
+            return Advice(picked.Boots, picked.Reason);
 
         var byArchetype = profile.Archetype switch
         {

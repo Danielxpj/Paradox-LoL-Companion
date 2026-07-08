@@ -189,4 +189,74 @@ public class ItemAdvisorStatsTests
         Assert.NotEqual(RecommendationCategory.Counter, top.Category);
         Assert.NotEqual(RecommendationCategory.Defense, top.Category);
     }
+
+    // --- Botas: la meta (op.gg) manda; la amenaza queda como nota ---
+
+    private static readonly int[] NoItems = Array.Empty<int>();
+
+    private static ChampionBuildStats BootsStats(params int[] bootIds) => new()
+    {
+        ChampionKey = "Jinx",
+        GameMode = "ranked",
+        Position = "adc",
+        Boots = new ItemSetStats(bootIds, PickRate: 0.62, Play: 9000, Win: 4700),
+    };
+
+    [Fact]
+    public void Boots_OpggMetaWins_ThreatBecomesNote()
+    {
+        // Misma amenaza que Boots_MercsAgainstCcAndMagic (CC pesado → Mercs),
+        // pero op.gg dice Sorcerer's: la meta manda y la amenaza queda como nota.
+        var state = TestCatalog.State(2000,
+            ("Jinx", "ORDER", 0, NoItems),
+            ("Malzahar", "CHAOS", 0, NoItems),
+            ("Leona", "CHAOS", 0, NoItems),
+            ("Amumu", "CHAOS", 0, NoItems));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var plan = advisor.Advise(state, stats: BootsStats(3020))!;
+
+        Assert.NotNull(plan.Boots);
+        Assert.Equal(3020, plan.Boots!.Boots.Id);
+        Assert.Contains("pick rate", plan.Boots.Reason);
+        Assert.Contains("consider Mercury's Treads", plan.Boots.Reason);
+    }
+
+    [Fact]
+    public void Boots_OpggMeta_NoNote_WhenThreatAgrees_OrNoSkew()
+    {
+        // Sin sesgo de amenaza: op.gg decide y la razón no lleva nota.
+        // Además op.gg trae dos botas y gana la primera de SU orden (3158),
+        // no la primera del orden del catálogo.
+        var state = TestCatalog.State(2000,
+            ("Jinx", "ORDER", 0, NoItems),
+            ("Zed", "CHAOS", 2, NoItems),
+            ("Ahri", "CHAOS", 2, NoItems));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var plan = advisor.Advise(state, stats: BootsStats(3158, 3006))!;
+
+        Assert.NotNull(plan.Boots);
+        Assert.Equal(3158, plan.Boots!.Boots.Id);
+        Assert.Contains("pick rate", plan.Boots.Reason);
+        Assert.DoesNotContain("consider", plan.Boots.Reason);
+    }
+
+    [Fact]
+    public void Boots_ThreatFallback_WhenOpggBootsNotInCatalog()
+    {
+        // op.gg trae un id que no existe en el mapa: fallback a la amenaza (Mercs).
+        var state = TestCatalog.State(2000,
+            ("Jinx", "ORDER", 0, NoItems),
+            ("Malzahar", "CHAOS", 0, NoItems),
+            ("Leona", "CHAOS", 0, NoItems),
+            ("Amumu", "CHAOS", 0, NoItems));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var plan = advisor.Advise(state, stats: BootsStats(99999))!;
+
+        Assert.NotNull(plan.Boots);
+        Assert.Equal(3111, plan.Boots!.Boots.Id);
+        Assert.Contains("CC", plan.Boots.Reason);
+    }
 }
