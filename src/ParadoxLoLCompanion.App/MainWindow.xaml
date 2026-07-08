@@ -592,6 +592,28 @@
                                            FontWeight="SemiBold" Foreground="{StaticResource Cyan}" />
                             </Border>
 
+                            <!-- Feed de consejos: debajo del asesor de items, a lo ancho. -->
+                            <TextBlock Text="ADVICE" Style="{StaticResource SectionHeader}" />
+                            <ItemsControl ItemsSource="{Binding Advice}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource Card}" Padding="12">
+                                            <!-- DockPanel (no StackPanel horizontal): el texto toma el ancho
+                                                 restante de la tarjeta y ajusta el wrap al redimensionar. -->
+                                            <DockPanel>
+                                                <Border DockPanel.Dock="Left" Width="4" CornerRadius="2"
+                                                        Background="{Binding Severity}" Margin="0,0,10,0" />
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Category}" Style="{StaticResource CardTitle}" />
+                                                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap"
+                                                               Foreground="{StaticResource TextPrimary}" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
                             <!-- ===== ARAM: MAYHEM — strip de augments estilo HUD ===== -->
                             <Border Padding="14,10">
                                 <Border.Style>
@@ -682,14 +704,8 @@
                                 </ItemsControl>
                             </StackPanel>
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2*" />
-                                    <ColumnDefinition Width="1*" />
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Tabla de jugadores -->
-                                <StackPanel Grid.Column="0">
+                            <!-- Tabla de jugadores -->
+                            <StackPanel>
                                     <TextBlock Text="PLAYERS" Style="{StaticResource SectionHeader}" />
                                     <Border Style="{StaticResource Card}" Padding="10">
                                         <DataGrid ItemsSource="{Binding Players}" AutoGenerateColumns="False"
@@ -751,32 +767,7 @@
                                             </DataGrid.Columns>
                                         </DataGrid>
                                     </Border>
-                                </StackPanel>
-
-                                <!-- Feed de consejos -->
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="ADVICE" Style="{StaticResource SectionHeader}" />
-                                    <ItemsControl ItemsSource="{Binding Advice}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Style="{StaticResource Card}" Padding="12">
-                                                    <!-- DockPanel (no StackPanel horizontal): el texto toma el ancho
-                                                         restante de la tarjeta y ajusta el wrap al redimensionar. -->
-                                                    <DockPanel>
-                                                        <Border DockPanel.Dock="Left" Width="4" CornerRadius="2"
-                                                                Background="{Binding Severity}" Margin="0,0,10,0" />
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding Category}" Style="{StaticResource CardTitle}" />
-                                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap"
-                                                                       Foreground="{StaticResource TextPrimary}" />
-                                                        </StackPanel>
-                                                    </DockPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Grid>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
