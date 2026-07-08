@@ -26,5 +26,7 @@ installer/output/
 
 ## Claude Code / editor local state
 .claude/
+## Mockups del visual companion (brainstorming)
+.superpowers/
 ## Artefactos del navegador de agentes
 .playwright-mcp/
