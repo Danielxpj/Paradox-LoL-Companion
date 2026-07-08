@@ -5,7 +5,6 @@ using ParadoxLoLCompanion.Core.Advice;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Models;
-using ParadoxLoLCompanion.Core.Objectives;
 using ParadoxLoLCompanion.Core.Util;
 
 namespace ParadoxLoLCompanion.App.ViewModels;
@@ -29,39 +28,6 @@ public sealed class ScorecardViewModel : ObservableObject
         get => _value;
         set => SetProperty(ref _value, value);
     }
-}
-
-/// <summary>Tarjeta de timer de objetivo (Dragón / Barón), actualizada en sitio.</summary>
-public sealed class ObjectiveTimerViewModel : ObservableObject
-{
-    private string _clock = "—";
-    private string _detail = "";
-    private Brush _accent = Palette.Muted;
-
-    public ObjectiveTimerViewModel(string label) => Label = label;
-
-    public string Label { get; }
-
-    public string Clock { get => _clock; set => SetProperty(ref _clock, value); }
-    public string Detail { get => _detail; set => SetProperty(ref _detail, value); }
-    public Brush Accent { get => _accent; set => SetProperty(ref _accent, value); }
-
-    public void Update(ObjectiveTiming t)
-    {
-        if (t.IsUp)
-        {
-            Clock = "Up now";
-            Detail = $"since {TimeFmt.Clock(t.NextSpawn)}";
-            Accent = Palette.Green;
-        }
-        else
-        {
-            Clock = TimeFmt.Clock(t.NextSpawn);
-            Detail = $"in {t.Remaining:0}s (estimated)";
-            Accent = t.Remaining <= 30 ? Palette.Amber : Palette.Muted;
-        }
-    }
-
 }
 
 /// <summary>Un ícono de item del inventario de un jugador (con nombre para el tooltip).</summary>

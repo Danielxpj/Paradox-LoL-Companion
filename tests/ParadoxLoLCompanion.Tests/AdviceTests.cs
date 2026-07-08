@@ -89,34 +89,6 @@ public class AdviceTests
         Assert.Empty(advice);
     }
 
-    // --- ObjectiveTimerRule ---
-
-    [Fact]
-    public void Objective_Dragon_ImportantWhenSpawningSoon()
-    {
-        // Fixture: último dragón a 330s, respawn 300s => 630s; ahora 600s => faltan 30s.
-        var advice = new ObjectiveTimerRule().Evaluate(Fixture()).ToList();
-        var dragon = Assert.Single(advice, a => a.Key == "obj-dragon");
-        Assert.Equal(AdviceSeverity.Important, dragon.Severity);
-    }
-
-    [Fact]
-    public void Objective_Baron_InfoBeforeFirstSpawn()
-    {
-        var advice = new ObjectiveTimerRule().Evaluate(Fixture()).ToList();
-        var baron = Assert.Single(advice, a => a.Key == "obj-baron");
-        Assert.Equal(AdviceSeverity.Info, baron.Severity);
-    }
-
-    [Fact]
-    public void Objectives_SkippedInAram()
-    {
-        // Dragón/Barón no existen en el Abismo: sin timers fuera de CLASSIC.
-        var advice = new ObjectiveTimerRule()
-            .Evaluate(StateWith(gameTimeSeconds: 600, gameMode: "ARAM")).ToList();
-        Assert.Empty(advice);
-    }
-
     // --- AdviceEngine ---
 
     [Fact]
@@ -125,8 +97,6 @@ public class AdviceTests
         var advice = AdviceEngine.CreateDefault().Evaluate(Fixture());
         var keys = advice.Select(a => a.Key).ToList();
         Assert.Contains("gold-milestone", keys);
-        Assert.Contains("obj-dragon", keys);
-        Assert.Contains("obj-baron", keys);
     }
 
     [Fact]

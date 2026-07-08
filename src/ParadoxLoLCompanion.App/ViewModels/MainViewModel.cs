@@ -18,7 +18,6 @@ using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Live;
 using ParadoxLoLCompanion.Core.Mayhem;
 using ParadoxLoLCompanion.Core.Models;
-using ParadoxLoLCompanion.Core.Objectives;
 using ParadoxLoLCompanion.Core.Stats;
 using ParadoxLoLCompanion.Core.Util;
 
@@ -67,8 +66,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly ScorecardViewModel _csMinCard = new("CS / min", Palette.Green);
     private readonly ScorecardViewModel _kdaCard = new("KDA", Palette.Blue);
     private readonly ScorecardViewModel _levelCard = new("Level", Palette.Purple);
-    private readonly ObjectiveTimerViewModel _dragon = new("Dragon");
-    private readonly ObjectiveTimerViewModel _baron = new("Baron");
 
     private IGameDataSource? _liveSource;
     private bool _replayMode;
@@ -91,7 +88,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             _clockCard, _goldCard, _csCard, _csMinCard, _kdaCard, _levelCard,
         };
-        Objectives = new ObservableCollection<ObjectiveTimerViewModel> { _dragon, _baron };
 
         // Selector de build del panel de items: Auto (detección) + los 7 arquetipos.
         // Los labels coinciden con ItemAdvisor.ArchetypeLabel.
@@ -129,7 +125,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     // --- Colecciones y estado expuesto a la UI ---
 
     public ObservableCollection<ScorecardViewModel> Scorecards { get; }
-    public ObservableCollection<ObjectiveTimerViewModel> Objectives { get; }
     public ObservableCollection<PlayerRowViewModel> Players { get; } = new();
     public ObservableCollection<AdviceRowViewModel> Advice { get; } = new();
     public ObservableCollection<ItemRecoRowViewModel> ItemRecos { get; } = new();
@@ -164,10 +159,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private Brush _lcuStatusBrush = Palette.Muted;
     public Brush LcuStatusBrush { get => _lcuStatusBrush; private set => SetProperty(ref _lcuStatusBrush, value); }
-
-    private bool _showObjectives = true;
-    /// <summary>La sección Dragón/Barón solo aplica en la Grieta (CLASSIC).</summary>
-    public bool ShowObjectives { get => _showObjectives; private set => SetProperty(ref _showObjectives, value); }
 
     private string _threatSummary = "";
     public string ThreatSummary { get => _threatSummary; private set => SetProperty(ref _threatSummary, value); }
@@ -472,16 +463,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _csMinCard.Value = me is null || minutes <= 0
             ? "—"
             : (me.Scores.CreepScore / minutes).ToString("0.0", CultureInfo.InvariantCulture);
-
-        // Dragón/Barón solo existen en la Grieta: en ARAM y otros modos la sección
-        // de objetivos se oculta por completo.
-        var isClassic = string.Equals(state.GameData.GameMode, "CLASSIC", StringComparison.OrdinalIgnoreCase);
-        ShowObjectives = isClassic;
-        if (isClassic)
-        {
-            _dragon.Update(ObjectiveTimers.Dragon(state));
-            _baron.Update(ObjectiveTimers.Baron(state));
-        }
 
         RebuildPlayers(state);
         RebuildAdvice(state);

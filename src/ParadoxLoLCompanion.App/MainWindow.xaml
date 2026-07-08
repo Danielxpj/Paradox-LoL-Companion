@@ -671,39 +671,6 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <!-- Dragón/Barón: solo en la Grieta; en ARAM la sección desaparece. -->
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ShowObjectives}" Value="False">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="OBJECTIVES (ESTIMATED)" Style="{StaticResource SectionHeader}" />
-                                <!-- Mismas celdas que el Resumen (6 columnas) para mantener el ritmo visual. -->
-                                <ItemsControl ItemsSource="{Binding Objectives}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate><UniformGrid Columns="6" Rows="1" /></ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Style="{StaticResource Card}" Padding="16,12">
-                                                <StackPanel>
-                                                    <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Label}" />
-                                                    <TextBlock FontSize="24" FontFamily="{StaticResource DisplayFont}"
-                                                               Foreground="{Binding Accent}" Text="{Binding Clock}" />
-                                                    <TextBlock FontSize="11" Foreground="{StaticResource TextFaint}"
-                                                               Text="{Binding Detail}" />
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-
                             <!-- Tabla de jugadores -->
                             <StackPanel>
                                     <TextBlock Text="PLAYERS" Style="{StaticResource SectionHeader}" />

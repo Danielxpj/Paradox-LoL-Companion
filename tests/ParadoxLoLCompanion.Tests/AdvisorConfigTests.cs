@@ -17,7 +17,6 @@ public class AdvisorConfigTests
     {
         var c = AdvisorConfig.Default;
         Assert.Equal(7.0, c.CsPerMinute.Target);
-        Assert.Equal(1200.0, c.Objectives.BaronFirstSpawn);
         Assert.Contains("LifeSteal", c.Items.SustainTags);
     }
 

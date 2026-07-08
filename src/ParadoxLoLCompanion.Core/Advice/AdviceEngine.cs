@@ -35,7 +35,6 @@ public sealed class AdviceEngine
 
     private static IEnumerable<IAdviceRule> DefaultRules(AdvisorConfig config) => new IAdviceRule[]
     {
-        new ObjectiveTimerRule(config.Objectives),
         new GoldForItemRule(config.Gold),
         new CsPerMinuteRule(config.CsPerMinute),
     };

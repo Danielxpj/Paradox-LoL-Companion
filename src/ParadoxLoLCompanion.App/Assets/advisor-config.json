@@ -8,13 +8,6 @@
     "target": 7.0,
     "minMinutes": 2.0
   },
-  "objectives": {
-    "dragonFirstSpawn": 300,
-    "dragonRespawn": 300,
-    "baronFirstSpawn": 1200,
-    "baronRespawn": 360,
-    "soonThreshold": 30
-  },
   "items": {
     "minCompletedItemGold": 1100,
     "minFinishedBootsGold": 900,

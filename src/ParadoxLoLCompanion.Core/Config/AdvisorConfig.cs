@@ -10,7 +10,6 @@ public sealed class AdvisorConfig
 {
     public GoldConfig Gold { get; set; } = new();
     public CsConfig CsPerMinute { get; set; } = new();
-    public ObjectivesConfig Objectives { get; set; } = new();
     public ItemsConfig Items { get; set; } = new();
     public MayhemConfig Mayhem { get; set; } = new();
 
@@ -67,15 +66,6 @@ public sealed class CsConfig
 {
     public double Target { get; set; } = 7.0;
     public double MinMinutes { get; set; } = 2.0;
-}
-
-public sealed class ObjectivesConfig
-{
-    public double DragonFirstSpawn { get; set; } = 300;
-    public double DragonRespawn { get; set; } = 300;
-    public double BaronFirstSpawn { get; set; } = 1200;
-    public double BaronRespawn { get; set; } = 360;
-    public double SoonThreshold { get; set; } = 30;
 }
 
 public sealed class ItemsConfig

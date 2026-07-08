@@ -12,7 +12,6 @@ public enum AdviceSeverity
 public enum AdviceCategory
 {
     Gold,
-    Objective,
     Farming,
     Draft,
     Items,
