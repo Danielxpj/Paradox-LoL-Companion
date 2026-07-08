@@ -190,8 +190,13 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="0,4,0,16">
 
-                            <!-- ===== ENEMY X-RAY: radiografía del daño enemigo ===== -->
-                            <Border Padding="18,14">
+                            <!-- ===== FILA 1: ENEMY X-RAY (2/3) + SUMMARY mini (1/3) ===== -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Padding="16,10">
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource Card}">
                                         <Style.Triggers>
@@ -341,6 +346,37 @@
                                 </Grid>
                             </Border>
 
+                            <!-- SUMMARY mini: las 6 stats en grilla 3×2, misma info sin sección propia. -->
+                            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14,8">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="SUMMARY" FontFamily="{StaticResource HudFont}" FontSize="10"
+                                               FontWeight="Bold" Foreground="{StaticResource Gold}" Margin="0,0,0,4" />
+                                    <ItemsControl ItemsSource="{Binding Scorecards}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="2,3,10,3">
+                                                    <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" />
+                                                    <TextBlock FontFamily="{StaticResource DisplayFont}" FontSize="18"
+                                                               Foreground="{StaticResource TextPrimary}" Text="{Binding Value}" />
+                                                    <Border Height="2" CornerRadius="1" Background="{Binding Accent}" Margin="0,3,0,0" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                            </Grid>
+
+                            <!-- ===== FILA 2: ITEM ADVISOR (2/3) + rail de ADVICE (1/3) ===== -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
                             <!-- ===== ASESOR DE ITEMS ===== -->
                             <DockPanel Margin="10,14,10,4">
                                 <Border DockPanel.Dock="Right" BorderBrush="{StaticResource GoldBorder}" BorderThickness="1"
@@ -501,13 +537,19 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Border Padding="16,10">
+                            <!-- Strip único: BOOTS + AUGMENTS + SKILLS en un solo renglón. -->
+                            <Border Padding="16,8">
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource Card}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding BootsLine}" Value="">
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding BootsLine}" Value="" />
+                                                    <Condition Binding="{Binding MayhemStatus}" Value="" />
+                                                    <Condition Binding="{Binding SkillPriorityLine}" Value="" />
+                                                </MultiDataTrigger.Conditions>
                                                 <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
+                                            </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
@@ -528,24 +570,68 @@
                                                    FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimary}"
                                                    HorizontalAlignment="Right" />
                                     </StackPanel>
-                                    <Border DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="2"
-                                            Margin="0,0,12,0" VerticalAlignment="Center"
-                                            BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
-                                        <Image Source="{Binding BootsIconUrl, TargetNullValue={x:Null}}"
-                                               RenderOptions.BitmapScalingMode="HighQuality" />
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding BootsName}" FontSize="14" FontWeight="Bold"
-                                                       Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
-                                            <Border Style="{StaticResource Chip}" Margin="10,0,0,0"
-                                                    BorderBrush="{StaticResource Neon}" BorderThickness="1" Background="#12321F">
-                                                <TextBlock Style="{StaticResource ChipText}" Foreground="{StaticResource Neon}"
-                                                           Text="{Binding BootsChip}" />
-                                            </Border>
+                                    <!-- AUGMENTS (Mayhem) compacto: el guidance largo vive en el tooltip. -->
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"
+                                                Margin="16,0,0,0" ToolTip="{Binding MayhemGuidance}">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding MayhemStatus}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <Border Style="{StaticResource Chip}" Background="{StaticResource Gold}" VerticalAlignment="Center">
+                                            <TextBlock Style="{StaticResource ChipText}" Foreground="#0B0E0C" Text="AUGMENTS" />
+                                        </Border>
+                                        <TextBlock Text="{Binding MayhemStatus}" FontFamily="{StaticResource HudFont}" FontSize="12"
+                                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                        <TextBlock Text="{Binding MayhemPickNow}" FontFamily="{StaticResource HudFont}" FontSize="12"
+                                                   FontWeight="Bold" Foreground="{StaticResource Amber}"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MayhemPickNow}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BootsLine}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <Border Width="30" Height="30" CornerRadius="2"
+                                                Margin="0,0,12,0" VerticalAlignment="Center"
+                                                BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1">
+                                            <Image Source="{Binding BootsIconUrl, TargetNullValue={x:Null}}"
+                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding BootsName}" FontSize="14" FontWeight="Bold"
+                                                           Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                                <Border Style="{StaticResource Chip}" Margin="10,0,0,0"
+                                                        BorderBrush="{StaticResource Neon}" BorderThickness="1" Background="#12321F">
+                                                    <TextBlock Style="{StaticResource ChipText}" Foreground="{StaticResource Neon}"
+                                                               Text="{Binding BootsChip}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <!-- Razón en 1 línea: el texto completo (con la nota de amenaza) va al tooltip. -->
+                                            <TextBlock Text="{Binding BootsSub}" FontFamily="{StaticResource HudFont}" FontSize="11"
+                                                       Foreground="{StaticResource TextFaint}" Margin="0,3,0,0"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding BootsSub}" />
                                         </StackPanel>
-                                        <TextBlock Text="{Binding BootsSub}" FontFamily="{StaticResource HudFont}" FontSize="11"
-                                                   Foreground="{StaticResource TextFaint}" Margin="0,3,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
@@ -591,85 +677,31 @@
                                 <TextBlock Text="{Binding LateTipsLine}" FontSize="13" TextWrapping="Wrap"
                                            FontWeight="SemiBold" Foreground="{StaticResource Cyan}" />
                             </Border>
+                            </StackPanel>
 
-                            <!-- Feed de consejos: debajo del asesor de items, a lo ancho. -->
-                            <TextBlock Text="ADVICE" Style="{StaticResource SectionHeader}" />
-                            <ItemsControl ItemsSource="{Binding Advice}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource Card}" Padding="12">
-                                            <!-- DockPanel (no StackPanel horizontal): el texto toma el ancho
-                                                 restante de la tarjeta y ajusta el wrap al redimensionar. -->
-                                            <DockPanel>
-                                                <Border DockPanel.Dock="Left" Width="4" CornerRadius="2"
-                                                        Background="{Binding Severity}" Margin="0,0,10,0" />
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Category}" Style="{StaticResource CardTitle}" />
-                                                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap"
-                                                               Foreground="{StaticResource TextPrimary}" />
-                                                </StackPanel>
-                                            </DockPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <!-- ===== ARAM: MAYHEM — strip de augments estilo HUD ===== -->
-                            <Border Padding="14,10">
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding MayhemStatus}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <WrapPanel>
-                                    <Border Style="{StaticResource Chip}" Background="{StaticResource Gold}" Margin="0,2,10,2">
-                                        <TextBlock Style="{StaticResource ChipText}" Foreground="#0B0E0C" Text="AUGMENTS" />
-                                    </Border>
-                                    <TextBlock Text="{Binding MayhemStatus}" FontFamily="{StaticResource HudFont}" FontSize="12"
-                                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,2,0,2" />
-                                    <TextBlock Text="{Binding MayhemPickNow}" FontFamily="{StaticResource HudFont}" FontSize="12"
-                                               FontWeight="Bold" Foreground="{StaticResource Amber}"
-                                               VerticalAlignment="Center" Margin="14,2,0,2">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding MayhemPickNow}" Value="">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                    <TextBlock Text="{Binding MayhemGuidance}" FontFamily="{StaticResource HudFont}" FontSize="11.5"
-                                               TextWrapping="Wrap" Foreground="{StaticResource TextMuted}"
-                                               VerticalAlignment="Center" Margin="14,2,0,2" />
-                                </WrapPanel>
-                            </Border>
-
-                            <TextBlock Text="SUMMARY" Style="{StaticResource SectionHeader}" />
-                            <!-- UniformGrid sin anchos fijos: las tarjetas se reparten el ancho
-                                 disponible y crecen al maximizar la ventana. -->
-                            <ItemsControl ItemsSource="{Binding Scorecards}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate><UniformGrid Columns="6" /></ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource Card}" Padding="16,12">
-                                            <StackPanel>
-                                                <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" />
-                                                <TextBlock Style="{StaticResource CardValue}" Text="{Binding Value}" />
-                                                <!-- Subrayado de acento (estilo HUD: la línea va abajo). -->
-                                                <Border Height="3" CornerRadius="2" Background="{Binding Accent}" Margin="0,8,0,0" />
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <!-- Rail derecho: feed de consejos compacto (sin categoría Items — duplica el panel). -->
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="ADVICE" FontFamily="{StaticResource HudFont}" FontSize="13"
+                                           FontWeight="Bold" Foreground="{StaticResource Gold}" Margin="10,17,0,7" />
+                                <ItemsControl ItemsSource="{Binding Advice}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource Card}" Padding="8,6">
+                                                <DockPanel>
+                                                    <Border DockPanel.Dock="Left" Width="3" CornerRadius="2"
+                                                            Background="{Binding Severity}" Margin="0,0,8,0" />
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Category}" Style="{StaticResource CardTitle}" />
+                                                        <TextBlock Text="{Binding Message}" FontSize="12" TextWrapping="Wrap"
+                                                                   Foreground="{StaticResource TextPrimary}" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            </Grid>
 
                             <!-- Tabla de jugadores -->
                             <StackPanel>
@@ -678,7 +710,8 @@
                                         <DataGrid ItemsSource="{Binding Players}" AutoGenerateColumns="False"
                                                   IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="None"
                                                   Background="Transparent" BorderThickness="0" RowBackground="Transparent"
-                                                  CanUserAddRows="False" HorizontalScrollBarVisibility="Disabled">
+                                                  CanUserAddRows="False" HorizontalScrollBarVisibility="Disabled"
+                                                  FontSize="12" RowHeight="26">
                                             <DataGrid.Columns>
                                                 <!-- Barra de color de equipo: azul = aliados, rojo = enemigos. -->
                                                 <DataGridTemplateColumn Width="Auto">

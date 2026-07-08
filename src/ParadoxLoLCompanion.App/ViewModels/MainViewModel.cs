@@ -486,7 +486,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         Advice.Clear();
         foreach (var item in _engine.Evaluate(state))
-            Advice.Add(new AdviceRowViewModel(item));
+        {
+            // Los consejos de Items duplican las tarjetas del asesor: fuera del feed.
+            if (item.Category != AdviceCategory.Items)
+                Advice.Add(new AdviceRowViewModel(item));
+        }
     }
 
     /// <summary>El jugador eligió build en la UI: recalcular el consejo al instante.</summary>
