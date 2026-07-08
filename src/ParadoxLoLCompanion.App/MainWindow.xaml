@@ -530,8 +530,25 @@
                                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                                     </DockPanel>
                                                 </Border>
-                                                <TextBlock Text="{Binding Reasons}" FontSize="12" TextWrapping="Wrap"
-                                                           Foreground="{StaticResource TextMuted}" Margin="0,10,0,0" />
+                                                <!-- Sub-recuadro "WHY": por qué se ofrece este item. -->
+                                                <Border Background="#0D120E" BorderBrush="{StaticResource CardBorder}"
+                                                        BorderThickness="1" CornerRadius="2" Padding="10,7" Margin="0,10,0,0">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Reasons}" Value="">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel>
+                                                        <TextBlock Text="WHY" Style="{StaticResource CardTitle}" />
+                                                        <TextBlock Text="{Binding Reasons}" FontSize="12" TextWrapping="Wrap"
+                                                                   Foreground="{StaticResource TextPrimary}" Margin="0,3,0,0"
+                                                                   LineHeight="17" />
+                                                    </StackPanel>
+                                                </Border>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>

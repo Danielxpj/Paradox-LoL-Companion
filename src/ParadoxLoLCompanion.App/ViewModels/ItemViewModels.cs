@@ -128,7 +128,8 @@ public sealed class ItemRecoRowViewModel
             BuyBarCost = "";
             AffordBrush = Palette.Amber;
         }
-        Reasons = string.Join(" · ", reco.Reasons);
+        // Una razón por línea: en el sub-recuadro "WHY" la lista se lee mejor que encadenada.
+        Reasons = string.Join("\n", reco.Reasons.Select(r => "· " + r));
 
         // Prioridad + categoría: por qué está en este lugar del orden (coherencia).
         (CategoryLabel, CategoryBrush) = reco.Category switch
