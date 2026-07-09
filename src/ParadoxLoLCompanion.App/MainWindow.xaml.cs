@@ -3,13 +3,18 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using ParadoxLoLCompanion.App.Interop;
 using ParadoxLoLCompanion.App.ViewModels;
 
 namespace ParadoxLoLCompanion.App;
 
-/// <summary>Ventana principal. Solo maneja el autoscroll de la consola; el resto es MVVM.</summary>
+/// <summary>Ventana principal. Maneja el autoscroll de la consola y el overlay
+/// in-game de Ctrl+X; el resto es MVVM.</summary>
 public partial class MainWindow : Window
 {
+    private CtrlXHotkey? _hotkey;
+    private OverlayWindow? _overlay;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -36,6 +41,30 @@ public partial class MainWindow : Window
         {
             // Windows sin soporte del atributo: la barra queda clara, nada más.
         }
+
+        // Hotkey global Ctrl+X (solo activo con el juego o esta app en primer plano):
+        // abre/cierra el overlay minimalista de recomendaciones de items.
+        _hotkey = new CtrlXHotkey();
+        _hotkey.Pressed += ToggleOverlay;
+    }
+
+    private void ToggleOverlay()
+    {
+        if (_overlay is null)
+        {
+            // Comparte el MainViewModel: el overlay se alimenta de la misma
+            // colección ItemRecos que el MATCH tab, sin lógica propia.
+            _overlay = new OverlayWindow { DataContext = DataContext };
+            _overlay.Closed += (_, _) => _overlay = null;
+        }
+        _overlay.Toggle();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _hotkey?.Dispose();
+        _overlay?.Close();
+        base.OnClosed(e);
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
