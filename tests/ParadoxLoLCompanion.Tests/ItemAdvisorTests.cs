@@ -145,16 +145,36 @@ public class ItemAdvisorTests
     }
 
     [Fact]
-    public void AntiHeal_Suppressed_WhenTeamAlreadyHasIt()
+    public void AntiHeal_Damped_WhenTeamHasItAndSustainModerate()
     {
-        // Mi aliado ya lleva Morello: no insistir con Heridas Graves.
+        // Mi aliado ya lleva Morello y la curación enemiga es moderada (un healer entre
+        // tres, ninguno fed): con GW aliado el bono anti-heal se amortigua — no se insiste.
         var state = TestCatalog.State(5000,
             ("Ahri", "ORDER", 0, None),
             ("Soraka", "ORDER", 0, new[] { 3165 }),
-            ("Warwick", "CHAOS", 8, None));
+            ("Warwick", "CHAOS", 0, None),
+            ("Zed", "CHAOS", 0, None),
+            ("Malzahar", "CHAOS", 0, None));
         var plan = Advisor().Advise(state)!;
 
         Assert.DoesNotContain(plan.Recommendations,
+            r => r.Reasons.Any(reason => reason.Contains("healing")));
+    }
+
+    [Fact]
+    public void AntiHeal_StillRecommended_WhenTeamHasItButSustainExtreme()
+    {
+        // Aliado con Morello PERO comp de sustain extremo (Warwick+Aatrox, ambos healers):
+        // la cobertura de GW depende de quién pega al objetivo, así que una SEGUNDA fuente
+        // de Heridas Graves sigue valiendo — el gate aliado amortigua, no anula.
+        var state = TestCatalog.State(5000,
+            ("Ahri", "ORDER", 0, None),
+            ("Soraka", "ORDER", 0, new[] { 3165 }),
+            ("Warwick", "CHAOS", 0, None),
+            ("Aatrox", "CHAOS", 0, None));
+        var plan = Advisor().Advise(state)!;
+
+        Assert.Contains(plan.Recommendations,
             r => r.Reasons.Any(reason => reason.Contains("healing")));
     }
 

@@ -71,13 +71,40 @@ public class ThreatAnalyzerTests
     [Fact]
     public void SustainItems_TriggerSustain_EvenWithoutHealerChampion()
     {
-        // Jinx con Cetro vampírico (LifeSteal).
+        // Jinx con una build de robo de vida real (Filo del Rey Arruinado, 3.200): el
+        // sustain se gradúa por oro invertido, así que una build de lifesteal sí dispara.
+        var state = TestCatalog.State(0,
+            ("Ahri", "ORDER", 0, new int[0]),
+            ("Jinx", "CHAOS", 3, new[] { 3153 }));
+
+        var threat = Analyzer().Analyze(state);
+        Assert.True(threat.SustainScore > 0.9);
+    }
+
+    [Fact]
+    public void CheapSustainItem_BarelyRegistersSustain()
+    {
+        // Un solo Cetro vampírico (900) NO es robo de vida real: el grado por enemigo es
+        // bajo, no satura como en la v3 (evita anti-heal contra cero curación al minuto 0).
         var state = TestCatalog.State(0,
             ("Ahri", "ORDER", 0, new int[0]),
             ("Jinx", "CHAOS", 3, new[] { 1053 }));
 
         var threat = Analyzer().Analyze(state);
-        Assert.True(threat.SustainScore > 0.9);
+        Assert.True(threat.SustainScore < 0.2);
+    }
+
+    [Fact]
+    public void StarterSustainItem_DoesNotCountAsSustain()
+    {
+        // Doran's Blade lleva tag LifeSteal pero es un starter (tag Lane): no cuenta como
+        // robo de vida — si no, 2-4 enemigos con starter saturan el sustain al minuto 0.
+        var state = TestCatalog.AramState(0,
+            ("Ahri", "ORDER", 0, new int[0]),
+            ("Jinx", "CHAOS", 0, new[] { 1055 }));
+
+        var threat = Analyzer().Analyze(state);
+        Assert.Equal(0, threat.SustainScore, precision: 3);
     }
 
     [Fact]

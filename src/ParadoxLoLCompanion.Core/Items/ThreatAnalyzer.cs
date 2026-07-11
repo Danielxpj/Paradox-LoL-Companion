@@ -82,10 +82,12 @@ public sealed class ThreatAnalyzer
             if (phys >= 0.5 && w * phys > topPhysW) { topPhysW = w * phys; topPhys = label; }
             if (phys <= 0.5 && w * (1 - phys) > topMagW) { topMagW = w * (1 - phys); topMag = label; }
 
-            if (HasSustain(enemy, champ))
+            var sustainDeg = SustainDegree(enemy, champ);
+            if (sustainDeg > 0)
             {
-                sustain += w;
-                if (w > topSustainW) { topSustainW = w; topSustain = label; }
+                var sw = w * sustainDeg;
+                sustain += sw;
+                if (sw > topSustainW) { topSustainW = sw; topSustain = label; }
             }
 
             var holdsGw = false;
@@ -197,15 +199,26 @@ public sealed class ThreatAnalyzer
             1 + p.Scores.Kills * 2.5 + p.Scores.Assists * 0.8
               + p.Scores.CreepScore * 0.04 + p.Level * 0.5 - p.Scores.Deaths * 1.2);
 
-    private bool HasSustain(Player enemy, StaticChampion? champ)
+    /// <summary>
+    /// Grado de sustain [0,1] de un enemigo: 1.0 si su kit cura (lista curada); si no, una
+    /// rampa sobre el ORO invertido en items con tag de sustain — excluyendo starters (tag
+    /// Lane) y botas, para que un Doran's/Guardian's o unas Gluttonous no cuenten como robo
+    /// de vida real y disparen anti-heal contra cero curación al minuto 0 (común en ARAM).
+    /// </summary>
+    private double SustainDegree(Player enemy, StaticChampion? champ)
     {
         if (champ is not null && _config.HealerChampions.Contains(champ.Key))
-            return true;
-        return enemy.Items.Any(i =>
+            return 1.0;
+        double gold = 0;
+        foreach (var i in enemy.Items)
         {
             var item = _data.ItemById(i.ItemID);
-            return item is not null && _config.SustainTags.Any(item.HasTag);
-        });
+            if (item is null || item.IsBoots || item.HasTag("Lane"))
+                continue;
+            if (_config.SustainTags.Any(item.HasTag))
+                gold += item.GoldTotal * Math.Max(i.Count, 1);
+        }
+        return Fuzzy.Ramp(gold, _config.SustainGoldFoot, _config.SustainGoldShoulder);
     }
 
     private static string Label(Player p) => $"{p.ChampionName} ({p.Scores.Kda})";

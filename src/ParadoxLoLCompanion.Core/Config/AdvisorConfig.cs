@@ -211,6 +211,12 @@ public sealed class ItemsConfig
     // Umbrales del análisis de amenaza.
     /// <summary>Fracción de la amenaza ponderada con curación/sustain que dispara anti-heal.</summary>
     public double SustainThreshold { get; set; } = 0.25;
+    /// <summary>Oro en items con sustain (starters/botas excluidos) para μ=0 / μ=1 del grado por enemigo: un Doran's/Vampiric barato no cuenta como robo de vida real, una build de lifesteal sí.</summary>
+    public double SustainGoldFoot { get; set; } = 800;
+    public double SustainGoldShoulder { get; set; } = 3000;
+    /// <summary>Con GW aliado presente, el bono anti-heal propio se amortigua salvo sustain extremo (foot..shoulder del grado Sustain).</summary>
+    public double AllyGwDampFoot { get; set; } = 0.55;
+    public double AllyGwDampShoulder { get; set; } = 0.9;
     /// <summary>Armadura total comprada por el equipo enemigo que dispara penetración.</summary>
     public double ArmorStackThreshold { get; set; } = 150;
     /// <summary>RM total comprada por el equipo enemigo que dispara penetración mágica.</summary>

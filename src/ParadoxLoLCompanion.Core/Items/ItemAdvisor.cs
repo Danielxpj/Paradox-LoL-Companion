@@ -541,9 +541,15 @@ public sealed class ItemAdvisor
         // Anti-curación (grado de sustain, ya calibrado por mapa), con bono si además
         // aporta fit. Los items anti-heal de un perfil de daño ajeno (Morello para un
         // AD puro) ya quedaron fuera del pool por OffensiveMismatch.
-        if (item.AppliesGrievousWounds && !teamHasGw && threat.Sustain > MuGate)
+        // Con GW aliado ya en juego el bono anti-heal se amortigua (no se anula): contra
+        // una comp de sustain extremo todavía conviene una SEGUNDA fuente de Heridas Graves
+        // (la cobertura depende de quién pega al objetivo, no de un único item aliado).
+        var allyGwDamp = teamHasGw
+            ? Fuzzy.Ramp(threat.Sustain, _config.AllyGwDampFoot, _config.AllyGwDampShoulder)
+            : 1.0;
+        if (item.AppliesGrievousWounds && allyGwDamp > 0 && threat.Sustain > MuGate)
         {
-            offense += (AntiHealMag + (fit > 0 ? 0.5 : 0)) * threat.Sustain;
+            offense += (AntiHealMag + (fit > 0 ? 0.5 : 0)) * threat.Sustain * allyGwDamp;
             reasons.Add($"cuts the healing of {threat.TopSustainName}");
         }
 
