@@ -49,7 +49,12 @@ public sealed record BootsAdvice(StaticItem Boots, string Reason, PurchasePlan P
 public sealed record SellSuggestion(StaticItem Item, int SellGold, string Reason);
 
 /// <summary>Compra inicial sugerida (solo al arranque de ARAM, con el inventario vacío).</summary>
-public sealed record StarterAdvice(StaticItem Item, string Reason);
+/// <param name="Set">El set completo de apertura (op.gg) o <c>null</c> si es un solo item.</param>
+public sealed record StarterAdvice(StaticItem Item, string Reason, IReadOnlyList<StaticItem>? Set = null)
+{
+    /// <summary>El set de apertura completo, o solo <see cref="Item"/> si no hay set.</summary>
+    public IReadOnlyList<StaticItem> Items => Set ?? new[] { Item };
+}
 
 /// <summary>
 /// Pieza urgente a comprar YA (la de ~800 de Heridas Graves) cuando el enemigo cura mucho

@@ -336,7 +336,7 @@ public sealed class ItemAdvisor
             BootsFor(me, profile, threat, mapNumber, stats, ownedIds, gold),
             SellSuggestions(me, profile, threat, weights, sustainThreshold,
                 recommendations.Count > 0 ? recommendations[0] : null, inventoryFull),
-            StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats),
+            StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats, gold),
             ShopAlertFor(me, isAram, recommendations))
         {
             InventoryFull = inventoryFull,
@@ -427,7 +427,7 @@ public sealed class ItemAdvisor
     /// más caro (los Guardian's de 950 son la apertura estándar del mapa).
     /// </summary>
     private StarterAdvice? StarterFor(Player me, ChampionProfile profile, double gameTime,
-        bool isAram, IReadOnlyDictionary<string, double> weights, ChampionBuildStats? stats)
+        bool isAram, IReadOnlyDictionary<string, double> weights, ChampionBuildStats? stats, double gold)
     {
         if (!isAram || gameTime > _config.StarterWindowSeconds)
             return null;
@@ -436,10 +436,32 @@ public sealed class ItemAdvisor
         if (ownsRealItem)
             return null;
 
-        var statStarterIds = stats?.Starter?.ItemIds ?? Array.Empty<int>();
+        // op.gg trae un SET de apertura: resolverlo directo (comprable en ARAM) y recomendar
+        // el conjunto mientras el presupuesto alcance — no solo un item con tag Lane, así
+        // aperturas tipo Tear/Dark Seal/componentes también se pueden expresar.
+        var resolved = (stats?.Starter?.ItemIds ?? Array.Empty<int>())
+            .Select(_data.ItemById)
+            .OfType<StaticItem>()
+            .Where(i => i.Purchasable && i.OnAram)
+            .ToList();
+        if (resolved.Count > 0)
+        {
+            var set = new List<StaticItem>();
+            double spent = 0;
+            foreach (var it in resolved)
+            {
+                if (gold > 0 && spent + it.GoldTotal > gold && set.Count > 0)
+                    break;
+                set.Add(it);
+                spent += it.GoldTotal;
+            }
+            return new StarterAdvice(set[0],
+                $"opening buy for your {ArchetypeLabel(profile.Archetype)} build", set);
+        }
+
+        // Fallback sin datos de op.gg: el starter con tag Lane de mejor fit (más caro en empate).
         var best = _data.AramStarterItems
-            .OrderByDescending(i => statStarterIds.Contains(i.Id) ? 1 : 0)
-            .ThenByDescending(i => i.Tags.Sum(t => weights.GetValueOrDefault(t)))
+            .OrderByDescending(i => i.Tags.Sum(t => weights.GetValueOrDefault(t)))
             .ThenByDescending(i => i.GoldTotal)
             .FirstOrDefault();
         return best is null

@@ -202,6 +202,29 @@ public class ItemAdvisorStatsTests
         Boots = new ItemSetStats(bootIds, PickRate: 0.62, Play: 9000, Win: 4700),
     };
 
+    [Fact]
+    public void StarterSet_FromOpgg_RecommendsMultipleWithinBudget()
+    {
+        // op.gg trae un set de apertura de 2 items: con presupuesto (1400) se recomiendan
+        // ambos; con presupuesto ajustado (500) solo el primero (D3).
+        var stats = new ChampionBuildStats
+        {
+            ChampionKey = "Jinx",
+            GameMode = "aram",
+            Position = "mid",
+            Starter = new ItemSetStats(new[] { 1055, 2051 }, 0.5, 5000, 2700),   // Doran's + Guardian's Horn
+        };
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var full = advisor.Advise(TestCatalog.AramState(1400,
+            ("Jinx", "ORDER", 0, NoItems), ("Zed", "CHAOS", 0, NoItems)), stats: stats)!;
+        Assert.Equal(new[] { 1055, 2051 }, full.Starter!.Items.Select(i => i.Id));
+
+        var tight = advisor.Advise(TestCatalog.AramState(500,
+            ("Jinx", "ORDER", 0, NoItems), ("Zed", "CHAOS", 0, NoItems)), stats: stats)!;
+        Assert.Equal(new[] { 1055 }, tight.Starter!.Items.Select(i => i.Id));
+    }
+
     private static ChampionBuildStats BootsStatsLowSample(params int[] bootIds) => new()
     {
         ChampionKey = "Jinx",
