@@ -112,14 +112,16 @@ public sealed class ItemRecoRowViewModel
         }
         else if (reco.Affordable)
         {
+            // La barra "BUY NOW" muestra lo que PAGÁS ahora (faltante), no el precio de
+            // lista: con componentes ya comprados terminar el item cuesta menos.
             BuyBarText = "BUY NOW ✓ FULL ITEM";
-            BuyBarCost = Cost;
+            BuyBarCost = reco.Purchase.RemainingCost.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
             AffordBrush = Palette.Green;
         }
         else if (reco.Purchase.NextComponent is { } component)
         {
             BuyBarText = $"BUY NOW ▸ {component.Name}";
-            BuyBarCost = component.GoldTotal.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+            BuyBarCost = reco.Purchase.NextComponentCost.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
             AffordBrush = Palette.Green;
         }
         else
