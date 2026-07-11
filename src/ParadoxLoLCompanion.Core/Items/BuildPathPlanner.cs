@@ -30,8 +30,8 @@ public static class BuildPathPlanner
         if (remaining <= gold)
             return new PurchasePlan(target, remaining, target);
 
-        var next = BestAffordableComponent(data, target, owned, gold);
-        return new PurchasePlan(target, remaining, next);
+        var next = BestAffordable(data, target, owned, gold);
+        return new PurchasePlan(target, remaining, next?.Item);
     }
 
     /// <summary>Oro que falta para terminar <paramref name="item"/>, consumiendo componentes poseídos.</summary>
@@ -48,14 +48,16 @@ public static class BuildPathPlanner
     }
 
     /// <summary>
-    /// El componente faltante más caro que se puede completar con el oro actual,
-    /// bajando recursivamente cuando un componente directo no alcanza.
+    /// El componente faltante que más oro real banquea en la build y que el oro actual
+    /// permite completar. El costo comparado es SIEMPRE el faltante (descontando
+    /// componentes poseídos), nunca el precio de lista — así las ramas profundas y las
+    /// directas compiten en la misma unidad y no se recomienda la compra que menos oro
+    /// deja en la build teniendo subárboles parcialmente comprados.
     /// </summary>
-    private static StaticItem? BestAffordableComponent(
+    private static (StaticItem Item, int Cost)? BestAffordable(
         IStaticData data, StaticItem item, Dictionary<int, int> owned, double gold)
     {
-        StaticItem? best = null;
-        var bestCost = -1;
+        (StaticItem Item, int Cost)? best = null;
 
         foreach (var component in Components(data, item))
         {
@@ -69,18 +71,11 @@ public static class BuildPathPlanner
             }
 
             var candidate = cost <= gold
-                ? component
-                : BestAffordableComponent(data, component, new Dictionary<int, int>(owned), gold);
+                ? (component, cost)
+                : BestAffordable(data, component, new Dictionary<int, int>(owned), gold);
 
-            if (candidate is not null)
-            {
-                var candidateCost = candidate.Id == component.Id ? cost : candidate.GoldTotal;
-                if (candidateCost > bestCost)
-                {
-                    best = candidate;
-                    bestCost = candidateCost;
-                }
-            }
+            if (candidate is { } c && (best is null || c.Cost > best.Value.Cost))
+                best = c;
         }
 
         return best;

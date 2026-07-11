@@ -89,6 +89,11 @@ internal static class TestCatalog
         "7031": { "name":"Zenith Edge (Masterwork)","gold":{"total":3400,"purchasable":false},"tags":["Damage","CriticalStrike"],"maps":{"11":true,"12":true},"from":["3031"],"depth":4,"stats":{"FlatPhysicalDamageMod":75,"FlatCritChanceMod":0.25} },
         "9068": { "name":"Sunfire Aegis","gold":{"total":2600,"purchasable":true},"tags":["Armor","Health"],"maps":{"11":true,"12":true},"from":["1029","1011"],"depth":3,"stats":{"FlatArmorMod":45,"FlatHPPoolMod":300} },
 
+        "9301": { "name":"Test Banked Component","gold":{"total":1000,"purchasable":true},"tags":["Health"],"maps":{"11":true,"12":true},"into":["9300"],"stats":{"FlatHPPoolMod":300} },
+        "9303": { "name":"Test Deep Sub","gold":{"total":1600,"purchasable":true},"tags":["Damage"],"maps":{"11":true,"12":true},"into":["9302"],"from":["1038"],"depth":2,"stats":{"FlatPhysicalDamageMod":45} },
+        "9302": { "name":"Test Expensive Branch","gold":{"total":3000,"purchasable":true},"tags":["Damage"],"maps":{"11":true,"12":true},"into":["9300"],"from":["9303"],"depth":3,"stats":{"FlatPhysicalDamageMod":60} },
+        "9300": { "name":"Test Twin Target","gold":{"total":4500,"purchasable":false},"tags":["Damage","Health"],"maps":{"11":true,"12":true},"from":["9301","9302"],"depth":4,"stats":{"FlatPhysicalDamageMod":70,"FlatHPPoolMod":400} },
+
         "1055": { "name":"Doran's Blade","gold":{"total":450,"purchasable":true},"tags":["Health","Damage","LifeSteal","Lane"],"maps":{"11":true,"12":true},"stats":{"FlatPhysicalDamageMod":8,"FlatHPPoolMod":80} },
         "2051": { "name":"Guardian's Horn","gold":{"total":950,"purchasable":true},"tags":["Health","HealthRegen","Lane"],"maps":{"11":false,"12":true},"stats":{"FlatHPPoolMod":150} },
         "3112": { "name":"Guardian's Orb","gold":{"total":950,"purchasable":true},"tags":["Health","SpellDamage","ManaRegen","Lane"],"maps":{"11":false,"12":true},"stats":{"FlatMagicDamageMod":40,"FlatHPPoolMod":100} },

@@ -80,4 +80,18 @@ public class BuildPathPlannerTests
         var plan = BuildPathPlanner.Plan(Data, Data.ItemById(3089)!, new[] { 1058 }, gold: 0);
         Assert.Equal(3600 - 1250, plan.RemainingCost);
     }
+
+    [Fact]
+    public void NextComponent_ComparesRemainingCost_NotStickerPrice()
+    {
+        // 9300 = [9301 (1000, básico), 9302 (3000, ← 9303 (1600, ← B.F. 1300))].
+        // Con B.F. Sword comprada y 1000 de oro: 9301 banquea 1000 reales; para 9303 solo
+        // faltan 300 (sticker 1600). "Menos oro muerto" debe elegir 9301; el bug elegía
+        // 9303 porque comparaba su precio de lista (1600) contra el faltante de 9301 (1000).
+        var target = Data.ItemById(9300)!;
+
+        var plan = BuildPathPlanner.Plan(Data, target, new[] { 1038 }, gold: 1000);
+
+        Assert.Equal(9301, plan.NextComponent!.Id);
+    }
 }
