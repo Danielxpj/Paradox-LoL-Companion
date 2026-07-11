@@ -168,4 +168,30 @@ public class DataDragonTests
         File.WriteAllText(Path.Combine(dir, "champion.json"), Champions);
         File.WriteAllText(Path.Combine(dir, "item.json"), Items);
     }
+
+    [Fact]
+    public void ChampionFull_DerivesKitFlags_FromSpellText()
+    {
+        // championFull.json (spells/pasiva) deriva flags de kit por keyword: unión con las
+        // listas curadas, nunca las reemplaza. Sin championFull → flags en false (D5).
+        const string champions = """
+        { "data": { "Milio": { "id":"Milio","key":"902","name":"Milio","tags":["Support"],"info":{"attack":2,"defense":3,"magic":7} } } }
+        """;
+        const string items = """ { "data": {} } """;
+        const string full = """
+        { "data": { "Milio": { "id":"Milio",
+            "passive": { "description":"Milio grants a shield to allies." },
+            "spells": [ { "description":"Restores health to the lowest ally." } ] } } }
+        """;
+
+        var withFull = DataDragonCatalog.FromJson("16.13.1", champions, items, null, full);
+        var milio = withFull.ChampionByKey("Milio")!;
+        Assert.True(milio.HealsAllies, "debería detectar curación por 'Restores health'");
+        Assert.True(milio.GrantsShields, "debería detectar escudo por 'grants a shield'");
+        Assert.False(milio.HasSuppressionKit);
+        Assert.False(milio.DealsPercentHpTrue);
+
+        var withoutFull = DataDragonCatalog.FromJson("16.13.1", champions, items);
+        Assert.False(withoutFull.ChampionByKey("Milio")!.HealsAllies);
+    }
 }

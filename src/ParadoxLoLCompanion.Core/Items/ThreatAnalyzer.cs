@@ -181,7 +181,10 @@ public sealed class ThreatAnalyzer
 
             if (champ is not null)
             {
-                if (_config.SuppressionChampions.Contains(champ.Key))
+                // Unión curada ∪ derivada (championFull): la lista curada es override y
+                // nunca se pierde; el flag por keyword solo AGREGA cobertura a campeones
+                // que la lista no tiene (listas que rotan en silencio entre parches).
+                if (champ.HasSuppressionKit || _config.SuppressionChampions.Contains(champ.Key))
                 {
                     suppression ??= label;
                     suppressorW += w;
@@ -191,12 +194,12 @@ public sealed class ThreatAnalyzer
                     heavyCc++;
                     heavyCcW += w;
                 }
-                if (_config.ShieldChampions.Contains(champ.Key))
+                if (champ.GrantsShields || _config.ShieldChampions.Contains(champ.Key))
                 {
                     shields = true;
                     shieldW += w;
                 }
-                if (_config.PercentHpTrueDamageChampions.Contains(champ.Key))
+                if (champ.DealsPercentHpTrue || _config.PercentHpTrueDamageChampions.Contains(champ.Key))
                     pctHpTrueW += w;
                 if (_config.HardEngageChampions.Contains(champ.Key))
                     hardEngageW += w;
@@ -299,7 +302,7 @@ public sealed class ThreatAnalyzer
     /// </summary>
     private double SustainDegree(Player enemy, StaticChampion? champ)
     {
-        if (champ is not null && _config.HealerChampions.Contains(champ.Key))
+        if (champ is not null && (champ.HealsAllies || _config.HealerChampions.Contains(champ.Key)))
             return 1.0;
         double gold = 0;
         foreach (var i in enemy.Items)

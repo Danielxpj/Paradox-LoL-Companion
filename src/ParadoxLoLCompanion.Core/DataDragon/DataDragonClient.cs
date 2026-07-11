@@ -44,8 +44,9 @@ public sealed class DataDragonClient
         var itemJson = await ReadCachedAsync(version, "item.json", ct).ConfigureAwait(false);
         if (championJson is null || itemJson is null)
             return null;
+        var championFullJson = await ReadCachedAsync(version, "championFull.json", ct).ConfigureAwait(false);
 
-        return DataDragonCatalog.FromJson(version, championJson, itemJson, _itemsConfig);
+        return DataDragonCatalog.FromJson(version, championJson, itemJson, _itemsConfig, championFullJson);
     }
 
     /// <summary>Última versión disponible online, o <c>null</c> si no hay conexión.</summary>
@@ -66,7 +67,17 @@ public sealed class DataDragonClient
     {
         var championJson = await GetDataFileAsync(version, "champion.json", ct).ConfigureAwait(false);
         var itemJson = await GetDataFileAsync(version, "item.json", ct).ConfigureAwait(false);
-        return DataDragonCatalog.FromJson(version, championJson, itemJson, _itemsConfig);
+        // championFull.json (spells/pasiva) es best-effort: si falla, los flags de kit
+        // quedan en false y solo mandan las listas curadas.
+        var championFullJson = await TryGetDataFileAsync(version, "championFull.json", ct).ConfigureAwait(false);
+        return DataDragonCatalog.FromJson(version, championJson, itemJson, _itemsConfig, championFullJson);
+    }
+
+    private async Task<string?> TryGetDataFileAsync(string version, string fileName, CancellationToken ct)
+    {
+        try { return await GetDataFileAsync(version, fileName, ct).ConfigureAwait(false); }
+        catch (HttpRequestException) { return null; }
+        catch (TaskCanceledException) { return null; }
     }
 
     /// <summary>

@@ -97,6 +97,17 @@ public sealed class ItemsConfig
     /// <summary>Detecta items que otorgan tenacidad (reducen la duración del control): en + es.</summary>
     public List<string> TenacityKeywords { get; set; } = new() { "Tenacity", "Tenacidad" };
 
+    // Keywords para derivar flags de KIT desde el texto de spells/pasiva (championFull.json).
+    // Conservadores a propósito (el texto es ruidoso): son unión con las listas curadas.
+    public List<string> HealKeywords { get; set; } = new()
+        { "restore", "restores", "healing", "heals for", "restaura", "cura", "curación" };
+    public List<string> ShieldKitKeywords { get; set; } = new()
+        { "shields", "grant a shield", "grants a shield", "otorga un escudo", "escuda" };
+    public List<string> SuppressionKitKeywords { get; set; } = new()
+        { "suppress", "suppresses", "suppression", "suprime", "supresión", "supresion" };
+    public List<string> PercentHpTrueKeywords { get; set; } = new()
+        { "maximum health", "max health", "true damage", "vida máxima", "vida maxima", "daño verdadero", "dano verdadero" };
+
     /// <summary>
     /// Items de dupla/soporte (escudan o potencian a un aliado): solo tienen sentido
     /// en el soporte — fuera del pool para laners. Zeke's, Knight's Vow, Locket, Redemption.

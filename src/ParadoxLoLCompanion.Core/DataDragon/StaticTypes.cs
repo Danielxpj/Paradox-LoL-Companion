@@ -30,6 +30,17 @@ public sealed class StaticChampion
 
     public string PrimaryTag => Tags.Count > 0 ? Tags[0] : "";
 
+    // Flags derivados del texto de spells/pasiva (championFull.json), cuando está: son
+    // OVERRIDE aditivo de las listas curadas — nunca las reemplazan (unión, no sustitución).
+    /// <summary>Su kit cura (a sí mismo o aliados): fuente de sustain.</summary>
+    public bool HealsAllies { get; init; }
+    /// <summary>Su kit otorga escudos: pide rompe-escudos.</summary>
+    public bool GrantsShields { get; init; }
+    /// <summary>Su kit suprime (lockdown letal): pide limpieza.</summary>
+    public bool HasSuppressionKit { get; init; }
+    /// <summary>Su kit hace daño por % de vida máxima o verdadero: apilar un muro rinde menos.</summary>
+    public bool DealsPercentHpTrue { get; init; }
+
     public bool HasTag(string tag) =>
         Tags.Any(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase));
 }

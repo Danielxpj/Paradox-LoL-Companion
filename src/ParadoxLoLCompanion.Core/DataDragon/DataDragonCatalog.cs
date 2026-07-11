@@ -154,11 +154,33 @@ public sealed class DataDragonCatalog : IStaticData
 
     // --- Construcción desde JSON ---
 
-    public static DataDragonCatalog FromJson(string version, string championJson, string itemJson, ItemsConfig? config = null)
+    public static DataDragonCatalog FromJson(string version, string championJson, string itemJson,
+        ItemsConfig? config = null, string? championFullJson = null)
     {
         config ??= new ItemsConfig();
         var champFile = JsonSerializer.Deserialize<ChampionFile>(championJson, JsonOptions) ?? new();
         var itemFile = JsonSerializer.Deserialize<ItemFile>(itemJson, JsonOptions) ?? new();
+
+        // Texto de spells+pasiva por campeón (championFull.json), si vino: para derivar
+        // flags de kit por keyword. Ausente → flags en false y solo mandan las listas curadas.
+        var kitText = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(championFullJson)
+            && JsonSerializer.Deserialize<ChampionFullFile>(championFullJson, JsonOptions) is { } full)
+        {
+            foreach (var (_, e) in full.Data)
+            {
+                if (string.IsNullOrEmpty(e.Id))
+                    continue;
+                var sb = new System.Text.StringBuilder();
+                if (e.Passive?.Description is { } pd)
+                    sb.Append(pd).Append(' ');
+                if (e.Spells is not null)
+                    foreach (var s in e.Spells)
+                        if (s.Description is { } sd)
+                            sb.Append(sd).Append(' ');
+                kitText[e.Id] = sb.ToString();
+            }
+        }
 
         var champions = new Dictionary<int, StaticChampion>();
         foreach (var (textKey, entry) in champFile.Data)
@@ -166,10 +188,12 @@ public sealed class DataDragonCatalog : IStaticData
             if (!int.TryParse(entry.Key, out var id))
                 continue;
             var partype = entry.Partype ?? "";
+            var key = string.IsNullOrEmpty(entry.Id) ? textKey : entry.Id;
+            var text = kitText.GetValueOrDefault(key, "");
             champions[id] = new StaticChampion
             {
                 Id = id,
-                Key = string.IsNullOrEmpty(entry.Id) ? textKey : entry.Id,
+                Key = key,
                 Name = entry.Name,
                 Tags = entry.Tags.AsReadOnly(),
                 Partype = partype,
@@ -181,6 +205,10 @@ public sealed class DataDragonCatalog : IStaticData
                     Defense = entry.Info?.Defense ?? 0,
                     Magic = entry.Info?.Magic ?? 0,
                 },
+                HealsAllies = MentionsAny(text, config.HealKeywords),
+                GrantsShields = MentionsAny(text, config.ShieldKitKeywords),
+                HasSuppressionKit = MentionsAny(text, config.SuppressionKitKeywords),
+                DealsPercentHpTrue = MentionsAny(text, config.PercentHpTrueKeywords),
             };
         }
 
@@ -303,6 +331,24 @@ public sealed class DataDragonCatalog : IStaticData
         public List<string> Tags { get; set; } = new();
         public string? Partype { get; set; }
         public InfoEntry? Info { get; set; }
+    }
+
+    // championFull.json: campeones con texto de spells y pasiva (para flags de kit).
+    private sealed class ChampionFullFile
+    {
+        public Dictionary<string, ChampionFullEntry> Data { get; set; } = new();
+    }
+
+    private sealed class ChampionFullEntry
+    {
+        public string Id { get; set; } = "";
+        public SpellDesc? Passive { get; set; }
+        public List<SpellDesc>? Spells { get; set; }
+    }
+
+    private sealed class SpellDesc
+    {
+        public string? Description { get; set; }
     }
 
     private sealed class InfoEntry
