@@ -342,7 +342,35 @@ public sealed class ItemAdvisor
             InventoryFull = inventoryFull,
             LateTips = LateTips(profile, inventoryFull, mapNumber,
                 state.GameData.GameTime, gold, ownedIds),
+            UrgentPickup = UrgentAntiHealPickup(profile, threat, teamHasGw, owned, mapNumber, recommendations),
         };
+    }
+
+    /// <summary>
+    /// Pieza urgente de Heridas Graves (~800) cuando el enemigo cura mucho y ningún item
+    /// COMPLETO de GW entró al top: el efecto vive en la pieza y se compra ya, en la primera
+    /// muerte. Se elige por perfil de daño (Orbe AP / Ejecutor AD / Bramble tanque).
+    /// </summary>
+    private UrgentPickup? UrgentAntiHealPickup(ChampionProfile me, TeamThreat threat, bool teamHasGw,
+        IReadOnlySet<int> owned, int mapNumber, IReadOnlyList<ItemRecommendation> recommendations)
+    {
+        if (threat.Sustain < 0.4 || teamHasGw)
+            return null;
+        // Ya tengo una fuente de GW, o el top ya recomienda un item de GW (su plan de
+        // compra ya guía hacia la pieza): no dupliques el consejo.
+        if (owned.Any(id => _data.ItemById(id)?.AppliesGrievousWounds == true)
+            || recommendations.Any(r => r.Item.AppliesGrievousWounds))
+            return null;
+
+        var components = _data.GrievousWoundsComponentsFor(mapNumber);
+        var pick = (me.DealsMagical ? components.FirstOrDefault(HasAp) : null)
+                ?? (me.DealsPhysical ? components.FirstOrDefault(HasAd) : null)
+                ?? components.FirstOrDefault(c => c.HasTag("Armor"))
+                ?? components.FirstOrDefault();
+        return pick is null
+            ? null
+            : new UrgentPickup(pick,
+                $"buy the {GoldFmt(pick.GoldTotal)}g piece now, finish it later — {threat.TopSustainName} heals a lot");
     }
 
     /// <summary>
@@ -582,7 +610,10 @@ public sealed class ItemAdvisor
             : 1.0;
         if (item.AppliesGrievousWounds && allyGwDamp > 0 && threat.Sustain > MuGate)
         {
-            offense += (AntiHealMag + (fit > 0 ? 0.5 : 0)) * threat.Sustain * allyGwDamp;
+            // La magnitud sube con la intensidad del sustain (2.0 → 3.0) para que un item
+            // GW completo pueda alcanzar el top contra comps de doble curación.
+            var antiHealMag = AntiHealMag + Fuzzy.Ramp(threat.Sustain, 0.5, 0.9);
+            offense += (antiHealMag + (fit > 0 ? 0.5 : 0)) * threat.Sustain * allyGwDamp;
             reasons.Add($"cuts the healing of {threat.TopSustainName}");
         }
 

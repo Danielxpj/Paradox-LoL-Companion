@@ -146,6 +146,18 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void GrievousWoundsComponents_AreThe800gPieces()
+    {
+        // La pieza urgente de GW: componentes comprables que aplican Heridas Graves
+        // (Ejecutor AD, Orbe AP), NO los items completos.
+        var comps = TestCatalog.Catalog().GrievousWoundsComponentsFor(12)
+            .Select(c => c.Id).ToHashSet();
+        Assert.Contains(3123, comps);   // Executioner's Calling (AD)
+        Assert.Contains(3916, comps);   // Oblivion Orb (AP)
+        Assert.DoesNotContain(3165, comps);   // Morello: item completo, no pieza
+    }
+
+    [Fact]
     public void ExtractsUtilityStats_ForEfficiency()
     {
         // El catálogo ahora extrae maná/MS/lifesteal/regen: items de mago/enchanter/asesino

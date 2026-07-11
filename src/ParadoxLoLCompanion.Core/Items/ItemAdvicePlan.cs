@@ -52,6 +52,12 @@ public sealed record SellSuggestion(StaticItem Item, int SellGold, string Reason
 public sealed record StarterAdvice(StaticItem Item, string Reason);
 
 /// <summary>
+/// Pieza urgente a comprar YA (la de ~800 de Heridas Graves) cuando el enemigo cura mucho
+/// y ningún item completo de GW llegó al top: el 100% del efecto vive en la pieza barata.
+/// </summary>
+public sealed record UrgentPickup(StaticItem Item, string Reason);
+
+/// <summary>
 /// El plan completo que produce <see cref="ItemAdvisor"/> en cada tick: la radiografía
 /// del enemigo, el top de items recomendados (con razones), las botas sugeridas, los
 /// items que conviene vender, la compra inicial y el aviso de tienda abierta (ARAM).
@@ -74,4 +80,7 @@ public sealed record ItemAdvicePlan(
 
     /// <summary>Consejos de late game (elixir con build completa, Control Ward en la Grieta).</summary>
     public IReadOnlyList<string> LateTips { get; init; } = Array.Empty<string>();
+
+    /// <summary>Pieza urgente de Heridas Graves a comprar ya (o <c>null</c> si no aplica).</summary>
+    public UrgentPickup? UrgentPickup { get; init; }
 }

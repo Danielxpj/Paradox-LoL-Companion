@@ -785,6 +785,26 @@ public class ItemAdvisorTests
     }
 
     [Fact]
+    public void UrgentAntiHealPickup_Suggests800gPiece_WhenNoCompletedGwInTop()
+    {
+        // Enchanter (Soraka) vs comp MÁGICA con un healer: el muro de RM (no-GW) domina el
+        // top-1 y ningún item completo de GW llega, así que se sugiere la pieza urgente de
+        // ~800 (Orbe AP) para comprar ya en la primera muerte.
+        var state = TestCatalog.State(2000,
+            ("Soraka", "ORDER", 0, None),
+            ("Warwick", "CHAOS", 0, None),
+            ("Ahri", "CHAOS", 0, None),
+            ("Ekko", "CHAOS", 0, None),
+            ("Elise", "CHAOS", 0, None));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 1 });
+
+        var plan = advisor.Advise(state, BuildArchetype.Enchanter)!;
+
+        Assert.Equal(3916, plan.UrgentPickup?.Item.Id);   // Oblivion Orb (pieza AP de GW)
+    }
+
+    [Fact]
     public void CcCounter_RecommendedVsHeavyCc_WithoutSuppressor()
     {
         // Comp de CC pesado sin supresor (Leona+Amumu): la regla de supresión NO dispara,

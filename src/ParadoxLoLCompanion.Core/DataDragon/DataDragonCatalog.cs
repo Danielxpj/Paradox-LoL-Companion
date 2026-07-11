@@ -25,6 +25,8 @@ public sealed class DataDragonCatalog : IStaticData
     private readonly List<StaticItem> _finishedBoots;
     private readonly List<StaticItem> _finishedBootsAram;
     private readonly List<StaticItem> _aramStarters;
+    private readonly List<StaticItem> _gwComponents;
+    private readonly List<StaticItem> _gwComponentsAram;
 
     public bool IsLoaded { get; }
     public string Version { get; }
@@ -85,6 +87,15 @@ public sealed class DataDragonCatalog : IStaticData
                         && !i.HasTag("GoldPer") && !i.HasTag("Jungle"))
             .OrderByDescending(i => i.GoldTotal)
             .ToList();
+
+        // Piezas de Heridas Graves (componentes ~800 comprables): Bramble/Ejecutor/Orbe.
+        // El 100% del efecto GW vive en la pieza; se puede comprar en la primera muerte.
+        List<StaticItem> GwComponents(Func<StaticItem, bool> onMap) => itemsById.Values
+            .Where(i => i.AppliesGrievousWounds && i.Purchasable && i.BuildsIntoSomething && onMap(i))
+            .OrderBy(i => i.GoldTotal)
+            .ToList();
+        _gwComponents = GwComponents(i => i.OnSummonersRift);
+        _gwComponentsAram = GwComponents(i => i.OnAram);
     }
 
     /// <summary>Catálogo vacío (no cargado): usado como valor por defecto seguro.</summary>
@@ -137,6 +148,9 @@ public sealed class DataDragonCatalog : IStaticData
 
     public IReadOnlyList<StaticItem> CompletedGrievousWoundsItems() =>
         _completedItems.Where(i => i.AppliesGrievousWounds).OrderBy(i => i.GoldTotal).ToList();
+
+    public IReadOnlyList<StaticItem> GrievousWoundsComponentsFor(int mapNumber) =>
+        mapNumber == 12 ? _gwComponentsAram : _gwComponents;
 
     // --- Construcción desde JSON ---
 

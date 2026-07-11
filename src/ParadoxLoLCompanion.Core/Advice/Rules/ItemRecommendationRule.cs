@@ -53,6 +53,9 @@ public sealed class ItemRecommendationRule : IAdviceRule
         if (antiheal is not null)
             yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Warning, "item-antiheal",
                 $"Grievous Wounds: {Describe(antiheal.Item)} — {string.Join("; ", antiheal.Reasons)}.");
+        else if (plan.UrgentPickup is { } urgent)
+            yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Warning, "item-antiheal",
+                $"Grievous Wounds now: {Describe(urgent.Item)} — {urgent.Reason}.");
 
         var top = plan.Top;
         if (top is not null)

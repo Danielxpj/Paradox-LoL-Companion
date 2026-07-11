@@ -134,6 +134,8 @@ public interface IStaticData
     IReadOnlyList<StaticItem> CompletedItemsByTag(string tag);
     /// <summary>Items completos que aplican Heridas Graves, ordenados por costo asc.</summary>
     IReadOnlyList<StaticItem> CompletedGrievousWoundsItems();
+    /// <summary>Componentes (piezas de ~800) que aplican Heridas Graves en el mapa dado, por costo asc: Bramble/Ejecutor/Orbe.</summary>
+    IReadOnlyList<StaticItem> GrievousWoundsComponentsFor(int mapNumber);
     /// <summary>Botas terminadas (tier 2), comprables en la Grieta.</summary>
     IReadOnlyList<StaticItem> FinishedBoots { get; }
     /// <summary>Items iniciales de ARAM (tag <c>Lane</c>: Doran's y Guardian's), por precio desc.</summary>
