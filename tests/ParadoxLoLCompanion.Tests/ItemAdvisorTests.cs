@@ -548,9 +548,10 @@ public class ItemAdvisorTests
             new(new ItemAdvisor(TestCatalog.Catalog()).Advise(TestCatalog.State(6000, players))!);
 
         // Morello (3165): Heridas Graves puras — sin lifesteal (no da "sustain" al enemigo)
-        // ni armadura, así el ÚNICO cambio es EnemyAntiHeal. Zed sigue siendo físico.
-        var without = Bork(("Aatrox", "ORDER", 0, None), ("Zed", "CHAOS", 3, None));
-        var with = Bork(("Aatrox", "ORDER", 0, None), ("Zed", "CHAOS", 3, new[] { 3165 }));
+        // ni armadura, así el ÚNICO cambio es EnemyAntiHeal. Zed sigue siendo físico. KDA
+        // parejo (0 kills) para aislar la devaluación del nudge ahead/behind.
+        var without = Bork(("Aatrox", "ORDER", 0, None), ("Zed", "CHAOS", 0, None));
+        var with = Bork(("Aatrox", "ORDER", 0, None), ("Zed", "CHAOS", 0, new[] { 3165 }));
 
         Assert.True(without.Of(3153) > 0, "Filo de Rey debería recomendarse sin anti-heal enemigo");
         Assert.True(with.Of(3153) < without.Of(3153),
@@ -649,6 +650,29 @@ public class ItemAdvisorTests
         var top = Advisor().Advise(coreState)!.Top!;
         Assert.True(top.Category is RecommendationCategory.Core or RecommendationCategory.Spike,
             $"esperaba Core/Spike, fue {top.Category}");
+    }
+
+    [Fact]
+    public void BehindPlayer_GetsMoreDefenseWeight()
+    {
+        // Ir atrás (muchas muertes vs. enemigos parejos) sube el peso de la defensa: la
+        // durabilidad compra tiempo. Un jugador parejo no recibe ese empujón.
+        GameState Game(int myDeaths)
+        {
+            var s = TestCatalog.State(20000,
+                ("Jinx", "ORDER", 0, None),
+                ("Zed", "CHAOS", 0, None),
+                ("Vayne", "CHAOS", 0, None));
+            s.AllPlayers[0].Scores.Deaths = myDeaths;
+            return s;
+        }
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+
+        var even = new StaticItemScore(advisor.Advise(Game(0))!).Of(3026);    // Guardian Angel (Armor)
+        var behind = new StaticItemScore(advisor.Advise(Game(8))!).Of(3026);
+
+        Assert.True(behind > even, $"behind={behind} even={even}");
     }
 
     [Fact]

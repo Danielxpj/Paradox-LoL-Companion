@@ -33,6 +33,9 @@ public sealed class ItemAdvisor
     private const double AntiTankMag = 2.0;
     private const double HardEngageMag = 1.5;
     private const double CcCounterMag = 2.0;
+    // Nudge ahead/behind: atrás sube la defensa, adelante sube los counters ofensivos.
+    private const double BehindDefenseBoost = 0.35;
+    private const double AheadOffenseBoost = 0.15;
     private const double LifestealDevalMag = 0.6;
     private const double LethalityDevalMag = 0.6;
     // Prior estadístico (OP.GG): magnitud del bono por "esto es lo que compran los
@@ -180,6 +183,13 @@ public sealed class ItemAdvisor
         // Necesidad defensiva real (stats vivos): amortigua los muros ya cubiertos.
         var defenseNeed = DefenseNeedFrom(state.ActivePlayer?.ChampionStats, me.Level);
 
+        // Ventaja/desventaja: atrás ⇒ durabilidad (comprar tiempo); adelante ⇒ greed
+        // (snowball de daño). Nudge asimétrico: cada canal solo puede CRECER, nunca encoger.
+        var ahead = threat.AvgEnemyWeight > 0
+            ? Fuzzy.Ramp(threat.MyWeight / threat.AvgEnemyWeight, 1.15, 1.9) : 0;
+        var behind = threat.MyWeight > 0
+            ? Fuzzy.Ramp(threat.AvgEnemyWeight / threat.MyWeight, 1.15, 1.9) : 0;
+
         // Items de dupla/soporte (Zeke's, Locket, Knight's Vow…): sus efectos viven
         // pegados a un aliado — fuera del pool salvo que seas el soporte del equipo.
         var isSupport = profile.Archetype == BuildArchetype.Enchanter
@@ -220,7 +230,7 @@ public sealed class ItemAdvisor
                 continue;
 
             var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw,
-                defenseNeed, stats, champName, currentCrit);
+                defenseNeed, stats, champName, currentCrit, ahead, behind);
             if (score > 0)
                 scored.Add((item, score, reasons, category));
         }
@@ -527,7 +537,8 @@ public sealed class ItemAdvisor
     private (double Score, List<string> Reasons, RecommendationCategory Category) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
         IReadOnlyDictionary<string, double> weights, bool teamHasGw, DefenseNeed need,
-        ChampionBuildStats? stats, string champName, double currentCrit = 0)
+        ChampionBuildStats? stats, string champName, double currentCrit = 0,
+        double ahead = 0, double behind = 0)
     {
         var reasons = new List<string>();
         var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t));
@@ -690,6 +701,10 @@ public sealed class ItemAdvisor
             + (item.HasLethality
                 ? LethalityDevalMag * threat.EnemyTankiness * weights.GetValueOrDefault("ArmorPenetration")
                 : 0);
+
+        // Nudge ahead/behind (asimétrico: cada canal solo crece, nunca encoge).
+        offense *= 1 + AheadOffenseBoost * ahead;
+        defense *= 1 + BehindDefenseBoost * behind;
 
         var score = core + offense + defense + statBonus - penalty;
         // Categoría = qué explica el puntaje: si lo situacional es una fracción relevante

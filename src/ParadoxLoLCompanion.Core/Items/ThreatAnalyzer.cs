@@ -254,6 +254,8 @@ public sealed class ThreatAnalyzer
             EnemyTankiness = Fuzzy.Ramp(
                 (bonusHealth + 20 * (bonusArmor + bonusMr)) / enemies.Count, 800, 3500),
             CcThreat = Ratio(heavyCcW, totalW, 0.2, 0.6),
+            AvgEnemyWeight = avgW,
+            MyWeight = Weight(me, avgLevel, avgCs),
         };
     }
 

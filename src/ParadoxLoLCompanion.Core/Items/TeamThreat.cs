@@ -69,5 +69,10 @@ public sealed record TeamThreat
     /// <summary>Cuánto CC pesado apila el enemigo (wombo): tenacidad y limpieza suben para todos.</summary>
     public double CcThreat { get; init; }
 
+    /// <summary>Peso promedio del equipo enemigo (escala relativa): base para ahead/behind.</summary>
+    public double AvgEnemyWeight { get; init; }
+    /// <summary>Peso del jugador activo en la MISMA escala relativa que los enemigos (comparable).</summary>
+    public double MyWeight { get; init; }
+
     public static TeamThreat None { get; } = new();
 }
