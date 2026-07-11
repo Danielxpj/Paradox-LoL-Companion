@@ -35,7 +35,7 @@ public sealed class GameState
             if (!string.IsNullOrEmpty(active.SummonerName))
             {
                 var byName = AllPlayers.Find(p =>
-                    string.Equals(p.SummonerName, active.SummonerName, StringComparison.Ordinal));
+                    string.Equals(p.SummonerName, active.SummonerName, StringComparison.OrdinalIgnoreCase));
                 if (byName is not null)
                     return byName;
             }
