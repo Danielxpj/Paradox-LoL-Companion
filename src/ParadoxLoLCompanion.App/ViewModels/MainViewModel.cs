@@ -366,7 +366,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         _catalog = catalog;
         // El provider lee el override vigente en cada tick: feed y panel siempre coinciden.
-        _engine = AdviceEngine.CreateWith(catalog, _config, () => _forcedArchetype);
+        _engine = AdviceEngine.CreateWith(catalog, _config, () => _forcedArchetype, () => _championStats);
         _itemAdvisor = new ItemAdvisor(catalog, _config.Items);
         _profilerForTiles = new ChampionProfiler(catalog, _config.Items);
         _benchAdvisor = new TeamBalanceAdvisor(catalog, _config.Items);

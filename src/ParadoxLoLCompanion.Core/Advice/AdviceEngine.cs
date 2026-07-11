@@ -3,6 +3,7 @@ using ParadoxLoLCompanion.Core.Config;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Models;
+using ParadoxLoLCompanion.Core.Stats;
 
 namespace ParadoxLoLCompanion.Core.Advice;
 
@@ -26,11 +27,12 @@ public sealed class AdviceEngine
     /// la UI, para que el feed coincida con el panel del asesor.
     /// </summary>
     public static AdviceEngine CreateWith(IStaticData staticData, AdvisorConfig? config = null,
-        Func<BuildArchetype?>? forcedArchetype = null)
+        Func<BuildArchetype?>? forcedArchetype = null,
+        Func<ChampionBuildStats?>? statsProvider = null)
     {
         config ??= AdvisorConfig.Default;
         return new(DefaultRules(config)
-            .Append(new ItemRecommendationRule(staticData, config.Items, forcedArchetype)));
+            .Append(new ItemRecommendationRule(staticData, config.Items, forcedArchetype, statsProvider)));
     }
 
     private static IEnumerable<IAdviceRule> DefaultRules(AdvisorConfig config) => new IAdviceRule[]

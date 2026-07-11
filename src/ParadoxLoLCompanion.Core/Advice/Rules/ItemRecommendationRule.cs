@@ -3,6 +3,7 @@ using ParadoxLoLCompanion.Core.Config;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Models;
+using ParadoxLoLCompanion.Core.Stats;
 
 namespace ParadoxLoLCompanion.Core.Advice.Rules;
 
@@ -16,10 +17,12 @@ public sealed class ItemRecommendationRule : IAdviceRule
 {
     private readonly ItemAdvisor _advisor;
     private readonly Func<BuildArchetype?>? _forcedArchetype;
+    private readonly Func<ChampionBuildStats?>? _statsProvider;
 
     public ItemRecommendationRule(IStaticData data, ItemsConfig? config = null,
-        Func<BuildArchetype?>? forcedArchetype = null)
-        : this(new ItemAdvisor(data, config), forcedArchetype)
+        Func<BuildArchetype?>? forcedArchetype = null,
+        Func<ChampionBuildStats?>? statsProvider = null)
+        : this(new ItemAdvisor(data, config), forcedArchetype, statsProvider)
     {
     }
 
@@ -27,15 +30,22 @@ public sealed class ItemRecommendationRule : IAdviceRule
     /// Provider del arquetipo forzado en la UI (se lee en cada tick): el feed debe
     /// decir lo mismo que el panel del asesor cuando el jugador elige build a mano.
     /// </param>
-    public ItemRecommendationRule(ItemAdvisor advisor, Func<BuildArchetype?>? forcedArchetype = null)
+    /// <param name="statsProvider">
+    /// Provider de las stats de op.gg cacheadas (se lee en cada tick): sin esto el feed
+    /// pierde el prior estadístico y la regla "las botas meta mandan" no rige en el feed.
+    /// </param>
+    public ItemRecommendationRule(ItemAdvisor advisor,
+        Func<BuildArchetype?>? forcedArchetype = null,
+        Func<ChampionBuildStats?>? statsProvider = null)
     {
         _advisor = advisor;
         _forcedArchetype = forcedArchetype;
+        _statsProvider = statsProvider;
     }
 
     public IEnumerable<AdviceItem> Evaluate(GameState state)
     {
-        var plan = _advisor.Advise(state, _forcedArchetype?.Invoke());
+        var plan = _advisor.Advise(state, _forcedArchetype?.Invoke(), _statsProvider?.Invoke());
         if (plan is null)
             yield break;
 

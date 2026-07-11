@@ -1,6 +1,7 @@
 using ParadoxLoLCompanion.Core.Advice.Rules;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
+using ParadoxLoLCompanion.Core.Stats;
 
 namespace ParadoxLoLCompanion.Tests;
 
@@ -80,5 +81,33 @@ public class ItemRecommendationTests
 
         var antiheal = rule.Evaluate(state).First(a => a.Key == "item-antiheal");
         Assert.Contains("Warwick", antiheal.Message);
+    }
+
+    [Fact]
+    public void Feed_UsesOpggStats_MetaBootsRuleInFeed()
+    {
+        // Amenaza que pide Mercs (Malzahar+Leona+Amumu) pero op.gg dice Sorcerer's:
+        // el feed debe decir lo mismo que el panel — la meta manda. Sin el statsProvider,
+        // el feed llamaba a Advise sin stats y la regla de botas meta no regía en el feed.
+        var state = TestCatalog.State(2000,
+            ("Jinx", "ORDER", 0, None),
+            ("Malzahar", "CHAOS", 0, None),
+            ("Leona", "CHAOS", 0, None),
+            ("Amumu", "CHAOS", 0, None));
+        var stats = new ChampionBuildStats
+        {
+            ChampionKey = "Jinx",
+            GameMode = "ranked",
+            Position = "adc",
+            Boots = new ItemSetStats(new[] { 3020 }, PickRate: 0.62, Play: 9000, Win: 4700),
+        };
+        var rule = new ItemRecommendationRule(TestCatalog.Catalog(),
+            statsProvider: () => stats);
+
+        var advice = rule.Evaluate(state).ToList();
+
+        var boots = advice.Single(a => a.Key == "item-boots");
+        Assert.Contains("Sorcerer's Shoes", boots.Message);
+        Assert.Contains("pick rate", boots.Message);
     }
 }
