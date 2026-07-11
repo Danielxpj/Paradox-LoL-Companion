@@ -49,6 +49,24 @@ public sealed class Player
     public double RespawnTimer { get; set; }
     public PlayerScores Scores { get; set; } = new();
     public List<Item> Items { get; set; } = new();
+    public SummonerSpells SummonerSpells { get; set; } = new();
+}
+
+/// <summary>Los dos hechizos de invocador de un jugador (<c>summonerSpells</c>).</summary>
+public sealed class SummonerSpells
+{
+    public SummonerSpell SummonerSpellOne { get; set; } = new();
+    public SummonerSpell SummonerSpellTwo { get; set; } = new();
+}
+
+/// <summary>
+/// Un hechizo de invocador. <see cref="RawDisplayName"/> trae la clave estable
+/// ("...SummonerDot..." = Ignite, "...SummonerHeal..." = Heal), independiente del idioma.
+/// </summary>
+public sealed class SummonerSpell
+{
+    public string DisplayName { get; set; } = "";
+    public string RawDisplayName { get; set; } = "";
 }
 
 /// <summary>Marcador de un jugador (<c>scores</c>).</summary>

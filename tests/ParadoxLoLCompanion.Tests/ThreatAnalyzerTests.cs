@@ -146,6 +146,21 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void EnemyIgnite_RaisesAntiHeal()
+    {
+        // Un enemigo con Ignite aplica Heridas Graves desde el minuto 0: EnemyAntiHeal debe
+        // subir aunque nadie tenga un item de GW, para devaluar el robo de vida propio.
+        var state = TestCatalog.State(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Zed", "CHAOS", 0, new int[0]));
+        state.AllPlayers[1].SummonerSpells.SummonerSpellOne =
+            new SummonerSpell { RawDisplayName = "GeneratedTip_SummonerSpell_SummonerDot_DisplayName" };
+
+        var threat = Analyzer().Analyze(state);
+        Assert.True(threat.EnemyAntiHeal > 0.05, $"antiHeal={threat.EnemyAntiHeal}");
+    }
+
+    [Fact]
     public void EnemyWhoKilledYou_WeighsMore()
     {
         // Dos enemigos con el mismo KDA; Zed te mató 3 veces. El counter personal debe

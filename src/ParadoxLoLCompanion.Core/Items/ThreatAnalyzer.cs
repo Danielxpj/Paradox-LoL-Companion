@@ -148,6 +148,18 @@ public sealed class ThreatAnalyzer
                 if (sw > topSustainW) { topSustainW = sw; topSustain = label; }
             }
 
+            // Hechizos de invocador: Ignite aplica 40% de Heridas Graves desde el minuto 0
+            // (comunísimo en ARAM), mucho antes de un Oblivion Orb — a medio peso (un solo
+            // objetivo, cooldown largo vs. un item). Heal cuenta como sustain menor.
+            if (HasSpell(enemy, "SummonerDot"))
+                gwHolderW += 0.5 * w;
+            if (HasSpell(enemy, "SummonerHeal") || HasSpell(enemy, "SummonerBoostedHeal"))
+            {
+                var hw = w * 0.35;
+                sustain += hw;
+                if (hw > topSustainW) { topSustainW = hw; topSustain = label; }
+            }
+
             // Perfil de daño observado (kit + compras) para el tipo de resistencia anti-burst.
             var enemyDamage = phys >= 0.6 ? DamageProfile.Physical
                 : phys <= 0.4 ? DamageProfile.Magical : DamageProfile.Mixed;
@@ -282,6 +294,11 @@ public sealed class ThreatAnalyzer
     /// Empareja un nombre de evento (KillerName/VictimName, que la API entrega como nombre
     /// de invocador o game-name del Riot ID) con un jugador, sin distinguir mayúsculas.
     /// </summary>
+    /// <summary>Alguno de los dos hechizos de invocador del jugador contiene la clave estable dada.</summary>
+    private static bool HasSpell(Player p, string rawKey) =>
+        p.SummonerSpells.SummonerSpellOne.RawDisplayName.Contains(rawKey, StringComparison.OrdinalIgnoreCase)
+        || p.SummonerSpells.SummonerSpellTwo.RawDisplayName.Contains(rawKey, StringComparison.OrdinalIgnoreCase);
+
     private static bool NameMatches(string? eventName, Player p) =>
         !string.IsNullOrEmpty(eventName)
         && (string.Equals(eventName, p.SummonerName, StringComparison.OrdinalIgnoreCase)
