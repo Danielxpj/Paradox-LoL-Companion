@@ -185,6 +185,13 @@ public sealed class ItemAdvisor
         // Necesidad defensiva real (stats vivos): amortigua los muros ya cubiertos.
         var defenseNeed = DefenseNeedFrom(state.ActivePlayer?.ChampionStats, me.Level);
 
+        // Items completos ya comprados: da el contexto de slot al prior de op.gg (comprando
+        // el 4.º/5.º/6.º item se pondera por la lista de ESE slot, no siempre por la del 4.º).
+        var completedCount = ownedIds
+            .Select(_data.ItemById)
+            .Count(i => i is { BuildsIntoSomething: false, IsBoots: false }
+                        && i.GoldTotal >= _config.MinCompletedItemGold);
+
         // Ventaja/desventaja: atrás ⇒ durabilidad (comprar tiempo); adelante ⇒ greed
         // (snowball de daño). Nudge asimétrico: cada canal solo puede CRECER, nunca encoger.
         var ahead = threat.AvgEnemyWeight > 0
@@ -232,7 +239,7 @@ public sealed class ItemAdvisor
                 continue;
 
             var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw,
-                defenseNeed, stats, champName, currentCrit, ahead, behind);
+                defenseNeed, stats, champName, currentCrit, ahead, behind, completedCount);
             if (score > 0)
                 scored.Add((item, score, reasons, category));
         }
@@ -549,7 +556,7 @@ public sealed class ItemAdvisor
         StaticItem item, ChampionProfile me, TeamThreat threat,
         IReadOnlyDictionary<string, double> weights, bool teamHasGw, DefenseNeed need,
         ChampionBuildStats? stats, string champName, double currentCrit = 0,
-        double ahead = 0, double behind = 0)
+        double ahead = 0, double behind = 0, int completedCount = 0)
     {
         var reasons = new List<string>();
         var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t));
@@ -692,7 +699,7 @@ public sealed class ItemAdvisor
         // (OP.GG, por rol y parche). Entra como refuerzo del fit — NO cuenta como
         // situacional para la categoría — así el item sigue siendo Core/Spike.
         double statBonus = 0;
-        if (stats is not null && PriorFor(item, stats) is { } prior)
+        if (stats is not null && PriorFor(item, stats, completedCount) is { } prior)
         {
             // Core y tardíos se ponderan aparte: sus pick rates están en escalas
             // distintas (combo de 3 items vs. item suelto) — ver constantes.
@@ -815,12 +822,12 @@ public sealed class ItemAdvisor
     /// el mapa de la config traduce la evolución al item recomendable.
     /// </summary>
     private (double PickRate, double WinRate, int Play, bool IsCore)? PriorFor(
-        StaticItem item, ChampionBuildStats stats)
+        StaticItem item, ChampionBuildStats stats, int completedCount)
     {
-        if (stats.ItemPriorFor(item.Id) is { } direct)
+        if (stats.ItemPriorFor(item.Id, completedCount) is { } direct)
             return direct;
         foreach (var (evolved, buyable) in _config.ItemEvolutions)
-            if (buyable == item.Id && stats.ItemPriorFor(evolved) is { } viaEvolution)
+            if (buyable == item.Id && stats.ItemPriorFor(evolved, completedCount) is { } viaEvolution)
                 return viaEvolution;
         return null;
     }

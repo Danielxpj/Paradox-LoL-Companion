@@ -211,6 +211,23 @@ public class ItemAdvisorStatsTests
     };
 
     [Fact]
+    public void ItemPriorFor_IsSlotAware_ByCompletedCount()
+    {
+        // Un item presente en el 4.º y en el 6.º slot hereda las stats del slot que
+        // corresponde al progreso de build, no siempre las del 4.º (D2).
+        var stats = new ChampionBuildStats
+        {
+            CoreItems = new ItemSetStats(new[] { 1001 }, 0.3, 5000, 2600),
+            FourthItems = new[] { new ItemSetStats(new[] { 3153 }, 0.30, 4000, 2100) },
+            SixthItems = new[] { new ItemSetStats(new[] { 3153 }, 0.10, 900, 480) },
+        };
+
+        Assert.Equal(0.30, stats.ItemPriorFor(3153, completedCount: 3)!.Value.PickRate, precision: 3);
+        Assert.Equal(0.10, stats.ItemPriorFor(3153, completedCount: 5)!.Value.PickRate, precision: 3);
+        Assert.Null(stats.ItemPriorFor(3153));   // sin contexto: no está en core ni en el aplanado
+    }
+
+    [Fact]
     public void Boots_TrivialSample_FallsBackToThreat()
     {
         // Muestra de op.gg trivial (día 1 de parche, 40 partidas): NO debe pisar la amenaza

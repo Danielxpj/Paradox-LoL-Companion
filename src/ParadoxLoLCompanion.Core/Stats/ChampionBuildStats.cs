@@ -52,13 +52,41 @@ public sealed class ChampionBuildStats
     /// core es la probabilidad de un combo de 3 items (~0.05–0.35) y el de un
     /// candidato tardío es de un item suelto (~0.1–0.5); el scoring los pondera aparte.
     /// </summary>
-    public (double PickRate, double WinRate, int Play, bool IsCore)? ItemPriorFor(int itemId)
+    public (double PickRate, double WinRate, int Play, bool IsCore)? ItemPriorFor(
+        int itemId, int completedCount = -1)
     {
+        // Con el core ya terminado (>=3 items completos), mirar primero la lista del slot
+        // que corresponde (4.º/5.º/6.º): un item que aparece en varios slots hereda las
+        // stats del slot correcto según el progreso, no siempre las del 4.º.
+        if (completedCount >= 3)
+        {
+            var slot = completedCount switch
+            {
+                3 => FourthItems,
+                4 => FifthItems,
+                _ => SixthItems,
+            };
+            if (FindIn(slot, itemId) is { } slotHit)
+                return slotHit;
+            foreach (var other in new[] { FourthItems, FifthItems, SixthItems })
+                if (FindIn(other, itemId) is { } otherHit)
+                    return otherHit;
+        }
         if (CoreItems is { } core && core.ItemIds.Contains(itemId))
             return (core.PickRate, core.WinRate, core.Play, true);
+        // Fallback al aplanado (compat con cachés viejas que solo traían LateItems).
         foreach (var set in LateItems)
             if (set.ItemIds.Contains(itemId))
                 return (set.PickRate, set.WinRate, set.Play, false);
+        return null;
+    }
+
+    private static (double PickRate, double WinRate, int Play, bool IsCore)? FindIn(
+        IReadOnlyList<ItemSetStats> sets, int itemId)
+    {
+        foreach (var s in sets)
+            if (s.ItemIds.Contains(itemId))
+                return (s.PickRate, s.WinRate, s.Play, false);
         return null;
     }
 }
