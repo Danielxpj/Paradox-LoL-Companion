@@ -677,6 +677,26 @@ public class ItemAdvisorTests
     }
 
     [Fact]
+    public void AffordabilityNudge_IsBounded_ByAffordMag()
+    {
+        // El empujón por "alcanzable" nunca supera el máximo aditivo (0.8 ARAM): es un
+        // desempate acotado, no el salto multiplicativo del 25% de la v3 que aplastaba counters.
+        var players = new (string, string, int, int[])[]
+        {
+            ("Jinx", "ORDER", 0, None),
+            ("Zed", "CHAOS", 0, None),
+        };
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+        var poor = new StaticItemScore(advisor.Advise(TestCatalog.AramState(0, players))!);
+        var rich = new StaticItemScore(advisor.Advise(TestCatalog.AramState(20000, players))!);
+
+        var delta = rich.Of(3153) - poor.Of(3153);   // BORK: mismo fit, solo cambia el nudge
+        Assert.True(delta <= 0.8 + 1e-6, $"nudge {delta} superó AffordMag");
+        Assert.True(delta >= 0, "el nudge solo puede subir el puntaje");
+    }
+
+    [Fact]
     public void BehindPlayer_GetsMoreDefenseWeight()
     {
         // Ir atrás (muchas muertes vs. enemigos parejos) sube el peso de la defensa: la

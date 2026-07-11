@@ -254,6 +254,9 @@ public sealed class ItemsConfig
     public double StarterWindowSeconds { get; set; } = 90;
     /// <summary>Factor sobre SustainThreshold en ARAM (anti-curación más temprana).</summary>
     public double AramSustainThresholdFactor { get; set; } = 0.6;
-    /// <summary>Multiplicador de "te alcanza ya" en ARAM (no hay recall: compras al morir).</summary>
+    /// <summary>Multiplicador de "te alcanza ya" en ARAM (obsoleto: reemplazado por el empujón aditivo).</summary>
     public double AramAffordabilityBoost { get; set; } = 1.25;
+    /// <summary>Empujón ADITIVO máximo por "casi lo alcanzás", que sube gradual con el oro (0.5·faltante → faltante): un desempate acotado, no un salto del 25% que aplasta counters.</summary>
+    public double AramAffordabilityBonus { get; set; } = 0.8;
+    public double AffordabilityBonus { get; set; } = 0.5;
 }

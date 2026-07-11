@@ -97,7 +97,7 @@ public sealed class ItemAdvisor
         var sustainThreshold = isAram
             ? _config.SustainThreshold * _config.AramSustainThresholdFactor
             : _config.SustainThreshold;
-        var affordBoost = isAram ? _config.AramAffordabilityBoost : 1.15;
+        var affordMag = isAram ? _config.AramAffordabilityBonus : _config.AffordabilityBonus;
 
         // El arquetipo sale del inventario real: si vas Garen tanque (o vendés todo y
         // cambiás de build), las recomendaciones siguen a lo que estás comprando.
@@ -243,7 +243,11 @@ public sealed class ItemAdvisor
             .Select(c =>
             {
                 var plan = BuildPathPlanner.Plan(_data, c.Item, ownedIds, gold);
-                var score = plan.CanFinishNow ? c.Score * affordBoost : c.Score;
+                // Empujón aditivo continuo en oro: entra gradual entre 0.5·faltante y el
+                // faltante, en vez del salto multiplicativo ×1.25 que flipeaba el orden al
+                // cruzar cada umbral de compra (la mayor discontinuidad que quedaba en v3).
+                var afford = affordMag * Fuzzy.Ramp(gold, 0.5 * plan.RemainingCost, plan.RemainingCost);
+                var score = c.Score + afford;
                 return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan);
             })
             .OrderByDescending(c => c.Score)
