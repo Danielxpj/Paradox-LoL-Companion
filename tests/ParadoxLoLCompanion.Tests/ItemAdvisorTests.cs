@@ -504,6 +504,26 @@ public class ItemAdvisorTests
     // --- Scoring difuso v3: prioridad coherente y counters de pasivas/build enemiga ---
 
     [Fact]
+    public void Category_IgnoresStatPrior_StaysCoreOnFitDrivenItem()
+    {
+        // Un item recomendado por FIT puro (sin counter situacional) queda Core aunque el
+        // prior de op.gg o una penalidad muevan el puntaje: la categoría sale de los
+        // componentes limpios (fit + situacional), no del total con prior/penalidades.
+        var state = TestCatalog.State(20000,
+            ("Ahri", "ORDER", 0, None),
+            ("Zed", "CHAOS", 0, None));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+
+        var plan = advisor.Advise(state)!;
+        // Rabadon (3089): AP puro, sin tags situacionales → Core/Spike, nunca Counter/Defense.
+        var rabadon = plan.Recommendations.FirstOrDefault(r => r.Item.Id == 3089);
+        Assert.NotNull(rabadon);
+        Assert.True(rabadon!.Category is RecommendationCategory.Core or RecommendationCategory.Spike,
+            $"Rabadon debería ser Core/Spike, fue {rabadon.Category}");
+    }
+
+    [Fact]
     public void Priority_IsScoreRelativeToTop_AndNonIncreasing()
     {
         var state = TestCatalog.State(6000,

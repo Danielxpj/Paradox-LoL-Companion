@@ -702,20 +702,22 @@ public sealed class ItemAdvisor
                 ? LethalityDevalMag * threat.EnemyTankiness * weights.GetValueOrDefault("ArmorPenetration")
                 : 0);
 
-        // Nudge ahead/behind (asimétrico: cada canal solo crece, nunca encoge).
-        offense *= 1 + AheadOffenseBoost * ahead;
-        defense *= 1 + BehindDefenseBoost * behind;
-
-        var score = core + offense + defense + statBonus - penalty;
-        // Categoría = qué explica el puntaje: si lo situacional es una fracción relevante
-        // del total, manda la contrapartida dominante (defensa vs. counter ofensivo);
-        // si no, el item se recomienda por fit puro (Core). El prior estadístico
-        // refuerza el fit, no lo situacional.
+        // Categoría desde componentes LIMPIOS (fit + situacional) y ANTES del nudge
+        // ahead/behind: sin el prior estadístico ni las penalidades (un statBonus grande ya
+        // no disfraza de Core a un counter) y estable frente a ir adelante/atrás — la
+        // etiqueta explica el item, no el marcador. Si lo situacional es una fracción
+        // relevante, manda la contrapartida dominante; si no, es fit puro (Core).
         var situational = offense + defense;
+        var coherent = core + situational;
         var category =
-            score <= 0 || situational < 0.2 * score ? RecommendationCategory.Core
+            coherent <= 0 || situational < 0.2 * coherent ? RecommendationCategory.Core
             : defense >= offense ? RecommendationCategory.Defense
             : RecommendationCategory.Counter;
+
+        // Nudge ahead/behind (asimétrico: cada canal solo crece): afecta el PUNTAJE, no la categoría.
+        offense *= 1 + AheadOffenseBoost * ahead;
+        defense *= 1 + BehindDefenseBoost * behind;
+        var score = core + offense + defense + statBonus - penalty;
         return (score, reasons, category);
     }
 
