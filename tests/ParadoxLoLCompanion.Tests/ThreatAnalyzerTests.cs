@@ -108,6 +108,20 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void MixedChampion_WithFullApItems_ReadsAsMagical()
+    {
+        // Leona (kit Mixto) que compró full AP: el split lee su daño REAL (mágico), no se
+        // queda en el 50/50 del kit — así el muro correcto (RM) sube en vez de repartirse.
+        var state = TestCatalog.State(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Leona", "CHAOS", 0, new[] { 3089, 3089 }));   // 2× Rabadon (260 AP)
+
+        var threat = Analyzer().Analyze(state);
+        Assert.True(threat.MagicalShare > 0.8, $"magicalShare={threat.MagicalShare}");
+        Assert.True(threat.MagicalSkew > 0.8, $"magicalSkew={threat.MagicalSkew}");
+    }
+
+    [Fact]
     public void EnemyItems_SumBonusResists()
     {
         var state = TestCatalog.State(0,

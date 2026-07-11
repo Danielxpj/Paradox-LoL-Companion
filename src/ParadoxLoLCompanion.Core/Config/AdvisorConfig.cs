@@ -223,6 +223,9 @@ public sealed class ItemsConfig
     public double MrStackThreshold { get; set; } = 120;
     /// <summary>Share de daño (físico o mágico) desde el cual se considera sesgado.</summary>
     public double SkewedDamageShare { get; set; } = 0.62;
+    /// <summary>Oro ofensivo (AD+AP en items) para μ=0 / μ=1 del blend kit→compras del split de daño enemigo.</summary>
+    public double DamageMixGoldFoot { get; set; } = 1500;
+    public double DamageMixGoldShoulder { get; set; } = 4500;
     /// <summary>
     /// Fit relativo (mi arquetipo vs. el arquetipo que mejor explica el item) bajo el
     /// cual un item ya comprado se sugiere vender (si no cumple un rol situacional).

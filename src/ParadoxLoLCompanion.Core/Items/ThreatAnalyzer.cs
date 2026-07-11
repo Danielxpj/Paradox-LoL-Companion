@@ -63,20 +63,53 @@ public sealed class ThreatAnalyzer
 
             var champ = _profiler.Resolve(enemy);
             var profile = _profiler.Profile(champ);
+            var label = Label(enemy);
 
-            var phys = profile.Damage switch
+            // Stats e inversión ofensiva de sus items: para leer su daño REAL, no solo el kit.
+            double adGold = 0, apGold = 0;
+            var holdsGw = false;
+            foreach (var owned in enemy.Items)
+            {
+                var item = _data.ItemById(owned.ItemID);
+                if (item is null)
+                    continue;
+                var count = Math.Max(owned.Count, 1);
+                bonusArmor += item.Armor * count;
+                bonusMr += item.SpellBlock * count;
+                bonusHealth += item.Health * count;
+                critSum += item.CritChance * count;
+                holdsGw |= item.AppliesGrievousWounds;
+                // Valor-oro ofensivo (mismas constantes que ItemAdvisor.Efficiency).
+                adGold += (item.AttackDamage * 35 + item.AttackSpeedPct * 2500 + item.CritChance * 4000) * count;
+                apGold += item.AbilityPower * 21.75 * count;
+            }
+            if (holdsGw)
+                gwHolderW += w;
+
+            // Split de daño: prior del kit mezclado con lo que REALMENTE compró. Un "Mixed"
+            // que fue full-AP deja de contar 50/50; un kit sesgado se corrige menos (tope 0.5
+            // del blend) porque su daño base pesa aunque compre algo off-build.
+            var kitPhys = profile.Damage switch
             {
                 DamageProfile.Physical => 1.0,
                 DamageProfile.Magical => 0.0,
                 _ => 0.5,
             };
+            var phys = kitPhys;
+            var offGold = adGold + apGold;
+            if (offGold > 0)
+            {
+                var blend = Fuzzy.Ramp(offGold, _config.DamageMixGoldFoot, _config.DamageMixGoldShoulder);
+                if (profile.Damage != DamageProfile.Mixed)
+                    blend = Math.Min(blend, 0.5);
+                phys += (adGold / offGold - kitPhys) * blend;
+            }
             physical += w * phys;
             magical += w * (1 - phys);
 
             if (champ?.HasTag("Marksman") == true)
                 autoAttack += w;
 
-            var label = Label(enemy);
             if (w > topW) { topW = w; topName = label; }
             if (w < minW) minW = w;
             if (phys >= 0.5 && w * phys > topPhysW) { topPhysW = w * phys; topPhys = label; }
@@ -90,27 +123,14 @@ public sealed class ThreatAnalyzer
                 if (sw > topSustainW) { topSustainW = sw; topSustain = label; }
             }
 
-            var holdsGw = false;
-            foreach (var owned in enemy.Items)
-            {
-                var item = _data.ItemById(owned.ItemID);
-                if (item is null)
-                    continue;
-                var count = Math.Max(owned.Count, 1);
-                bonusArmor += item.Armor * count;
-                bonusMr += item.SpellBlock * count;
-                bonusHealth += item.Health * count;
-                critSum += item.CritChance * count;
-                holdsGw |= item.AppliesGrievousWounds;
-            }
-            if (holdsGw)
-                gwHolderW += w;
-
+            // Perfil de daño observado (kit + compras) para el tipo de resistencia anti-burst.
+            var enemyDamage = phys >= 0.6 ? DamageProfile.Physical
+                : phys <= 0.4 ? DamageProfile.Magical : DamageProfile.Mixed;
             if (champ?.HasTag("Assassin") == true && w > topBurstW)
             {
                 topBurstW = w;
                 topBurst = label;
-                burstDamage = profile.Damage;
+                burstDamage = enemyDamage;
             }
 
             if (champ is not null)
