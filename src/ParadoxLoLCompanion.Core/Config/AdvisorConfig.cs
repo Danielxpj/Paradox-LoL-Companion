@@ -240,6 +240,12 @@ public sealed class ItemsConfig
         { "Cassiopeia", "Karthus", "Malzahar", "Vladimir", "Ryze", "Kayle", "Swain", "Singed" };
     /// <summary>Cantidad de campeones con CC pesado que sugiere botas Mercurio.</summary>
     public int CcCountForMercs { get; set; } = 2;
+    /// <summary>Segundos de vida media de un asesinato para el decaimiento por recencia (kills viejos pesan menos).</summary>
+    public double KillRecencySeconds { get; set; } = 300;
+    /// <summary>Cuánto sube el peso de un enemigo por cada asesinato reciente sobre vos.</summary>
+    public double KillOnMeWeight { get; set; } = 0.4;
+    /// <summary>Tope de asesinatos recientes contados para que un solo enemigo no monopolice la amenaza.</summary>
+    public double KillOnMeCap { get; set; } = 3;
 
     // ARAM (mapa 12): peleas constantes y compras al reaparecer.
     /// <summary>Segundos de partida durante los que se sugiere la compra inicial (ARAM).</summary>

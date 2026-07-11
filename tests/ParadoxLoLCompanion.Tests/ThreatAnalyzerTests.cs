@@ -146,6 +146,26 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void EnemyWhoKilledYou_WeighsMore()
+    {
+        // Dos enemigos con el mismo KDA; Zed te mató 3 veces. El counter personal debe
+        // apuntar a Zed: pesa más aunque el marcador sea idéntico.
+        var state = TestCatalog.State(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Zed", "CHAOS", 2, new int[0]),
+            ("Malzahar", "CHAOS", 2, new int[0]));
+        for (var i = 0; i < 3; i++)
+            state.Events.Events.Add(new GameEvent
+            {
+                EventName = "ChampionKill", EventTime = 100 + i,
+                KillerName = "Zed", VictimName = "Me",
+            });
+
+        var threat = Analyzer().Analyze(state);
+        Assert.Equal("Zed (2/0/0)", threat.TopThreatName);
+    }
+
+    [Fact]
     public void FedMage_ProducesBurstThreat_NotJustAssassins()
     {
         // Un mago fed (no asesino) es el burst dominante de ARAM: debe producir Burst > 0,

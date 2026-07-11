@@ -52,6 +52,25 @@ public sealed class ThreatAnalyzer
         var avgLevel = enemies.Average(e => (double)e.Level);
         var avgCs = enemies.Average(e => (double)e.Scores.CreepScore);
 
+        // Enemigos que TE mataron pesan más: el counter personal (anti-burst, muro del
+        // tipo correcto, QSS) debe apuntar a quien te mata, no al promedio del equipo.
+        var gameTime = state.GameData.GameTime;
+        double KillMultiplier(Player enemy)
+        {
+            var killsOnMe = 0.0;
+            foreach (var ev in state.Events.Events)
+            {
+                if (!string.Equals(ev.EventName, "ChampionKill", StringComparison.OrdinalIgnoreCase)
+                    || !NameMatches(ev.VictimName, me) || !NameMatches(ev.KillerName, enemy))
+                    continue;
+                var recency = gameTime > 0
+                    ? Fuzzy.Clamp01(Math.Exp(-(gameTime - ev.EventTime) / _config.KillRecencySeconds))
+                    : 1.0;
+                killsOnMe += recency;
+            }
+            return 1 + _config.KillOnMeWeight * Math.Min(killsOnMe, _config.KillOnMeCap);
+        }
+
         double totalW = 0, physical = 0, magical = 0, autoAttack = 0, sustain = 0;
         double bonusArmor = 0, bonusMr = 0, bonusHealth = 0;
         double critSum = 0, gwHolderW = 0, pctHpTrueW = 0, hardEngageW = 0;
@@ -64,7 +83,7 @@ public sealed class ThreatAnalyzer
 
         foreach (var enemy in enemies)
         {
-            var w = Weight(enemy, avgLevel, avgCs);
+            var w = Weight(enemy, avgLevel, avgCs) * KillMultiplier(enemy);
             totalW += w;
 
             var champ = _profiler.Resolve(enemy);
@@ -258,6 +277,15 @@ public sealed class ThreatAnalyzer
         }
         return Fuzzy.Ramp(gold, _config.SustainGoldFoot, _config.SustainGoldShoulder);
     }
+
+    /// <summary>
+    /// Empareja un nombre de evento (KillerName/VictimName, que la API entrega como nombre
+    /// de invocador o game-name del Riot ID) con un jugador, sin distinguir mayúsculas.
+    /// </summary>
+    private static bool NameMatches(string? eventName, Player p) =>
+        !string.IsNullOrEmpty(eventName)
+        && (string.Equals(eventName, p.SummonerName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(eventName, p.RiotIdGameName, StringComparison.OrdinalIgnoreCase));
 
     private static string Label(Player p) => $"{p.ChampionName} ({p.Scores.Kda})";
 }
