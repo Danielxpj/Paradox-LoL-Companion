@@ -177,6 +177,9 @@ public sealed class ItemAdvisor
         var currentCrit = Math.Max(liveCrit,
             ownedIds.Sum(id => _data.ItemById(id)?.CritChance ?? 0));
 
+        // Necesidad defensiva real (stats vivos): amortigua los muros ya cubiertos.
+        var defenseNeed = DefenseNeedFrom(state.ActivePlayer?.ChampionStats, me.Level);
+
         // Items de dupla/soporte (Zeke's, Locket, Knight's Vow…): sus efectos viven
         // pegados a un aliado — fuera del pool salvo que seas el soporte del equipo.
         var isSupport = profile.Archetype == BuildArchetype.Enchanter
@@ -217,7 +220,7 @@ public sealed class ItemAdvisor
                 continue;
 
             var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw,
-                stats, champName, currentCrit);
+                defenseNeed, stats, champName, currentCrit);
             if (score > 0)
                 scored.Add((item, score, reasons, category));
         }
@@ -523,7 +526,7 @@ public sealed class ItemAdvisor
     /// </summary>
     private (double Score, List<string> Reasons, RecommendationCategory Category) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
-        IReadOnlyDictionary<string, double> weights, bool teamHasGw,
+        IReadOnlyDictionary<string, double> weights, bool teamHasGw, DefenseNeed need,
         ChampionBuildStats? stats, string champName, double currentCrit = 0)
     {
         var reasons = new List<string>();
@@ -573,12 +576,12 @@ public sealed class ItemAdvisor
         var wallDamp = 1 - 0.4 * threat.PercentHpTrue;
         if (item.HasTag("Armor") && threat.PhysicalSkew > MuGate)
         {
-            defense += DefenseMag * threat.PhysicalSkew * df * wallDamp;
+            defense += DefenseMag * threat.PhysicalSkew * df * wallDamp * need.Armor;
             reasons.Add($"{Pct(threat.PhysicalShare)} of enemy damage is physical ({threat.TopPhysicalName})");
         }
         if (item.HasTag("SpellBlock") && threat.MagicalSkew > MuGate)
         {
-            defense += DefenseMag * threat.MagicalSkew * df * wallDamp;
+            defense += DefenseMag * threat.MagicalSkew * df * wallDamp * need.Mr;
             reasons.Add($"{Pct(threat.MagicalShare)} of enemy damage is magic ({threat.TopMagicalName})");
         }
 
@@ -593,7 +596,7 @@ public sealed class ItemAdvisor
                 0.4 * Math.Max(threat.PhysicalSkew, threat.MagicalSkew));
             if (hpDegree > MuGate)
             {
-                defense += DefenseMag * hpDegree * df * (1 - 0.6 * threat.PercentHpTrue);
+                defense += DefenseMag * hpDegree * df * (1 - 0.6 * threat.PercentHpTrue) * need.Hp;
                 reasons.Add("raw health holds against both damage types");
             }
         }
@@ -601,10 +604,11 @@ public sealed class ItemAdvisor
         // Híbridos defensa+ofensa contra un asesino fed (Zhonya / Ángel / Fauces / Banshee).
         if (threat.Burst > MuGate && me.IsSquishy)
         {
-            var defTag = threat.BurstDamage == DamageProfile.Magical ? "SpellBlock" : "Armor";
+            var burstMagical = threat.BurstDamage == DamageProfile.Magical;
+            var defTag = burstMagical ? "SpellBlock" : "Armor";
             if (item.HasTag(defTag) && OffensiveMatch(item, me))
             {
-                defense += AntiBurstMag * threat.Burst;
+                defense += AntiBurstMag * threat.Burst * (burstMagical ? need.Mr : need.Armor);
                 reasons.Add($"to survive the burst from {threat.TopBurstName}");
             }
         }
@@ -784,6 +788,27 @@ public sealed class ItemAdvisor
 
     private static double DefenseFactor(ChampionProfile me) =>
         me.Archetype == BuildArchetype.Tank ? 1.2 : me.IsSquishy ? 1.0 : 0.6;
+
+    /// <summary>
+    /// Necesidad defensiva por tipo [0,1] derivada de los stats VIVOS del jugador: con
+    /// armadura/RM/vida ya altas (dos defensivos comprados) un tercer muro rinde menos.
+    /// Sin datos vivos (replays, MaxHealth=0) devuelve 1 en todo: cae al factor por arquetipo.
+    /// </summary>
+    private readonly record struct DefenseNeed(double Armor, double Mr, double Hp)
+    {
+        public static DefenseNeed Full { get; } = new(1, 1, 1);
+    }
+
+    private static DefenseNeed DefenseNeedFrom(ChampionStats? live, int level)
+    {
+        if (live is null || live.MaxHealth <= 0)
+            return DefenseNeed.Full;
+        var lvl = Math.Max(level, 1);
+        return new DefenseNeed(
+            1 - Fuzzy.Ramp(live.Armor, 40 + 5 * lvl, 120 + 8 * lvl),
+            1 - Fuzzy.Ramp(live.MagicResist, 30 + 4 * lvl, 100 + 6 * lvl),
+            1 - Fuzzy.Ramp(live.MaxHealth, 800 + 90 * lvl, 1800 + 150 * lvl));
+    }
 
     /// <summary>
     /// Valor en oro de los stats planos del item vs. su costo (eficiencia clásica de oro;

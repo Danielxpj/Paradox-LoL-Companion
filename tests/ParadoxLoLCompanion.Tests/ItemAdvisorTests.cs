@@ -1,6 +1,7 @@
 using ParadoxLoLCompanion.Core.Config;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
+using ParadoxLoLCompanion.Core.Models;
 
 namespace ParadoxLoLCompanion.Tests;
 
@@ -648,6 +649,31 @@ public class ItemAdvisorTests
         var top = Advisor().Advise(coreState)!.Top!;
         Assert.True(top.Category is RecommendationCategory.Core or RecommendationCategory.Spike,
             $"esperaba Core/Spike, fue {top.Category}");
+    }
+
+    [Fact]
+    public void HighLiveArmor_DampsArmorWallBonus()
+    {
+        // Con mucha armadura ya en los stats vivos, el bono del muro de armadura baja: un
+        // tercer item de armadura no debe apilarse a ciegas. Sin datos vivos → sin cambio.
+        GameState Vs(double liveArmor)
+        {
+            var s = TestCatalog.State(20000,
+                ("Jinx", "ORDER", 0, None),
+                ("Zed", "CHAOS", 0, None),
+                ("Vayne", "CHAOS", 0, None));
+            s.ActivePlayer!.Level = 11;
+            s.ActivePlayer.ChampionStats.MaxHealth = 1800;
+            s.ActivePlayer.ChampionStats.Armor = liveArmor;
+            return s;
+        }
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+
+        var low = new StaticItemScore(advisor.Advise(Vs(15))!).Of(3026);    // Guardian Angel (Armor)
+        var high = new StaticItemScore(advisor.Advise(Vs(260))!).Of(3026);
+
+        Assert.True(low > high, $"low={low} high={high}");
     }
 
     [Fact]
