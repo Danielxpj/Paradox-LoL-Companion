@@ -640,21 +640,31 @@ public sealed class ItemAdvisor
             reasons.Add("survives the enemy engage");
         }
 
-        // Limpieza de supresión (QSS/Mercurial) para carries: quedar suprimido es muerte segura.
-        if (threat.HasSuppression && item.RemovesCc
+        // Anti-CC unificado (difuso): la supresión (lockdown letal, limpieza para carries
+        // AD) y el CC pesado general (wombo, limpieza/tenacidad para todos) se combinan por
+        // MÁXIMO, no por suma — un supresor que además es CC pesado (Malzahar) no paga dos
+        // veces el mismo QSS. Ambas magnitudes escalan por su grado difuso (ya no crisp).
+        double antiCc = 0;
+        string? antiCcReason = null;
+        if (item.RemovesCc && threat.Suppression > MuGate
             && me.Archetype is BuildArchetype.Marksman or BuildArchetype.AdFighter or BuildArchetype.AdAssassin)
         {
-            offense += CleanseMag;
-            reasons.Add($"cleanses the suppression from {threat.SuppressionName}");
+            antiCc = CleanseMag * threat.Suppression;
+            antiCcReason = $"cleanses the suppression from {threat.SuppressionName}";
         }
-
-        // Anti-CC: contra una comp de CC pesado (wombo), limpieza (QSS/Mercurial) o
-        // tenacidad valen para TODOS los arquetipos, no solo AD (a diferencia de la regla
-        // de supresión, que sigue acotada a carries AD por naturaleza del kit).
         if (threat.CcThreat > MuGate && (item.RemovesCc || item.GrantsTenacity))
         {
-            offense += CcCounterMag * threat.CcThreat;
-            reasons.Add("cuts through the enemy crowd control");
+            var cc = CcCounterMag * threat.CcThreat;
+            if (cc > antiCc)
+            {
+                antiCc = cc;
+                antiCcReason = "cuts through the enemy crowd control";
+            }
+        }
+        if (antiCc > 0)
+        {
+            offense += antiCc;
+            reasons.Add(antiCcReason!);
         }
 
         // Anti-tanque: contra un equipo gordo tu daño quiere penetrar/on-hit, no rebotar.
@@ -664,10 +674,10 @@ public sealed class ItemAdvisor
             reasons.Add("cuts through the enemy's durability");
         }
 
-        // Rompe-escudos cuando el rival trae escudos grandes.
-        if (threat.HasShields && item.BreaksShields && me.DealsPhysical)
+        // Rompe-escudos, escalado por el grado de escudos enemigos (fed-weighted), no crisp.
+        if (threat.ShieldThreat > MuGate && item.BreaksShields && me.DealsPhysical)
         {
-            offense += ShieldBreakMag;
+            offense += ShieldBreakMag * threat.ShieldThreat;
             reasons.Add("shreds enemy shields");
         }
 

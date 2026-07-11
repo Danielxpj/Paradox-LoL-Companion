@@ -725,6 +725,26 @@ public class ItemAdvisorTests
     }
 
     [Fact]
+    public void AntiCc_DoesNotDoubleCount_SuppressionAndHeavyCc()
+    {
+        // Malzahar es supresor Y CC pesado: un QSS/Mercurial recibe UNA sola razón anti-CC
+        // (las reglas se combinan por máximo, no se suman como en la v3).
+        var state = TestCatalog.State(20000,
+            ("Jinx", "ORDER", 0, None),
+            ("Malzahar", "CHAOS", 0, None),
+            ("Leona", "CHAOS", 0, None));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+
+        var plan = advisor.Advise(state)!;
+        var merc = plan.Recommendations.FirstOrDefault(r => r.Item.Id == 3139);   // Mercurial Scimitar
+        Assert.NotNull(merc);
+        var antiCcReasons = merc!.Reasons.Count(r =>
+            r.Contains("suppression") || r.Contains("crowd control"));
+        Assert.Equal(1, antiCcReasons);
+    }
+
+    [Fact]
     public void CcCounter_RecommendedVsHeavyCc_WithoutSuppressor()
     {
         // Comp de CC pesado sin supresor (Leona+Amumu): la regla de supresión NO dispara,

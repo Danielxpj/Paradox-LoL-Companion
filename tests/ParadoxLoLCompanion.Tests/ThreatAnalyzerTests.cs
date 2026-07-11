@@ -146,6 +146,19 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void ShieldComp_RaisesShieldThreat()
+    {
+        // Un campeón de escudos sube ShieldThreat (grado difuso, ya no un booleano crisp).
+        var state = TestCatalog.State(0,
+            ("Zed", "ORDER", 0, new int[0]),
+            ("Karma", "CHAOS", 0, new int[0]));
+
+        var threat = Analyzer().Analyze(state);
+        Assert.True(threat.ShieldThreat > 0.5, $"shieldThreat={threat.ShieldThreat}");
+        Assert.True(threat.HasShields);
+    }
+
+    [Fact]
     public void HeavyCcComp_RaisesCcThreat()
     {
         // Comp de CC pesado (wombo): el grado CcThreat sube para pedir tenacidad/limpieza.

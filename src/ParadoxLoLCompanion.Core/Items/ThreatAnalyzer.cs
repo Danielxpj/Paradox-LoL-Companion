@@ -74,6 +74,7 @@ public sealed class ThreatAnalyzer
         double totalW = 0, physical = 0, magical = 0, autoAttack = 0, sustain = 0;
         double bonusArmor = 0, bonusMr = 0, bonusHealth = 0;
         double critSum = 0, gwHolderW = 0, pctHpTrueW = 0, hardEngageW = 0, heavyCcW = 0;
+        double suppressorW = 0, shieldW = 0;
         double topW = 0, minW = double.MaxValue, topPhysW = 0, topMagW = 0, topSustainW = 0, topBurstW = 0;
         string? topName = null, topPhys = null, topMag = null, topSustain = null, topBurst = null;
         var burstDamage = DamageProfile.Mixed;
@@ -175,15 +176,21 @@ public sealed class ThreatAnalyzer
 
             if (champ is not null)
             {
-                if (suppression is null && _config.SuppressionChampions.Contains(champ.Key))
-                    suppression = label;
+                if (_config.SuppressionChampions.Contains(champ.Key))
+                {
+                    suppression ??= label;
+                    suppressorW += w;
+                }
                 if (_config.HeavyCcChampions.Contains(champ.Key))
                 {
                     heavyCc++;
                     heavyCcW += w;
                 }
                 if (_config.ShieldChampions.Contains(champ.Key))
+                {
                     shields = true;
+                    shieldW += w;
+                }
                 if (_config.PercentHpTrueDamageChampions.Contains(champ.Key))
                     pctHpTrueW += w;
                 if (_config.HardEngageChampions.Contains(champ.Key))
@@ -251,6 +258,10 @@ public sealed class ThreatAnalyzer
             EnemyTankiness = Fuzzy.Ramp(
                 (bonusHealth + 20 * (bonusArmor + bonusMr)) / enemies.Count, 800, 3500),
             CcThreat = Ratio(heavyCcW, totalW, 0.2, 0.6),
+            // Foot bajo (0.03): un solo supresor de peso promedio ya da μ alto — la
+            // supresión es letal aun con el enemigo atrás, no es cuestión de "fed".
+            Suppression = Ratio(suppressorW, totalW, 0.03, 0.35),
+            ShieldThreat = Ratio(shieldW, totalW, 0.15, 0.5),
             AvgEnemyWeight = avgW,
             MyWeight = Weight(me, avgLevel, avgCs),
         };

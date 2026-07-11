@@ -39,6 +39,11 @@ public sealed record TeamThreat
     public int HeavyCcCount { get; init; }
     public bool HasShields { get; init; }
 
+    /// <summary>Grado de supresión enemiga (lockdown letal): pide limpieza (QSS/Mercurial) para carries.</summary>
+    public double Suppression { get; init; }
+    /// <summary>Grado de escudos enemigos ponderado por lo fed que van: pide rompe-escudos.</summary>
+    public double ShieldThreat { get; init; }
+
     // --- Grados difusos (v3): perceptos continuos ∈ [0,1] que el scoring usa en lugar de
     // los umbrales duros. Los produce ThreatAnalyzer; el umbral de la v2 es el cruce μ≈0.5.
 
