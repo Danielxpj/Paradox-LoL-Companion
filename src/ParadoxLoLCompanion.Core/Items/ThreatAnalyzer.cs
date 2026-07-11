@@ -84,12 +84,17 @@ public sealed class ThreatAnalyzer
 
         foreach (var enemy in enemies)
         {
-            var w = Weight(enemy, avgLevel, avgCs) * KillMultiplier(enemy);
-            totalW += w;
-
             var champ = _profiler.Resolve(enemy);
             var profile = _profiler.Profile(champ);
             var label = Label(enemy);
+
+            var w = Weight(enemy, avgLevel, avgCs) * KillMultiplier(enemy);
+            // Modificador ARAM de daño HECHO (Riot lo aplica; ddragon no lo expone): un
+            // campeón nerfeado en ARAM aporta menos amenaza; uno buffeado, más.
+            if (isAram && champ is not null
+                && _config.AramBalance.TryGetValue(champ.Key, out var aramMod))
+                w *= aramMod.Dealt;
+            totalW += w;
 
             // Stats e inversión ofensiva de sus items: para leer su daño REAL, no solo el kit.
             double adGold = 0, apGold = 0;

@@ -201,6 +201,25 @@ public sealed class ItemsConfig
     /// <summary>Correcciones al arquetipo de build inferido de los tags.</summary>
     public Dictionary<string, string> ArchetypeOverrides { get; set; } = new();
 
+    /// <summary>
+    /// Modificadores de balance ARAM por campeón (daño HECHO / RECIBIDO) que Riot aplica y
+    /// ddragon NO expone. Solo entradas no-neutrales (default 1.0); tabla mantenida por
+    /// parche desde el wiki comunitario — semilla de ejemplos comunes abajo.
+    /// </summary>
+    public Dictionary<string, AramBalance> AramBalance { get; set; } = new()
+    {
+        ["Zed"] = new() { Dealt = 0.9, Taken = 1.1 },
+        ["MasterYi"] = new() { Dealt = 0.9, Taken = 1.05 },
+        ["Karthus"] = new() { Dealt = 0.92, Taken = 1.05 },
+        ["Ziggs"] = new() { Dealt = 0.9, Taken = 1.05 },
+        ["Seraphine"] = new() { Dealt = 0.9, Taken = 1.05 },
+        ["Velkoz"] = new() { Dealt = 0.9, Taken = 1.05 },
+        ["Xerath"] = new() { Dealt = 0.9, Taken = 1.05 },
+        ["Heimerdinger"] = new() { Dealt = 0.85, Taken = 1.1 },
+        ["Kayle"] = new() { Dealt = 1.08, Taken = 0.95 },
+        ["Kassadin"] = new() { Dealt = 1.05, Taken = 0.95 },
+    };
+
     // Detección de build por inventario (Garen tanque vs. daño, Janna support vs. AP).
     /// <summary>Inferir el arquetipo desde los items que el jugador realmente compró.</summary>
     public bool DetectBuildFromItems { get; set; } = true;
@@ -261,4 +280,11 @@ public sealed class ItemsConfig
     public double AffordabilityBonus { get; set; } = 0.5;
     /// <summary>Bono de retención al item que ya estaba en el top el tick anterior: mata la oscilación en el borde (un retador debe superar al incumbente por más que esto para desplazarlo), muy por debajo de cualquier counter.</summary>
     public double HysteresisBonus { get; set; } = 0.3;
+}
+
+/// <summary>Modificador de balance ARAM de un campeón: factor de daño hecho y recibido (1.0 = neutral).</summary>
+public sealed class AramBalance
+{
+    public double Dealt { get; set; } = 1.0;
+    public double Taken { get; set; } = 1.0;
 }

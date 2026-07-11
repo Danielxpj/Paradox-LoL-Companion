@@ -146,6 +146,26 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void AramBalance_NerfedEnemyContributesLessThreat()
+    {
+        // Modificador ARAM de daño hecho: un campeón nerfeado (Zed a 0.5) pesa menos que
+        // uno neutral con el mismo marcador — el no-nerfeado es la mayor amenaza.
+        var cfg = new ParadoxLoLCompanion.Core.Config.ItemsConfig
+        {
+            AramBalance = new() { ["Zed"] = new ParadoxLoLCompanion.Core.Config.AramBalance { Dealt = 0.5 } },
+        };
+        var analyzer = new ThreatAnalyzer(TestCatalog.Catalog(), cfg);
+        var state = TestCatalog.AramState(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Zed", "CHAOS", 5, new int[0]),
+            ("Malzahar", "CHAOS", 5, new int[0]));
+
+        var threat = analyzer.Analyze(state);
+
+        Assert.Equal("Malzahar (5/0/0)", threat.TopThreatName);
+    }
+
+    [Fact]
     public void GrievousWoundsComponents_AreThe800gPieces()
     {
         // La pieza urgente de GW: componentes comprables que aplican Heridas Graves
