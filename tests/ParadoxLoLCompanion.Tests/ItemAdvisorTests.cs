@@ -149,13 +149,16 @@ public class ItemAdvisorTests
     public void AntiHeal_Damped_WhenTeamHasItAndSustainModerate()
     {
         // Mi aliado ya lleva Morello y la curación enemiga es moderada (un healer entre
-        // tres, ninguno fed): con GW aliado el bono anti-heal se amortigua — no se insiste.
+        // cinco, ninguno fed → sustain ~0.2, bajo el foot del damp): con GW aliado el bono
+        // anti-heal se amortigua — no se insiste con una segunda fuente.
         var state = TestCatalog.State(5000,
             ("Ahri", "ORDER", 0, None),
             ("Soraka", "ORDER", 0, new[] { 3165 }),
             ("Warwick", "CHAOS", 0, None),
             ("Zed", "CHAOS", 0, None),
-            ("Malzahar", "CHAOS", 0, None));
+            ("Malzahar", "CHAOS", 0, None),
+            ("Vayne", "CHAOS", 0, None),
+            ("Pyke", "CHAOS", 0, None));
         var plan = Advisor().Advise(state)!;
 
         Assert.DoesNotContain(plan.Recommendations,
@@ -379,10 +382,11 @@ public class ItemAdvisorTests
     }
 
     [Fact]
-    public void Aram_TriggersAntiHealEarlier()
+    public void Aram_ScoresAntiHealHigher_ThanRift()
     {
-        // Warwick con poca ventaja: sustain ~0.23, bajo el umbral normal (0.25) pero
-        // sobre el de ARAM (0.25 × 0.6) — en ARAM las peleas son constantes.
+        // Warwick con poca ventaja: sustain ~0.23, bajo el umbral de Grieta (0.25) pero
+        // sobre el de ARAM. Con las rampas suaves de la v4 el anti-heal (Morello) puntúa
+        // MÁS en ARAM (umbral más bajo → μ mayor), en vez de un salto binario.
         var players = new[]
         {
             ("Ahri", "ORDER", 0, None),
@@ -390,13 +394,13 @@ public class ItemAdvisorTests
             ("Zed", "CHAOS", 2, None),
             ("Jinx", "CHAOS", 2, None),
         };
-        var onRift = Advisor().Advise(TestCatalog.State(5000, players))!;
-        var onAram = Advisor().Advise(TestCatalog.AramState(5000, players))!;
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+        var onRift = new StaticItemScore(advisor.Advise(TestCatalog.State(5000, players))!);
+        var onAram = new StaticItemScore(advisor.Advise(TestCatalog.AramState(5000, players))!);
 
-        Assert.DoesNotContain(onRift.Recommendations,
-            r => r.Reasons.Any(reason => reason.Contains("healing")));
-        Assert.Contains(onAram.Recommendations,
-            r => r.Reasons.Any(reason => reason.Contains("healing")));
+        Assert.True(onAram.Of(3165) > onRift.Of(3165),
+            $"ARAM anti-heal {onAram.Of(3165)} no superó a Grieta {onRift.Of(3165)}");
     }
 
     [Fact]

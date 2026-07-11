@@ -321,9 +321,25 @@ public class ThreatAnalyzerTests
         var rift = Analyzer().Analyze(TestCatalog.State(0, players));
         var aram = Analyzer().Analyze(TestCatalog.AramState(0, players));
 
+        // Con las rampas ancladas a μ(umbral)=0.5: sustain ~0.226 queda bajo μ=0.5 en Grieta
+        // (umbral 0.25) y sobre μ=0.5 en ARAM (umbral 0.15) — ARAM más caliente, sin saltos.
         Assert.True(aram.Sustain > rift.Sustain,
             $"ARAM {aram.Sustain} no fue mayor que Grieta {rift.Sustain}");
-        Assert.Equal(0.0, rift.Sustain, precision: 6);
+        Assert.True(rift.Sustain < 0.5, $"Grieta debería quedar bajo μ=0.5: {rift.Sustain}");
+        Assert.True(aram.Sustain > 0.5, $"ARAM debería superar μ=0.5: {aram.Sustain}");
+    }
+
+    [Fact]
+    public void ArmorStack_CrossesHalf_AtThreshold()
+    {
+        // Regla de diseño v3: cada grado cruza μ≈0.5 EN el umbral de config. 150 de
+        // armadura enemiga (= ArmorStackThreshold) ⇒ ArmorStack ≈ 0.5.
+        var state = TestCatalog.State(0,
+            ("Zed", "ORDER", 0, new int[0]),
+            ("Leona", "CHAOS", 0, new[] { 3075, 1029, 1029 }));   // 70 + 40 + 40 = 150
+
+        var threat = Analyzer().Analyze(state);
+        Assert.InRange(threat.ArmorStack, 0.45, 0.55);
     }
 
     [Fact]

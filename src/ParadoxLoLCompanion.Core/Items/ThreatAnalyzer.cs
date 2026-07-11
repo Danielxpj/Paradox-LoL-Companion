@@ -236,15 +236,16 @@ public sealed class ThreatAnalyzer
             MixedDamage = Fuzzy.And(
                 Fuzzy.Ramp(physicalShare, 0.30, 0.50),
                 Fuzzy.Ramp(magicalShare, 0.30, 0.50)),
+            // Rampas ancladas SIMÉTRICAS al umbral: μ(umbral)=0.5 (la regla de diseño v3),
+            // no el 0/0.33/0.375 dispar de la v3. Así, en el umbral, contrapartidas igual
+            // de críticas (pen vs. anti-heal vs. supervivencia) empujan lo mismo.
             ArmorStack = Fuzzy.Ramp(bonusArmor,
-                _config.ArmorStackThreshold * 0.4, _config.ArmorStackThreshold * 2),
+                _config.ArmorStackThreshold * 0.5, _config.ArmorStackThreshold * 1.5),
             MrStack = Fuzzy.Ramp(bonusMr,
-                _config.MrStackThreshold * 0.4, _config.MrStackThreshold * 2),
-            // foot = umbral del mapa (μ=0 en el umbral, sube por encima): no dispara por
-            // debajo (Grieta 0.23 < 0.25 → 0) y entra suave en ARAM (umbral más bajo).
-            Sustain = Fuzzy.Ramp(sustainScore, sustainThr, sustainThr * 1.7),
+                _config.MrStackThreshold * 0.5, _config.MrStackThreshold * 1.5),
+            Sustain = Fuzzy.Ramp(sustainScore, sustainThr * 0.6, sustainThr * 1.4),
             Burst = Fuzzy.Ramp(burstScore,
-                _config.BurstThreshold * 0.75, _config.BurstThreshold * 1.5),
+                _config.BurstThreshold * 0.75, _config.BurstThreshold * 1.25),
             CritThreat = Fuzzy.Or(
                 Fuzzy.Ramp(critSum, 0.15, 0.9),           // items de crítico comprados
                 Fuzzy.Ramp(autoAttackShare, 0.35, 0.75)), // tiradores que van a apilar crítico
