@@ -1,10 +1,48 @@
 using ParadoxLoLCompanion.Core.Items;
+using ParadoxLoLCompanion.Core.Models;
 
 namespace ParadoxLoLCompanion.Tests;
 
 public class ThreatAnalyzerTests
 {
     private static ThreatAnalyzer Analyzer() => new(TestCatalog.Catalog());
+
+    private static Player Enemy(string champ, int kills = 0, int deaths = 0, int level = 0, int cs = 0) =>
+        new()
+        {
+            ChampionName = champ,
+            RawChampionName = $"game_character_displayname_{champ}",
+            Team = "CHAOS",
+            Level = level,
+            Scores = new PlayerScores { Kills = kills, Deaths = deaths, CreepScore = cs },
+        };
+
+    private static GameState LevelledState(int level, int cs) => new()
+    {
+        ActivePlayer = new ActivePlayer { SummonerName = "Me" },
+        GameData = new GameData { GameMode = "ARAM", MapNumber = 12 },
+        AllPlayers =
+        {
+            new Player { SummonerName = "Me", ChampionName = "Jinx",
+                RawChampionName = "game_character_displayname_Jinx", Team = "ORDER", Level = level },
+            Enemy("Zed", kills: 8, level: level, cs: cs + 40),
+            Enemy("Soraka", deaths: 4, level: level, cs: cs),
+            Enemy("Malzahar", level: level, cs: cs),
+        },
+    };
+
+    [Fact]
+    public void FedWeight_IsRelativeToTeamBaseline_NotCompressedLate()
+    {
+        // Un asesino con la misma ventaja de KDA produce el mismo burstScore en early y en
+        // late: la línea base (nivel/CS del equipo) evita que el crecimiento compartido
+        // comprima la señal. Con la fórmula absoluta vieja, late quedaba muy por debajo.
+        var early = Analyzer().Analyze(LevelledState(level: 3, cs: 20));
+        var late = Analyzer().Analyze(LevelledState(level: 18, cs: 250));
+
+        Assert.True(Math.Abs(early.Burst - late.Burst) < 0.05,
+            $"early={early.Burst} late={late.Burst}");
+    }
 
     [Fact]
     public void NoEnemies_ReturnsNone()

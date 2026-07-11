@@ -46,6 +46,12 @@ public sealed class ThreatAnalyzer
             ? _config.SustainThreshold * _config.AramSustainThresholdFactor
             : _config.SustainThreshold;
 
+        // Línea base del equipo enemigo: los pesos se miden RELATIVOS a su nivel/CS
+        // promedio, para que el crecimiento compartido de late game no infle todos los
+        // pesos y comprima las señales (burst, mayor amenaza) justo cuando importan.
+        var avgLevel = enemies.Average(e => (double)e.Level);
+        var avgCs = enemies.Average(e => (double)e.Scores.CreepScore);
+
         double totalW = 0, physical = 0, magical = 0, autoAttack = 0, sustain = 0;
         double bonusArmor = 0, bonusMr = 0, bonusHealth = 0;
         double critSum = 0, gwHolderW = 0, pctHpTrueW = 0, hardEngageW = 0;
@@ -58,7 +64,7 @@ public sealed class ThreatAnalyzer
 
         foreach (var enemy in enemies)
         {
-            var w = Weight(enemy);
+            var w = Weight(enemy, avgLevel, avgCs);
             totalW += w;
 
             var champ = _profiler.Resolve(enemy);
@@ -220,11 +226,16 @@ public sealed class ThreatAnalyzer
     private static double Ratio(double part, double total, double foot, double shoulder) =>
         total > 0 ? Fuzzy.Ramp(part / total, foot, shoulder) : 0;
 
-    /// <summary>Peso de "qué tan fuerte va" un enemigo; nunca baja de 0.5 para que todos cuenten.</summary>
-    public static double Weight(Player p) =>
+    /// <summary>
+    /// Peso de "qué tan fuerte va" un jugador, RELATIVO a la línea base de nivel/CS que se
+    /// le pase (0/0 = absoluto, compatible con la fórmula vieja). Restar el promedio del
+    /// equipo evita que el crecimiento compartido de late game infle todos los pesos y
+    /// comprima las señales relativas. Nunca baja de 0.5 para que todos cuenten.
+    /// </summary>
+    public static double Weight(Player p, double avgLevel = 0, double avgCs = 0) =>
         Math.Max(0.5,
-            1 + p.Scores.Kills * 2.5 + p.Scores.Assists * 0.8
-              + p.Scores.CreepScore * 0.04 + p.Level * 0.5 - p.Scores.Deaths * 1.2);
+            1 + p.Scores.Kills * 2.5 + p.Scores.Assists * 0.8 - p.Scores.Deaths * 1.2
+              + (p.Level - avgLevel) * 0.5 + (p.Scores.CreepScore - avgCs) * 0.04);
 
     /// <summary>
     /// Grado de sustain [0,1] de un enemigo: 1.0 si su kit cura (lista curada); si no, una
