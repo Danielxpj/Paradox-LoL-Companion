@@ -146,6 +146,18 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void ExtractsUtilityStats_ForEfficiency()
+    {
+        // El catálogo ahora extrae maná/MS/lifesteal/regen: items de mago/enchanter/asesino
+        // ya no leen como "ineficientes" en el modulador de eficiencia (S7 entrega 1).
+        var item = TestCatalog.Catalog().ItemById(9400)!;
+        Assert.Equal(600, item.Mana);
+        Assert.Equal(45, item.MoveSpeed);
+        Assert.Equal(0.12, item.LifeStealPct, precision: 3);
+        Assert.Equal(100, item.HealthRegen);
+    }
+
+    [Fact]
     public void ShieldComp_RaisesShieldThreat()
     {
         // Un campeón de escudos sube ShieldThreat (grado difuso, ya no un booleano crisp).

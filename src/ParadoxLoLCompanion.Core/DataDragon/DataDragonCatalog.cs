@@ -203,6 +203,10 @@ public sealed class DataDragonCatalog : IStaticData
                 AbilityPower = Stat(entry.Stats, "FlatMagicDamageMod"),
                 AttackSpeedPct = Stat(entry.Stats, "PercentAttackSpeedMod"),
                 CritChance = Stat(entry.Stats, "FlatCritChanceMod"),
+                Mana = Stat(entry.Stats, "FlatMPPoolMod"),
+                MoveSpeed = Stat(entry.Stats, "FlatMovementSpeedMod"),
+                LifeStealPct = Stat(entry.Stats, "PercentLifeStealMod"),
+                HealthRegen = Stat(entry.Stats, "FlatHPRegenMod"),
             };
         }
 

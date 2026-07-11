@@ -856,9 +856,13 @@ public sealed class ItemAdvisor
     /// </summary>
     private static double Efficiency(StaticItem item, double critWaste = 0)
     {
+        // Valores de oro estándar por stat (incluye maná/MS/lifesteal/regen: items de mago,
+        // enchanter y asesino gastan su oro ahí, y sin esto leían como "ineficientes").
         var value = item.AttackDamage * 35 + item.AbilityPower * 21.75
                   + item.Armor * 20 + item.SpellBlock * 18 + item.Health * 2.67
-                  + item.AttackSpeedPct * 2500 + item.CritChance * 4000 * (1 - critWaste);
+                  + item.AttackSpeedPct * 2500 + item.CritChance * 4000 * (1 - critWaste)
+                  + item.Mana * 1.4 + item.MoveSpeed * 12 + item.LifeStealPct * 3750
+                  + item.HealthRegen * 3;
         return value / Math.Max(item.GoldTotal, 1);
     }
 

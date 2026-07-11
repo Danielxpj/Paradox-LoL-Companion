@@ -93,6 +93,7 @@ internal static class TestCatalog
         "9303": { "name":"Test Deep Sub","gold":{"total":1600,"purchasable":true},"tags":["Damage"],"maps":{"11":true,"12":true},"into":["9302"],"from":["1038"],"depth":2,"stats":{"FlatPhysicalDamageMod":45} },
         "9302": { "name":"Test Expensive Branch","gold":{"total":3000,"purchasable":true},"tags":["Damage"],"maps":{"11":true,"12":true},"into":["9300"],"from":["9303"],"depth":3,"stats":{"FlatPhysicalDamageMod":60} },
         "9300": { "name":"Test Twin Target","gold":{"total":4500,"purchasable":false},"tags":["Damage","Health"],"maps":{"11":true,"12":true},"from":["9301","9302"],"depth":4,"stats":{"FlatPhysicalDamageMod":70,"FlatHPPoolMod":400} },
+        "9400": { "name":"Test Utility Stats","gold":{"total":2000,"purchasable":false},"tags":["Mana","LifeSteal"],"maps":{"11":false,"12":false},"stats":{"FlatMPPoolMod":600,"FlatMovementSpeedMod":45,"PercentLifeStealMod":0.12,"FlatHPRegenMod":100} },
 
         "1055": { "name":"Doran's Blade","gold":{"total":450,"purchasable":true},"tags":["Health","Damage","LifeSteal","Lane"],"maps":{"11":true,"12":true},"stats":{"FlatPhysicalDamageMod":8,"FlatHPPoolMod":80} },
         "2051": { "name":"Guardian's Horn","gold":{"total":950,"purchasable":true},"tags":["Health","HealthRegen","Lane"],"maps":{"11":false,"12":true},"stats":{"FlatHPPoolMod":150} },

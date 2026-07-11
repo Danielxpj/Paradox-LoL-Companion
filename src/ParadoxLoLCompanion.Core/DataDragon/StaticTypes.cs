@@ -89,6 +89,14 @@ public sealed class StaticItem
     public double AttackSpeedPct { get; init; }
     /// <summary>Prob. de crítico como fracción (0.25 = 25 %).</summary>
     public double CritChance { get; init; }
+    /// <summary>Maná plano (para valorar el oro de items de maná, sin castigar su "ineficiencia").</summary>
+    public double Mana { get; init; }
+    /// <summary>Velocidad de movimiento plana.</summary>
+    public double MoveSpeed { get; init; }
+    /// <summary>Robo de vida como fracción (0.15 = 15 %).</summary>
+    public double LifeStealPct { get; init; }
+    /// <summary>Regeneración de vida plana.</summary>
+    public double HealthRegen { get; init; }
 
     public bool IsBoots => HasTag("Boots");
 
