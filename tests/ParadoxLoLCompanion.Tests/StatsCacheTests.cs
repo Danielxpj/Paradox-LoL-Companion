@@ -56,4 +56,17 @@ public class StatsCacheTests : IDisposable
         File.WriteAllText(file, "{corrupt");
         Assert.False(cache.TryRead("16.13.1", "Jayce", "ranked", "top", out _));
     }
+
+    [Fact]
+    public void TryRead_misses_entries_older_than_max_age()
+    {
+        // Dentro del mismo parche, una entrada vieja (datos ruidosos del día 1) debe
+        // caducar: TryRead falla y el fetch se re-dispara para refrescar la muestra.
+        var cache = new StatsCache(_dir) { MaxAge = TimeSpan.FromHours(48) };
+        cache.Write("16.13.1", "Jayce", "ranked", "top", Sample());
+        var file = Directory.GetFiles(Path.Combine(_dir, "16.13.1"))[0];
+        File.SetLastWriteTimeUtc(file, DateTime.UtcNow.AddDays(-3));
+
+        Assert.False(cache.TryRead("16.13.1", "Jayce", "ranked", "top", out _));
+    }
 }

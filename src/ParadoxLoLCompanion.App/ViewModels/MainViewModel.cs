@@ -59,6 +59,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private string? _runesAppliedKey;      // "champKey|patch": una aplicación automática por campeón
     private ChampionBuildStats? _championStats;
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
+    // Reintento con backoff cuando un fetch falla: sin esto, un timeout dejaba la key
+    // fijada y la partida entera corría sin prior, botas meta, item sets ni runas.
+    private readonly Dictionary<string, (int Attempts, DateTime NextRetryUtc)> _statsRetry = new();
+    private const int StatsMaxAttempts = 3;
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -532,6 +536,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         var key = $"{champ.Key}|{me.Position.ToUpperInvariant()}|{mapNumber}|{_catalog.Version}";
         if (key == _statsFetchKey)
             return;
+        if (_statsRetry.TryGetValue(key, out var retry)
+            && (retry.Attempts >= StatsMaxAttempts || DateTime.UtcNow < retry.NextRetryUtc))
+            return;   // agotó reintentos o todavía en backoff
         _statsFetchKey = key;
         _championStats = null;
         RebuildRunesPanel();
@@ -556,6 +563,17 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (_statsFetchKey != key)
                 return;   // llegó tarde: el contexto ya cambió
             _championStats = stats;
+            if (stats is null)
+            {
+                // Falló: liberar la key y programar backoff (45 s, 90 s, luego se rinde)
+                // para que el tick de 1 s reintente — un timeout ya no silencia el prior
+                // y las botas meta toda la partida.
+                var attempts = _statsRetry.TryGetValue(key, out var r) ? r.Attempts + 1 : 1;
+                _statsRetry[key] = (attempts, DateTime.UtcNow.AddSeconds(45 * Math.Pow(2, attempts - 1)));
+                _statsFetchKey = null;
+            }
+            else
+                _statsRetry.Remove(key);
             AppendConsole(stats is null
                 ? $"[stats] no OP.GG data for {champKey} — advising without statistical priors (see lines above for why)."
                 : $"[stats] OP.GG build data loaded for {champKey} ({stats.GameMode}/{stats.Position}).");
@@ -941,6 +959,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 AutoApplyRunesIfNeeded(_championStats);
             return;
         }
+        if (_statsRetry.TryGetValue(key, out var retry)
+            && (retry.Attempts >= StatsMaxAttempts || DateTime.UtcNow < retry.NextRetryUtc))
+            return;   // agotó reintentos o todavía en backoff
         _statsFetchKey = key;
         _championStats = null;
         RebuildRunesPanel();

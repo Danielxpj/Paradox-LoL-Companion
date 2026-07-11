@@ -12,6 +12,13 @@ public sealed class StatsCache
 {
     private readonly string _baseDir;
 
+    /// <summary>
+    /// Antigüedad máxima de una entrada dentro del mismo parche: las stats del día 1 de
+    /// un parche son ruidosas (muestras chicas) y no deben quedar clavadas semanas; pasado
+    /// este tiempo, <see cref="TryRead"/> falla y el fetch se re-dispara.
+    /// </summary>
+    public TimeSpan MaxAge { get; init; } = TimeSpan.FromHours(48);
+
     public StatsCache(string? baseDir = null) =>
         _baseDir = baseDir ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -25,6 +32,10 @@ public sealed class StatsCache
         {
             var path = FilePath(patch, championKey, gameMode, position);
             if (!File.Exists(path))
+                return false;
+            // Caducidad por timestamp del archivo: tolera cachés viejas sin cambiar el
+            // formato de serialización (una entrada rancia es un miss, se re-consulta).
+            if (DateTime.UtcNow - File.GetLastWriteTimeUtc(path) > MaxAge)
                 return false;
             stats = JsonSerializer.Deserialize<ChampionBuildStats>(File.ReadAllText(path));
             return stats is not null;
