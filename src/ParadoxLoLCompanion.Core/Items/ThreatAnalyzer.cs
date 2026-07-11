@@ -126,9 +126,16 @@ public sealed class ThreatAnalyzer
             // Perfil de daño observado (kit + compras) para el tipo de resistencia anti-burst.
             var enemyDamage = phys >= 0.6 ? DamageProfile.Physical
                 : phys <= 0.4 ? DamageProfile.Magical : DamageProfile.Mixed;
-            if (champ?.HasTag("Assassin") == true && w > topBurstW)
+            // Burst: asesinos a peso pleno; magos (burst mágico de ARAM) a peso reducido,
+            // salvo los de DPS sostenido. Un Veigar fed ya no es invisible al anti-burst.
+            var burstFactor = champ?.HasTag("Assassin") == true ? 1.0
+                : champ?.HasTag("Mage") == true && !_config.SustainedDpsMages.Contains(champ.Key)
+                    ? _config.MageBurstFactor
+                    : 0.0;
+            var burstW = w * burstFactor;
+            if (burstW > topBurstW)
             {
-                topBurstW = w;
+                topBurstW = burstW;
                 topBurst = label;
                 burstDamage = enemyDamage;
             }

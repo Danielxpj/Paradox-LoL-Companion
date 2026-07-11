@@ -233,6 +233,11 @@ public sealed class ItemsConfig
     public double SellFitRatioThreshold { get; set; } = 0.5;
     /// <summary>Peso relativo al promedio desde el cual un asesino se considera "fed".</summary>
     public double BurstThreshold { get; set; } = 1.6;
+    /// <summary>Peso relativo del burst de un mago vs. un asesino: en ARAM el burst dominante suele ser un mago fed (Veigar/Syndra/Lux), invisible si solo miramos el tag Assassin.</summary>
+    public double MageBurstFactor { get; set; } = 0.8;
+    /// <summary>Magos de DPS sostenido (no burst): excluidos de la detección de burst mágico.</summary>
+    public List<string> SustainedDpsMages { get; set; } = new()
+        { "Cassiopeia", "Karthus", "Malzahar", "Vladimir", "Ryze", "Kayle", "Swain", "Singed" };
     /// <summary>Cantidad de campeones con CC pesado que sugiere botas Mercurio.</summary>
     public int CcCountForMercs { get; set; } = 2;
 

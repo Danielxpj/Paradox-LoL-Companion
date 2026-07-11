@@ -108,6 +108,21 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void FedMage_ProducesBurstThreat_NotJustAssassins()
+    {
+        // Un mago fed (no asesino) es el burst dominante de ARAM: debe producir Burst > 0,
+        // no quedar invisible como en la v3 (que solo miraba el tag Assassin).
+        var state = TestCatalog.State(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Karma", "CHAOS", 12, new int[0]),
+            ("Soraka", "CHAOS", 0, new int[0]),
+            ("Vayne", "CHAOS", 0, new int[0]));
+
+        var threat = Analyzer().Analyze(state);
+        Assert.True(threat.Burst > 0.05, $"burst={threat.Burst}");
+    }
+
+    [Fact]
     public void MixedChampion_WithFullApItems_ReadsAsMagical()
     {
         // Leona (kit Mixto) que compró full AP: el split lee su daño REAL (mágico), no se
