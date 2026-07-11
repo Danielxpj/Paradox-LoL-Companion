@@ -103,7 +103,7 @@ internal static class TestCatalog
         "223069": { "name":"Void Immolation","gold":{"total":6000,"purchasable":true},"tags":["Health","Armor","SpellBlock","Aura"],"maps":{"11":false,"12":true},"stats":{"FlatHPPoolMod":650,"FlatArmorMod":60,"FlatSpellBlockMod":60} },
         "663172": { "name":"Zephyr","gold":{"total":2800,"purchasable":true},"tags":["Damage","AttackSpeed"],"maps":{"11":true,"12":false},"stats":{"FlatPhysicalDamageMod":40,"PercentAttackSpeedMod":0.5} },
 
-        "3111": { "name":"Mercury's Treads","gold":{"total":1100,"purchasable":true},"tags":["Boots","SpellBlock","Tenacity"],"maps":{"11":true,"12":true},"into":["3173"],"from":["1001","1033"],"depth":2,"stats":{"FlatSpellBlockMod":25} },
+        "3111": { "name":"Mercury's Treads","description":"Passive: grants Tenacity","gold":{"total":1100,"purchasable":true},"tags":["Boots","SpellBlock","Tenacity"],"maps":{"11":true,"12":true},"into":["3173"],"from":["1001","1033"],"depth":2,"stats":{"FlatSpellBlockMod":25} },
         "3173": { "name":"Forever Forward","gold":{"total":1850,"purchasable":true},"tags":["Boots","SpellBlock","Tenacity"],"maps":{"11":true,"12":false},"from":["3111"],"depth":3,"stats":{"FlatSpellBlockMod":30} },
         "3047": { "name":"Plated Steelcaps","gold":{"total":1100,"purchasable":true},"tags":["Boots","Armor"],"maps":{"11":true,"12":true},"from":["1001","1029"],"depth":2,"stats":{"FlatArmorMod":20} },
         "3006": { "name":"Berserker's Greaves","gold":{"total":1100,"purchasable":true},"tags":["Boots","AttackSpeed"],"maps":{"11":true,"12":true},"from":["1001"],"depth":2,"stats":{"PercentAttackSpeedMod":0.35} },

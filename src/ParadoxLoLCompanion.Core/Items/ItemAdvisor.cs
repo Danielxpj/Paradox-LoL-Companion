@@ -32,6 +32,7 @@ public sealed class ItemAdvisor
     private const double AntiCritMag = 2.5;
     private const double AntiTankMag = 2.0;
     private const double HardEngageMag = 1.5;
+    private const double CcCounterMag = 2.0;
     private const double LifestealDevalMag = 0.6;
     private const double LethalityDevalMag = 0.6;
     // Prior estadístico (OP.GG): magnitud del bono por "esto es lo que compran los
@@ -630,6 +631,15 @@ public sealed class ItemAdvisor
         {
             offense += CleanseMag;
             reasons.Add($"cleanses the suppression from {threat.SuppressionName}");
+        }
+
+        // Anti-CC: contra una comp de CC pesado (wombo), limpieza (QSS/Mercurial) o
+        // tenacidad valen para TODOS los arquetipos, no solo AD (a diferencia de la regla
+        // de supresión, que sigue acotada a carries AD por naturaleza del kit).
+        if (threat.CcThreat > MuGate && (item.RemovesCc || item.GrantsTenacity))
+        {
+            offense += CcCounterMag * threat.CcThreat;
+            reasons.Add("cuts through the enemy crowd control");
         }
 
         // Anti-tanque: contra un equipo gordo tu daño quiere penetrar/on-hit, no rebotar.

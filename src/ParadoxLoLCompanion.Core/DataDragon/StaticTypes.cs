@@ -58,6 +58,8 @@ public sealed class StaticItem
     public bool BreaksShields { get; init; }
     /// <summary>Su pasiva reduce el daño crítico que recibes (Presagio de Randuin).</summary>
     public bool ReducesCritDamage { get; init; }
+    /// <summary>Otorga tenacidad (reduce la duración del control): útil vs. comps de CC pesado.</summary>
+    public bool GrantsTenacity { get; init; }
 
     /// <summary>
     /// Da letalidad (penetración plana): rinde contra squishies, NO contra tanques —

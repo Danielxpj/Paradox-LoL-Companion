@@ -66,6 +66,8 @@ public sealed record TeamThreat
     public double EnemyAntiHeal { get; init; }
     /// <summary>Cuánta vida+resistencias acumuló el enemigo → tu ofensiva quiere penetración/on-hit.</summary>
     public double EnemyTankiness { get; init; }
+    /// <summary>Cuánto CC pesado apila el enemigo (wombo): tenacidad y limpieza suben para todos.</summary>
+    public double CcThreat { get; init; }
 
     public static TeamThreat None { get; } = new();
 }

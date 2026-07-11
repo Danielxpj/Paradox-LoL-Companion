@@ -94,6 +94,8 @@ public sealed class ItemsConfig
         { "from critical strikes", "de los golpes críticos", "de golpes críticos" };
     /// <summary>Detecta items de letalidad (pen plana: mata squishies, no tanques).</summary>
     public List<string> LethalityKeywords { get; set; } = new() { "Lethality", "letalidad" };
+    /// <summary>Detecta items que otorgan tenacidad (reducen la duración del control): en + es.</summary>
+    public List<string> TenacityKeywords { get; set; } = new() { "Tenacity", "Tenacidad" };
 
     /// <summary>
     /// Items de dupla/soporte (escudan o potencian a un aliado): solo tienen sentido

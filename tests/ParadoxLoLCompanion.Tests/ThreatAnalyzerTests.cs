@@ -146,6 +146,27 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void HeavyCcComp_RaisesCcThreat()
+    {
+        // Comp de CC pesado (wombo): el grado CcThreat sube para pedir tenacidad/limpieza.
+        var state = TestCatalog.State(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Leona", "CHAOS", 0, new int[0]),
+            ("Amumu", "CHAOS", 0, new int[0]),
+            ("Malzahar", "CHAOS", 0, new int[0]));
+
+        var threat = Analyzer().Analyze(state);
+        Assert.True(threat.CcThreat > 0.5, $"ccThreat={threat.CcThreat}");
+    }
+
+    [Fact]
+    public void TenacityKeyword_SetsGrantsTenacityFlag()
+    {
+        // La detección por keyword ("Tenacity"/"Tenacidad") marca items de tenacidad.
+        Assert.True(TestCatalog.Catalog().ItemById(3111)!.GrantsTenacity);
+    }
+
+    [Fact]
     public void EnemyIgnite_RaisesAntiHeal()
     {
         // Un enemigo con Ignite aplica Heridas Graves desde el minuto 0: EnemyAntiHeal debe

@@ -181,11 +181,12 @@ public class ItemAdvisorTests
     [Fact]
     public void StackedArmor_TriggersArmorPenetration()
     {
-        // Zed (asesino físico) vs enemigos con 160 de armadura comprada.
+        // Zed (asesino físico) vs enemigos con 160 de armadura comprada. Portadores sin CC
+        // pesado ni curación (Vayne/Pyke) para aislar la penetración del bono anti-CC.
         var state = TestCatalog.State(5000,
             ("Zed", "ORDER", 0, None),
-            ("Leona", "CHAOS", 0, new[] { 3075, 1029 }),
-            ("Amumu", "CHAOS", 0, new[] { 3068 }));
+            ("Vayne", "CHAOS", 0, new[] { 3075, 1029 }),
+            ("Pyke", "CHAOS", 0, new[] { 3068 }));
         var plan = Advisor().Advise(state)!;
 
         var top = plan.Top!;
@@ -647,6 +648,25 @@ public class ItemAdvisorTests
         var top = Advisor().Advise(coreState)!.Top!;
         Assert.True(top.Category is RecommendationCategory.Core or RecommendationCategory.Spike,
             $"esperaba Core/Spike, fue {top.Category}");
+    }
+
+    [Fact]
+    public void CcCounter_RecommendedVsHeavyCc_WithoutSuppressor()
+    {
+        // Comp de CC pesado sin supresor (Leona+Amumu): la regla de supresión NO dispara,
+        // pero el grado CcThreat sí — un item de limpieza sube por "crowd control".
+        var state = TestCatalog.State(20000,
+            ("Jinx", "ORDER", 0, None),
+            ("Leona", "CHAOS", 0, None),
+            ("Amumu", "CHAOS", 0, None),
+            ("Zed", "CHAOS", 0, None));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 10 });
+
+        var plan = advisor.Advise(state)!;
+
+        Assert.Contains(plan.Recommendations,
+            r => r.Reasons.Any(reason => reason.Contains("crowd control")));
     }
 
     [Fact]
