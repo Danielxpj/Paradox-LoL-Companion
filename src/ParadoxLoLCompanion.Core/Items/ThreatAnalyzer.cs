@@ -92,7 +92,7 @@ public sealed class ThreatAnalyzer
             // Modificador ARAM de daño HECHO (Riot lo aplica; ddragon no lo expone): un
             // campeón nerfeado en ARAM aporta menos amenaza; uno buffeado, más.
             if (isAram && champ is not null
-                && _config.AramBalance.TryGetValue(champ.Key, out var aramMod))
+                && _config.AramBalance?.TryGetValue(champ.Key, out var aramMod) == true)
                 w *= aramMod.Dealt;
             totalW += w;
 

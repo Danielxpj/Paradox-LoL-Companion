@@ -251,6 +251,30 @@ public class ItemAdvisorStatsTests
     }
 
     [Fact]
+    public void Boots_MidSample_OpggStillWins()
+    {
+        // Muestra media (350 partidas, sobre el piso de 300): la meta de op.gg gana, no cae
+        // en la zona muerta [300,410] que dejaba el gate viejo (Ramp > MuGate).
+        var state = TestCatalog.State(2000,
+            ("Jinx", "ORDER", 0, NoItems),
+            ("Malzahar", "CHAOS", 0, NoItems),
+            ("Leona", "CHAOS", 0, NoItems),
+            ("Amumu", "CHAOS", 0, NoItems));
+        var stats = new ChampionBuildStats
+        {
+            ChampionKey = "Jinx",
+            GameMode = "ranked",
+            Position = "adc",
+            Boots = new ItemSetStats(new[] { 3020 }, PickRate: 0.62, Play: 350, Win: 190),
+        };
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var plan = advisor.Advise(state, stats: stats)!;
+
+        Assert.Equal(3020, plan.Boots!.Boots.Id);   // Sorcerer's (op.gg), no Mercs por amenaza
+    }
+
+    [Fact]
     public void Boots_TrivialSample_FallsBackToThreat()
     {
         // Muestra de op.gg trivial (día 1 de parche, 40 partidas): NO debe pisar la amenaza

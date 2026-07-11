@@ -146,6 +146,21 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
+    public void AramBalance_NullConfig_DoesNotThrow()
+    {
+        // Un config con "aramBalance": null (editado a mano) no debe romper el análisis
+        // en vivo — el lookup está null-guardado.
+        var cfg = new ParadoxLoLCompanion.Core.Config.ItemsConfig { AramBalance = null! };
+        var analyzer = new ThreatAnalyzer(TestCatalog.Catalog(), cfg);
+        var state = TestCatalog.AramState(0,
+            ("Jinx", "ORDER", 0, new int[0]),
+            ("Zed", "CHAOS", 0, new int[0]));
+
+        var ex = Record.Exception(() => analyzer.Analyze(state));
+        Assert.Null(ex);
+    }
+
+    [Fact]
     public void AramBalance_NerfedEnemyContributesLessThreat()
     {
         // Modificador ARAM de daño hecho: un campeón nerfeado (Zed a 0.5) pesa menos que

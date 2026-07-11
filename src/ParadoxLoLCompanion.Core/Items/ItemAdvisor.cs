@@ -94,9 +94,6 @@ public sealed class ItemAdvisor
         var isAram = state.GameData.MapNumber == 12
             || string.Equals(state.GameData.GameMode, "ARAM", StringComparison.OrdinalIgnoreCase);
         var mapNumber = isAram ? 12 : state.GameData.MapNumber == 0 ? 11 : state.GameData.MapNumber;
-        var sustainThreshold = isAram
-            ? _config.SustainThreshold * _config.AramSustainThresholdFactor
-            : _config.SustainThreshold;
         var affordMag = isAram ? _config.AramAffordabilityBonus : _config.AffordabilityBonus;
 
         // El arquetipo sale del inventario real: si vas Garen tanque (o vendés todo y
@@ -334,7 +331,7 @@ public sealed class ItemAdvisor
             threat,
             recommendations,
             BootsFor(me, profile, threat, mapNumber, stats, ownedIds, gold),
-            SellSuggestions(me, profile, threat, weights, sustainThreshold,
+            SellSuggestions(me, profile, threat, weights,
                 recommendations.Count > 0 ? recommendations[0] : null, inventoryFull),
             StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats, gold),
             ShopAlertFor(me, isAram, recommendations))
@@ -496,7 +493,7 @@ public sealed class ItemAdvisor
     /// </summary>
     private List<SellSuggestion> SellSuggestions(
         Player me, ChampionProfile profile, TeamThreat threat,
-        IReadOnlyDictionary<string, double> myWeights, double sustainThreshold,
+        IReadOnlyDictionary<string, double> myWeights,
         ItemRecommendation? top, bool inventoryFull)
     {
         var allWeights = ArchetypeWeights.All
@@ -557,7 +554,9 @@ public sealed class ItemAdvisor
                 continue;
 
             // Salvaguardas: aunque no pegue con la build, cumple un rol situacional.
-            if (item.AppliesGrievousWounds && threat.SustainScore >= sustainThreshold)
+            // Mismo cruce difuso que el lado de compra (S1): no vender un anti-heal mientras
+            // el grado de sustain esté activo, para que comprar/mantener no se contradigan.
+            if (item.AppliesGrievousWounds && threat.Sustain > MuGate)
                 continue;
             if (item.RemovesCc && threat.HasSuppression)
                 continue;
@@ -921,8 +920,9 @@ public sealed class ItemAdvisor
         var value = item.AttackDamage * 35 + item.AbilityPower * 21.75
                   + item.Armor * 20 + item.SpellBlock * 18 + item.Health * 2.67
                   + item.AttackSpeedPct * 2500 + item.CritChance * 4000 * (1 - critWaste)
-                  + item.Mana * 1.4 + item.MoveSpeed * 12 + item.LifeStealPct * 3750
-                  + item.HealthRegen * 3;
+                  + item.Mana * 1.4 + item.MoveSpeed * 12 + item.LifeStealPct * 3750;
+        // HealthRegen se omite a propósito: ddragon reporta FlatHPRegenMod como % de la regen
+        // base (no HP/5), así que un valor-oro por-HP5 lo malmediría. Su peso es chico igual.
         return value / Math.Max(item.GoldTotal, 1);
     }
 
@@ -1016,8 +1016,7 @@ public sealed class ItemAdvisor
         // La meta manda para CUALQUIER muestra real; solo se cierra el hueco de muestra
         // trivial (día 1 de parche, un puñado de partidas) con la misma rampa de confianza
         // por juego que ya tienen los priors de items — no es un árbitro amenaza-vs-meta.
-        if (stats?.Boots is { } statBoots
-            && Fuzzy.Ramp(statBoots.Play, StatPlayFoot, StatPlayShoulder) > MuGate)
+        if (stats?.Boots is { } statBoots && statBoots.Play >= StatPlayFoot)
         {
             var popular = statBoots.ItemIds
                 .Select(id => candidates.FirstOrDefault(c => c.Id == id))

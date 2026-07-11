@@ -194,4 +194,25 @@ public class DataDragonTests
         var withoutFull = DataDragonCatalog.FromJson("16.13.1", champions, items);
         Assert.False(withoutFull.ChampionByKey("Milio")!.HealsAllies);
     }
+
+    [Fact]
+    public void ChampionFull_KeywordFlags_DoNotFalsePositive()
+    {
+        // Las frases específicas evitan falsos positivos: "Restores Mana" no es curación,
+        // "oscura" no contiene "cura a un aliado", "shields nothing" no otorga escudos.
+        const string champions = """
+        { "data": { "Ryze": { "id":"Ryze","key":"13","name":"Ryze","tags":["Mage"],"info":{"attack":2,"defense":2,"magic":8} } } }
+        """;
+        const string items = """ { "data": {} } """;
+        const string full = """
+        { "data": { "Ryze": { "id":"Ryze",
+            "passive": { "description":"Restores 20 Mana." },
+            "spells": [ { "description":"A dark bolt (oscura) that shields nothing." } ] } } }
+        """;
+
+        var catalog = DataDragonCatalog.FromJson("16.13.1", champions, items, null, full);
+        var ryze = catalog.ChampionByKey("Ryze")!;
+        Assert.False(ryze.HealsAllies, "'Restores Mana'/'oscura' no deberían marcar curación");
+        Assert.False(ryze.GrantsShields, "'shields nothing' no debería marcar escudos");
+    }
 }

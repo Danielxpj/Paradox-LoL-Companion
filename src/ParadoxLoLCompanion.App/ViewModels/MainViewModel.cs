@@ -386,6 +386,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         DetachAndStopLiveSource();
         _lastGameState = null;
+        _previousTopIds = null;
         ResetBuildRole();
 
         _liveSource = replay
@@ -904,6 +905,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             _inGame = false;
             _lastGameState = null; // sin partida: que el reset no recalcule sobre datos viejos
+            _previousTopIds = null; // la histéresis no debe filtrarse a la próxima partida
             ResetBuildRole();
             UpdateContext();
         }

@@ -98,15 +98,23 @@ public sealed class ItemsConfig
     public List<string> TenacityKeywords { get; set; } = new() { "Tenacity", "Tenacidad" };
 
     // Keywords para derivar flags de KIT desde el texto de spells/pasiva (championFull.json).
-    // Conservadores a propósito (el texto es ruidoso): son unión con las listas curadas.
+    // FRASES específicas a propósito: el texto es ruidoso y el matching es por substring, así
+    // que "restore health" (no "restore", que pega en "Restores Mana") y "cura a un aliado"
+    // (no "cura", substring de "oscura"). Son unión con las listas curadas (nunca las quitan),
+    // así que un falso NEGATIVO lo cubre la lista curada; un falso positivo daría consejo malo.
     public List<string> HealKeywords { get; set; } = new()
-        { "restore", "restores", "healing", "heals for", "restaura", "cura", "curación" };
+    {
+        "restore health", "restores health", "healing to allies", "heal an ally", "heals an ally",
+        "heals allies", "restaura la vida", "restaura vida", "cura a un aliado", "cura a los aliados",
+    };
     public List<string> ShieldKitKeywords { get; set; } = new()
-        { "shields", "grant a shield", "grants a shield", "otorga un escudo", "escuda" };
+        { "grant a shield", "grants a shield", "shield an ally", "shields an ally", "shields allies",
+          "otorga un escudo", "concede un escudo", "escuda a un aliado" };
     public List<string> SuppressionKitKeywords { get; set; } = new()
-        { "suppress", "suppresses", "suppression", "suprime", "supresión", "supresion" };
+        { "suppress", "suppresses", "suppressing", "suppression", "suprime", "supresión", "supresion" };
     public List<string> PercentHpTrueKeywords { get; set; } = new()
-        { "maximum health", "max health", "true damage", "vida máxima", "vida maxima", "daño verdadero", "dano verdadero" };
+        { "maximum health as", "of their maximum health", "target's maximum health",
+          "of maximum health", "true damage", "de la vida máxima", "daño verdadero", "dano verdadero" };
 
     /// <summary>
     /// Items de dupla/soporte (escudan o potencian a un aliado): solo tienen sentido
