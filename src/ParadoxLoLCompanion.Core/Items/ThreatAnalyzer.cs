@@ -108,8 +108,11 @@ public sealed class ThreatAnalyzer
                 adGold += (item.AttackDamage * 35 + item.AttackSpeedPct * 2500 + item.CritChance * 4000) * count;
                 apGold += item.AbilityPower * 21.75 * count;
             }
-            if (holdsGw)
-                gwHolderW += w;
+            // Grado de anti-heal enemigo por enemigo, como MÁXIMO (no suma): un item de GW
+            // vale 1; Ignite (SummonerDot) medio — un enemigo con ambos no cuenta 1.5.
+            var gwDeg = Math.Max(holdsGw ? 1.0 : 0.0, HasSpell(enemy, "SummonerDot") ? 0.5 : 0.0);
+            if (gwDeg > 0)
+                gwHolderW += w * gwDeg;
 
             // Split de daño: prior del kit mezclado con lo que REALMENTE compró. Un "Mixed"
             // que fue full-AP deja de contar 50/50; un kit sesgado se corrige menos (tope 0.5
@@ -140,24 +143,17 @@ public sealed class ThreatAnalyzer
             if (phys >= 0.5 && w * phys > topPhysW) { topPhysW = w * phys; topPhys = label; }
             if (phys <= 0.5 && w * (1 - phys) > topMagW) { topMagW = w * (1 - phys); topMag = label; }
 
+            // Sustain por enemigo, capado a 1: el kit curador (SustainDegree) o el hechizo
+            // Heal suman, pero un enemigo nunca aporta más que su propio peso (sin esto,
+            // healer + Heal daría 1.35*w y sustainScore se saldría de [0,1]).
             var sustainDeg = SustainDegree(enemy, champ);
+            if (HasSpell(enemy, "SummonerHeal") || HasSpell(enemy, "SummonerBoostedHeal"))
+                sustainDeg = Math.Min(1.0, sustainDeg + 0.35);
             if (sustainDeg > 0)
             {
                 var sw = w * sustainDeg;
                 sustain += sw;
                 if (sw > topSustainW) { topSustainW = sw; topSustain = label; }
-            }
-
-            // Hechizos de invocador: Ignite aplica 40% de Heridas Graves desde el minuto 0
-            // (comunísimo en ARAM), mucho antes de un Oblivion Orb — a medio peso (un solo
-            // objetivo, cooldown largo vs. un item). Heal cuenta como sustain menor.
-            if (HasSpell(enemy, "SummonerDot"))
-                gwHolderW += 0.5 * w;
-            if (HasSpell(enemy, "SummonerHeal") || HasSpell(enemy, "SummonerBoostedHeal"))
-            {
-                var hw = w * 0.35;
-                sustain += hw;
-                if (hw > topSustainW) { topSustainW = hw; topSustain = label; }
             }
 
             // Perfil de daño observado (kit + compras) para el tipo de resistencia anti-burst.
@@ -301,10 +297,13 @@ public sealed class ThreatAnalyzer
     /// Empareja un nombre de evento (KillerName/VictimName, que la API entrega como nombre
     /// de invocador o game-name del Riot ID) con un jugador, sin distinguir mayúsculas.
     /// </summary>
-    /// <summary>Alguno de los dos hechizos de invocador del jugador contiene la clave estable dada.</summary>
+    /// <summary>
+    /// Alguno de los dos hechizos de invocador del jugador contiene la clave estable dada.
+    /// Tolera nulls: la Live Client API puede mandar summonerSpells/rawDisplayName en null.
+    /// </summary>
     private static bool HasSpell(Player p, string rawKey) =>
-        p.SummonerSpells.SummonerSpellOne.RawDisplayName.Contains(rawKey, StringComparison.OrdinalIgnoreCase)
-        || p.SummonerSpells.SummonerSpellTwo.RawDisplayName.Contains(rawKey, StringComparison.OrdinalIgnoreCase);
+        ((p.SummonerSpells?.SummonerSpellOne?.RawDisplayName ?? "").Contains(rawKey, StringComparison.OrdinalIgnoreCase))
+        || ((p.SummonerSpells?.SummonerSpellTwo?.RawDisplayName ?? "").Contains(rawKey, StringComparison.OrdinalIgnoreCase));
 
     private static bool NameMatches(string? eventName, Player p) =>
         !string.IsNullOrEmpty(eventName)

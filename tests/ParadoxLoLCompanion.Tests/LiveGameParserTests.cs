@@ -88,6 +88,30 @@ public class LiveGameParserTests
     }
 
     [Fact]
+    public void Parse_Normalizes_NullSummonerSpells()
+    {
+        // La API puede mandar summonerSpells (o un hechizo / rawDisplayName) en null:
+        // el pipeline de amenaza no debe romper (antes: NPE que tiraba el tick entero).
+        const string json = """
+        {
+          "activePlayer": { "summonerName": "Me" },
+          "allPlayers": [
+            { "championName": "Ahri", "summonerName": "Me", "team": "ORDER" },
+            { "championName": "Zed", "summonerName": "Zed", "team": "CHAOS", "summonerSpells": null },
+            { "championName": "Jinx", "summonerName": "Jinx", "team": "CHAOS",
+              "summonerSpells": { "summonerSpellOne": null, "summonerSpellTwo": { "rawDisplayName": null } } }
+          ],
+          "gameData": { "gameMode": "ARAM", "mapNumber": 12 }
+        }
+        """;
+        var state = LiveGameParser.Parse(json);
+
+        var analyzer = new ParadoxLoLCompanion.Core.Items.ThreatAnalyzer(TestCatalog.Catalog());
+        var threat = analyzer.Analyze(state);   // no debe lanzar
+        Assert.True(threat.HasEnemies);
+    }
+
+    [Fact]
     public void ActivePlayerEntry_MatchesByRiotId_WhenSummonerNameEmpty()
     {
         // Parche nuevo: summonerName vacío, se empareja por riotId.

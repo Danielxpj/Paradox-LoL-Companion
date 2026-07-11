@@ -35,6 +35,9 @@ public static class LiveGameParser
         {
             p.Items ??= new();
             p.Scores ??= new();
+            p.SummonerSpells ??= new();
+            p.SummonerSpells.SummonerSpellOne ??= new();
+            p.SummonerSpells.SummonerSpellTwo ??= new();
         }
         return state;
     }
