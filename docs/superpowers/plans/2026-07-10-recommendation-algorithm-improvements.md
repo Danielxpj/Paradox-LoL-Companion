@@ -8,7 +8,14 @@
 
 **Tech Stack:** C# / .NET 10 (WPF app), xUnit, Data Dragon, Live Client API, op.gg vía MCP.
 
-**Estado:** ⚠️ **Este plan NO se implementa en esta sesión** (directiva del usuario: descubrir y planificar, sin implementar). La Fase 0 está a nivel de tarea TDD completa; las Fases 1–4 son briefs de diseño con fórmulas y puntos de inserción exactos — cada fase debe convertirse en su propio plan ejecutable (superpowers:writing-plans) al momento de implementarla.
+**Estado:** ✅ **IMPLEMENTADO (2026-07-11), release v2.0.** Fases 0–4 implementadas por TDD sobre la base verde de 267 tests → **309 tests verdes**, la app WPF compila limpia. Tres pasadas de revisión adversarial (Fase 0, Fase 2, Fases 3–4) encontraron y se corrigieron: NPE por summonerSpells null, over-count de sustain/anti-heal, falsos positivos de keywords de kit (D5), unidad de HealthRegen, fuga de histéresis entre partidas (S6), NPE de config null (D6), zona muerta de botas (D4) y varios cruces difusos.
+
+**Diferido con justificación (no bloqueante para v2.0):**
+- **S5 — Priority desde puntaje sin boost:** las recomendaciones se muestran en orden de puntaje CON boost, así que las prioridades deben seguir ese orden (una prioridad basada en el puntaje sin boost sería no-monótona). Solo se implementó la parte de Category desde componentes limpios.
+- **S7 parte 2 — fit por valor (statFit) en vez de conteo de tags:** "el mayor reordenamiento del plan"; necesita la vara de medición H2 con corpus real antes de recalibrar a ciegas. Se implementó la parte 1 (valuación de maná/MS/lifesteal en la eficiencia).
+- **H1 — corpus de partidas reales** y las métricas agreement@3 / churn de H2: requieren grabar partidas ARAM reales (no fabricables autónomamente). Se implementó la métrica counter-responsiveness (barridos sintéticos, sin corpus).
+- **D6 — lado "taken" (durabilidad propia):** solo se implementó el lado "dealt" (amenaza enemiga).
+- **Fase 5 (G1–G3):** ángulos de descubrimiento, fuera del alcance de implementación (requieren sus propias sesiones de diseño).
 
 ---
 
