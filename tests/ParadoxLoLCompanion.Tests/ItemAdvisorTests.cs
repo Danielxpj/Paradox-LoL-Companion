@@ -1,3 +1,4 @@
+using ParadoxLoLCompanion.Core.Config;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
 
@@ -626,6 +627,30 @@ public class ItemAdvisorTests
         var top = Advisor().Advise(coreState)!.Top!;
         Assert.True(top.Category is RecommendationCategory.Core or RecommendationCategory.Spike,
             $"esperaba Core/Spike, fue {top.Category}");
+    }
+
+    [Fact]
+    public void ExclusiveGroup_NotPoisoned_ByGwSkippedItem()
+    {
+        // Tirador vs comp que cura (Warwick+Aatrox): Grievous Edge (GW, mayor fit de
+        // tirador) supera por fit a Recordatorio Mortal y toma el cupo de Heridas Graves;
+        // Recordatorio Mortal (GW + grupo Last Whisper) se saltea por gwTaken — y NO debe
+        // marcar el grupo y bloquear a Lord Dominik's (mismo grupo, alto fit). Con la
+        // corrección, un item GW salteado ya no envenena su grupo y Lord Dominik's entra.
+        var state = TestCatalog.AramState(20000,
+            ("Jinx", "ORDER", 0, None),
+            ("Warwick", "CHAOS", 0, None),
+            ("Aatrox", "CHAOS", 0, None),
+            ("Zed", "CHAOS", 0, None));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 10 });
+
+        var plan = advisor.Advise(state)!;
+
+        var names = plan.Recommendations.Select(r => r.Item.Name).ToList();
+        Assert.Contains("Grievous Edge", names);             // el GW que sí entró
+        Assert.DoesNotContain("Mortal Reminder", names);     // cupo GW ya tomado
+        Assert.Contains("Lord Dominik's Regards", names);    // NO bloqueado por el grupo
     }
 
     /// <summary>Ayuda de test: busca el puntaje de un item por id en un plan (0 si no está).</summary>

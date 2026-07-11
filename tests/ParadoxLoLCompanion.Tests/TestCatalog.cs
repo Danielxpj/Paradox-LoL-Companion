@@ -13,7 +13,8 @@ namespace ParadoxLoLCompanion.Tests;
 /// (items de modos/perks: ddragon los marca comprables en un mapa pero no tienen árbol
 /// de construcción), 3173 (botas tier 3 de Hazañas de Fuerza, mejora de 3111) y
 /// 3135/3137/8010 (grupo "límite de 1" del Vacío: sin pasiva compartida ni componente
-/// común entre los tres — la exclusividad no se puede derivar de ddragon).
+/// común entre los tres — la exclusividad no se puede derivar de ddragon) y 6699 (item
+/// de Heridas Graves solo-ARAM con alto fit de tirador, para test del grupo excluyente).
 /// </summary>
 internal static class TestCatalog
 {
@@ -63,6 +64,7 @@ internal static class TestCatalog
         "3031": { "name":"Infinity Edge","gold":{"total":3400,"purchasable":true},"tags":["Damage","CriticalStrike"],"maps":{"11":true,"12":true},"from":["1038","1018"],"depth":3,"stats":{"FlatPhysicalDamageMod":65,"FlatCritChanceMod":0.25} },
         "3033": { "name":"Mortal Reminder","description":"Passive: inflicts Grievous Wounds","gold":{"total":3300,"purchasable":true},"tags":["Damage","CriticalStrike","ArmorPenetration"],"maps":{"11":true,"12":true},"from":["3123","1018","1036"],"depth":3,"stats":{"FlatPhysicalDamageMod":35,"FlatCritChanceMod":0.25} },
         "3036": { "name":"Lord Dominik's Regards","gold":{"total":3100,"purchasable":true},"tags":["Damage","CriticalStrike","ArmorPenetration"],"maps":{"11":true,"12":true},"from":["1038","1018"],"depth":3,"stats":{"FlatPhysicalDamageMod":35,"FlatCritChanceMod":0.25} },
+        "6699": { "name":"Grievous Edge","description":"Passive: inflicts Grievous Wounds","gold":{"total":3400,"purchasable":true},"tags":["Damage","CriticalStrike","AttackSpeed"],"maps":{"11":false,"12":true},"from":["1038","1018"],"depth":3,"stats":{"FlatPhysicalDamageMod":45,"FlatCritChanceMod":0.25,"PercentAttackSpeedMod":0.20} },
         "3089": { "name":"Rabadon's Deathcap","gold":{"total":3600,"purchasable":true},"tags":["SpellDamage"],"maps":{"11":true,"12":true},"from":["1058","1052"],"depth":3,"stats":{"FlatMagicDamageMod":130} },
         "3135": { "name":"Void Staff","gold":{"total":3000,"purchasable":true},"tags":["SpellDamage","MagicPenetration"],"maps":{"11":true,"12":true},"from":["4630","1026"],"depth":3,"stats":{"FlatMagicDamageMod":95} },
         "3137": { "name":"Cryptbloom","description":"<mainText><passive>Life from Death</passive><br>When a champion that you damaged dies, a nova heals allies.</mainText>","gold":{"total":2850,"purchasable":true},"tags":["SpellDamage","MagicPenetration","AbilityHaste"],"maps":{"11":true,"12":true},"from":["4630","1052"],"depth":3,"stats":{"FlatMagicDamageMod":75} },

@@ -243,8 +243,12 @@ public sealed class ItemAdvisor
         {
             if (recommendations.Count >= _config.MaxRecommendations)
                 break;
+            // Chequeos PUROS primero; el estado (nombre/grupo/pasivas/GW) se marca recién
+            // cuando el item pasa TODAS las puertas — un item salteado (p.ej. un segundo
+            // item de Heridas Graves) no debe envenenar el grupo excluyente de los que
+            // vienen detrás y bloquear una recomendación válida (Lord Dominik's).
             // Nunca dos recomendaciones con el mismo nombre (ids duplicados del catálogo).
-            if (!recommendedNames.Add(item.Name))
+            if (recommendedNames.Contains(item.Name))
                 continue;
             // Ni dos items del mismo grupo excluyente (misma pasiva con nombre): dos
             // Hidras, dos Lifeline, dos Immolate… no pueden convivir en una build.
@@ -252,8 +256,8 @@ public sealed class ItemAdvisor
                 continue;
             // Ni dos del mismo grupo "límite de 1" de la config: comprar el primero
             // vuelve ilegal al segundo (Void Staff / Cryptbloom / Bloodletter's Curse).
-            if (ExclusiveGroupOf(item) is >= 0 and var rankedGroup
-                && !takenExclusiveGroups.Add(rankedGroup))
+            var rankedGroup = ExclusiveGroupOf(item);
+            if (rankedGroup >= 0 && takenExclusiveGroups.Contains(rankedGroup))
                 continue;
             if (item.AppliesGrievousWounds)
             {
@@ -263,6 +267,9 @@ public sealed class ItemAdvisor
                     continue;
                 gwTaken = true;
             }
+            recommendedNames.Add(item.Name);
+            if (rankedGroup >= 0)
+                takenExclusiveGroups.Add(rankedGroup);
             takenPassives.UnionWith(item.PassiveNames);
 
             if (reasons.Count == 0)
