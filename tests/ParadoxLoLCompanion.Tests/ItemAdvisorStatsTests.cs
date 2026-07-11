@@ -202,6 +202,33 @@ public class ItemAdvisorStatsTests
         Boots = new ItemSetStats(bootIds, PickRate: 0.62, Play: 9000, Win: 4700),
     };
 
+    private static ChampionBuildStats BootsStatsLowSample(params int[] bootIds) => new()
+    {
+        ChampionKey = "Jinx",
+        GameMode = "ranked",
+        Position = "adc",
+        Boots = new ItemSetStats(bootIds, PickRate: 0.62, Play: 40, Win: 25),   // muestra trivial
+    };
+
+    [Fact]
+    public void Boots_TrivialSample_FallsBackToThreat()
+    {
+        // Muestra de op.gg trivial (día 1 de parche, 40 partidas): NO debe pisar la amenaza
+        // (Malzahar+Leona+Amumu → Mercs). La regla "la meta manda" solo vale con datos reales.
+        var state = TestCatalog.State(2000,
+            ("Jinx", "ORDER", 0, NoItems),
+            ("Malzahar", "CHAOS", 0, NoItems),
+            ("Leona", "CHAOS", 0, NoItems),
+            ("Amumu", "CHAOS", 0, NoItems));
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var plan = advisor.Advise(state, stats: BootsStatsLowSample(3020))!;
+
+        Assert.NotNull(plan.Boots);
+        Assert.Equal(3111, plan.Boots!.Boots.Id);   // Mercury's Treads (amenaza), no Sorcerer's
+        Assert.DoesNotContain("pick rate", plan.Boots.Reason);
+    }
+
     [Fact]
     public void Boots_OpggMetaWins_ThreatBecomesNote()
     {

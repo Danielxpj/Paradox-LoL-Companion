@@ -953,15 +953,20 @@ public sealed class ItemAdvisor
 
         // La meta manda: las botas que más compran los jugadores de tu campeón,
         // en el orden de op.gg (popularidad), no en el orden del catálogo.
-        if (stats?.Boots is { } statBoots)
+        // La meta manda para CUALQUIER muestra real; solo se cierra el hueco de muestra
+        // trivial (día 1 de parche, un puñado de partidas) con la misma rampa de confianza
+        // por juego que ya tienen los priors de items — no es un árbitro amenaza-vs-meta.
+        if (stats?.Boots is { } statBoots
+            && Fuzzy.Ramp(statBoots.Play, StatPlayFoot, StatPlayShoulder) > MuGate)
         {
             var popular = statBoots.ItemIds
                 .Select(id => candidates.FirstOrDefault(c => c.Id == id))
                 .FirstOrDefault(c => c is not null);
             if (popular is not null)
             {
+                var wr = statBoots.WinRate > 0 ? $", {Pct(statBoots.WinRate)} WR" : "";
                 var reason =
-                    $"most common boots on your champion ({Pct(statBoots.PickRate)} pick rate)";
+                    $"most common boots on your champion ({Pct(statBoots.PickRate)} pick rate{wr})";
                 if (threatPick is { } alt && alt.Boots.Id != popular.Id)
                     reason += $" — but {alt.Reason}: consider {alt.Boots.Name}";
                 return Advice(popular, reason);
