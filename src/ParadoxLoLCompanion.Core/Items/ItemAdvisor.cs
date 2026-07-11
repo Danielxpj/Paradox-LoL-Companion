@@ -79,7 +79,7 @@ public sealed class ItemAdvisor
     /// es del kit del campeón, no de la build).
     /// </summary>
     public ItemAdvicePlan? Advise(GameState state, BuildArchetype? forcedArchetype = null,
-        ChampionBuildStats? stats = null)
+        ChampionBuildStats? stats = null, IReadOnlyList<int>? previousTopIds = null)
     {
         if (!_data.IsLoaded)
             return null;
@@ -247,7 +247,12 @@ public sealed class ItemAdvisor
                 // faltante, en vez del salto multiplicativo ×1.25 que flipeaba el orden al
                 // cruzar cada umbral de compra (la mayor discontinuidad que quedaba en v3).
                 var afford = affordMag * Fuzzy.Ramp(gold, 0.5 * plan.RemainingCost, plan.RemainingCost);
-                var score = c.Score + afford;
+                // Histéresis: un pequeño bono al que ya estaba en el top el tick anterior,
+                // para que dos items casi empatados no intercambien rank con cada twitch de
+                // input (la "lista que tiembla"). Muy por debajo de cualquier counter.
+                var incumbent = previousTopIds is not null && previousTopIds.Contains(c.Item.Id)
+                    ? _config.HysteresisBonus : 0;
+                var score = c.Score + afford + incumbent;
                 return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan);
             })
             .OrderByDescending(c => c.Score)

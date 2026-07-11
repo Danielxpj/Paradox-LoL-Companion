@@ -677,6 +677,26 @@ public class ItemAdvisorTests
     }
 
     [Fact]
+    public void Hysteresis_GivesIncumbentRetentionBonus()
+    {
+        // El item que estaba en el top el tick anterior recibe un pequeño bono de retención,
+        // para que dos candidatos casi empatados no intercambien rank cada tick.
+        var players = new (string, string, int, int[])[]
+        {
+            ("Jinx", "ORDER", 0, None),
+            ("Zed", "CHAOS", 0, None),
+        };
+        var advisor = new ItemAdvisor(TestCatalog.Catalog(),
+            new ItemsConfig { MaxRecommendations = 20 });
+        var baseline = new StaticItemScore(advisor.Advise(TestCatalog.State(20000, players))!);
+        var withIncumbent = new StaticItemScore(
+            advisor.Advise(TestCatalog.State(20000, players), previousTopIds: new[] { 3153 })!);
+
+        var delta = withIncumbent.Of(3153) - baseline.Of(3153);   // BORK como incumbente
+        Assert.True(delta > 0.25 && delta <= 0.3 + 1e-6, $"bono de retención {delta}");
+    }
+
+    [Fact]
     public void AffordabilityNudge_IsBounded_ByAffordMag()
     {
         // El empujón por "alcanzable" nunca supera el máximo aditivo (0.8 ARAM): es un

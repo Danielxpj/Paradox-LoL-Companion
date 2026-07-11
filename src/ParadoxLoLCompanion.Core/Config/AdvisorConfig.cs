@@ -259,4 +259,6 @@ public sealed class ItemsConfig
     /// <summary>Empujón ADITIVO máximo por "casi lo alcanzás", que sube gradual con el oro (0.5·faltante → faltante): un desempate acotado, no un salto del 25% que aplasta counters.</summary>
     public double AramAffordabilityBonus { get; set; } = 0.8;
     public double AffordabilityBonus { get; set; } = 0.5;
+    /// <summary>Bono de retención al item que ya estaba en el top el tick anterior: mata la oscilación en el borde (un retador debe superar al incumbente por más que esto para desplazarlo), muy por debajo de cualquier counter.</summary>
+    public double HysteresisBonus { get; set; } = 0.3;
 }

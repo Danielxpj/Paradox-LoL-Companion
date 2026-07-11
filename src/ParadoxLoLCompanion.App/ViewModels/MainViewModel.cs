@@ -58,6 +58,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private string? _itemSetsWrittenKey;   // "champKey|map|patch": una escritura por contexto
     private string? _runesAppliedKey;      // "champKey|patch": una aplicación automática por campeón
     private ChampionBuildStats? _championStats;
+    // Top de items del tick anterior: la histéresis del asesor lo usa para no "temblar".
+    private IReadOnlyList<int>? _previousTopIds;
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
     // Reintento con backoff cuando un fetch falla: sin esto, un timeout dejaba la key
     // fijada y la partida entera corría sin prior, botas meta, item sets ni runas.
@@ -501,6 +503,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private void OnBuildRoleSelected(BuildRoleOptionViewModel option)
     {
         _forcedArchetype = option.Archetype;
+        _previousTopIds = null;   // cambió la build: no arrastrar la histéresis del arquetipo viejo
         AppendConsole($"[items] build role: {option.Label}");
         if (_lastGameState is { } state)
         {
@@ -541,6 +544,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;   // agotó reintentos o todavía en backoff
         _statsFetchKey = key;
         _championStats = null;
+        _previousTopIds = null;   // cambió el campeón/contexto: reset de la histéresis
         RebuildRunesPanel();
         _ = FetchStatsAsync(champ.Key, me.Position, mapNumber, _catalog.Version, key);
     }
@@ -702,7 +706,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private void RebuildItemPlan(GameState state)
     {
         ItemRecos.Clear();
-        var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats);
+        var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats, _previousTopIds);
+        _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
         if (plan is null)
         {
             ThreatSummary = "";
