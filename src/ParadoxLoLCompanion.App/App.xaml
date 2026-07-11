@@ -213,6 +213,36 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Variante compacta del segmento para el overlay in-game: estira a ancho de
+             celda (UniformGrid) para columnas parejas, con fuente/padding menores para
+             empacar los 8 roles en una grilla 4x2 ordenada sin recortar "AP FIGHTER". -->
+        <Style x:Key="OverlaySegmentRadio" TargetType="RadioButton" BasedOn="{StaticResource SegmentRadio}">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="Transparent"
+                                BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1"
+                                CornerRadius="2" Padding="4,4" Margin="0,0,4,4">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#12321F" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Neon}" />
+                                <Setter Property="Foreground" Value="{StaticResource Neon}" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Neon}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="RadioButton">
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />

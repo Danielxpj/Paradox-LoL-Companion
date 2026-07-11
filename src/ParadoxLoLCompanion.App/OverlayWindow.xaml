@@ -8,9 +8,11 @@
         ResizeMode="NoResize"
         MouseLeftButtonDown="OnDrag">
 
-    <!-- Overlay in-game minimalista: SOLO las recomendaciones de items del MATCH tab
-         (con su WHY) y, al costado, la bota sugerida SOLO si aún no llevás botas
-         terminadas (BootsName ya viene vacío en ese caso desde el ViewModel). -->
+    <!-- Overlay in-game: las recomendaciones de items del MATCH tab (con su WHY),
+         al costado la bota sugerida SOLO si aún no llevás botas terminadas (BootsName
+         ya viene vacío en ese caso desde el ViewModel), y arriba el selector de
+         rol/build — el mismo override por partida del MATCH tab, ahora accionable
+         sin salir del juego. -->
     <Border Background="#F00B0E0C" BorderBrush="{StaticResource CardBorderStrong}"
             BorderThickness="1" CornerRadius="4" Padding="10,8,10,10">
         <DockPanel>
@@ -60,6 +62,26 @@
                     <TextBlock Text="ITEM ADVISOR" FontFamily="{StaticResource HudFont}"
                                FontSize="11" FontWeight="Bold" Foreground="{StaticResource Gold}" />
                 </DockPanel>
+
+                <!-- Selector de rol/build: bindea BuildRoles del MainViewModel compartido;
+                     cambiarlo recalcula items y botas al instante (OnBuildRoleSelected).
+                     GroupName propio: los radios del overlay viven en otra ventana que los
+                     del MATCH tab, así que WPF no los agrupa entre sí; se mantienen en sync
+                     solo por el IsChecked del ViewModel. AUTO = detección automática. -->
+                <TextBlock Text="BUILD" Margin="2,0,2,4" FontFamily="{StaticResource HudFont}"
+                           FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextFaint}" />
+                <ItemsControl ItemsSource="{Binding BuildRoles}" Margin="2,0,-2,8">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><UniformGrid Columns="4" /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton GroupName="OverlayBuildRole" Content="{Binding Label}"
+                                         Style="{StaticResource OverlaySegmentRadio}"
+                                         IsChecked="{Binding IsChecked, Mode=TwoWay}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
                 <ItemsControl ItemsSource="{Binding ItemRecos}">
                     <ItemsControl.ItemTemplate>

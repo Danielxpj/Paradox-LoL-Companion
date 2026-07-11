@@ -30,3 +30,5 @@ installer/output/
 .superpowers/
 ## Artefactos del navegador de agentes
 .playwright-mcp/
+## Knowledge graph generado por graphify (regenerable con `graphify update .`)
+graphify-out/
