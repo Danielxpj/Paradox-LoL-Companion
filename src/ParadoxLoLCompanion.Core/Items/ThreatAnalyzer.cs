@@ -251,7 +251,11 @@ public sealed class ThreatAnalyzer
                 _config.BurstThreshold * 0.75, _config.BurstThreshold * 1.25),
             CritThreat = Fuzzy.Or(
                 Fuzzy.Ramp(critSum, 0.15, 0.9),           // items de crítico comprados
-                Fuzzy.Ramp(autoAttackShare, 0.35, 0.75)), // tiradores que van a apilar crítico
+                // Tiradores que van a apilar crítico, PERO solo si ya empezaron a comprarlo:
+                // sin crit confirmado, un on-hit/lifesteal marksman no dispara anti-crit.
+                Fuzzy.AndProduct(
+                    Fuzzy.Ramp(autoAttackShare, 0.35, 0.75),
+                    Fuzzy.Ramp(critSum, 0.05, 0.4))),
             PercentHpTrue = Ratio(pctHpTrueW, totalW, 0.15, 0.5),
             HardEngage = Ratio(hardEngageW, totalW, 0.15, 0.5),
             EnemyAntiHeal = Ratio(gwHolderW, totalW, 0.05, 0.35),

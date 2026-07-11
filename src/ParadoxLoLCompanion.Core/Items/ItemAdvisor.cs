@@ -26,13 +26,15 @@ public sealed class ItemAdvisor
     private const double AntiHealMag = 2.0;
     private const double PenMag = 3.0;
     private const double DefenseMag = 2.0;
-    private const double AntiBurstMag = 2.0;
+    // Supervivencia unificada (burst de asesino OR enganche duro): reemplaza AntiBurst+HardEngage.
+    private const double SurvivalMag = 2.0;
     private const double CleanseMag = 3.0;
     private const double ShieldBreakMag = 1.0;
     private const double AntiCritMag = 2.5;
     private const double AntiTankMag = 2.0;
-    private const double HardEngageMag = 1.5;
     private const double CcCounterMag = 2.0;
+    /// <summary>Tope de la suma defensiva por item: evita que un solo muro aspire todo el presupuesto del top-3.</summary>
+    private const double DefenseCap = 4.0;
     // Nudge ahead/behind: atrás sube la defensa, adelante sube los counters ofensivos.
     private const double BehindDefenseBoost = 0.35;
     private const double AheadOffenseBoost = 0.15;
@@ -612,32 +614,28 @@ public sealed class ItemAdvisor
             }
         }
 
-        // Híbridos defensa+ofensa contra un asesino fed (Zhonya / Ángel / Fauces / Banshee).
-        if (threat.Burst > MuGate && me.IsSquishy)
+        // Supervivencia al "te van a matar" (Zhonya/GA/QSS/Banshee): burst de asesino y
+        // enganche/pick duro son señales CORRELACIONADAS — se combinan por OR difuso, no se
+        // suman, así un solo item defensivo no cobra dos veces por la misma amenaza. Para
+        // squishies con ofensa acompañante; el factor de necesidad aplica al resist del burst.
+        var survival = Fuzzy.Or(threat.Burst, threat.HardEngage);
+        if (survival > MuGate && me.IsSquishy && OffensiveMatch(item, me)
+            && (item.HasTag("Armor") || item.HasTag("SpellBlock") || item.RemovesCc))
         {
             var burstMagical = threat.BurstDamage == DamageProfile.Magical;
-            var defTag = burstMagical ? "SpellBlock" : "Armor";
-            if (item.HasTag(defTag) && OffensiveMatch(item, me))
-            {
-                defense += AntiBurstMag * threat.Burst * (burstMagical ? need.Mr : need.Armor);
-                reasons.Add($"to survive the burst from {threat.TopBurstName}");
-            }
+            var needFactor = item.HasTag(burstMagical ? "SpellBlock" : "Armor")
+                ? (burstMagical ? need.Mr : need.Armor) : 1.0;
+            defense += SurvivalMag * survival * needFactor;
+            reasons.Add(threat.Burst >= threat.HardEngage
+                ? $"to survive the burst from {threat.TopBurstName}"
+                : "survives the enemy engage");
         }
 
-        // Anti-crítico cuando el rival apila crítico (tiradores / Filo Infinito).
+        // Anti-crítico cuando el rival apila crítico (tiradores CON crit comprado / Filo Infinito).
         if (item.ReducesCritDamage && threat.CritThreat > MuGate)
         {
             defense += AntiCritMag * threat.CritThreat;
             reasons.Add("reduces the enemy crit damage");
-        }
-
-        // Supervivencia vs. enganche/pick duro (GA / Zhonya / QSS / Banshee).
-        if (threat.HardEngage > MuGate && me.IsSquishy
-            && (item.HasTag("Armor") || item.HasTag("SpellBlock") || item.RemovesCc)
-            && OffensiveMatch(item, me))
-        {
-            defense += HardEngageMag * threat.HardEngage;
-            reasons.Add("survives the enemy engage");
         }
 
         // Anti-CC unificado (difuso): la supresión (lockdown letal, limpieza para carries
@@ -711,6 +709,11 @@ public sealed class ItemAdvisor
             + (item.HasLethality
                 ? LethalityDevalMag * threat.EnemyTankiness * weights.GetValueOrDefault("ArmorPenetration")
                 : 0);
+
+        // Tope defensivo por item: contra una comp que dispara varios muros correlacionados
+        // (armadura + anti-crit + supervivencia), un solo item no debe aspirar todo el
+        // presupuesto del top-3 y desplazar la penetración/anti-heal que la comp también pide.
+        defense = Math.Min(defense, DefenseCap);
 
         // Categoría desde componentes LIMPIOS (fit + situacional) y ANTES del nudge
         // ahead/behind: sin el prior estadístico ni las penalidades (un statBonus grande ya

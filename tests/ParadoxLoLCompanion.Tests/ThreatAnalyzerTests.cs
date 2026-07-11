@@ -356,17 +356,31 @@ public class ThreatAnalyzerTests
     }
 
     [Fact]
-    public void CritThreat_HighAgainstMarksman_LowAgainstBruisers()
+    public void CritThreat_HighAgainstCritMarksman_LowAgainstBruisers()
     {
+        // El anti-crit ahora exige crítico CONFIRMADO: un tirador que YA compró crítico
+        // dispara CritThreat; un bruiser sin crítico, no (antes bastaba el tag Marksman).
         var vsMarksman = Analyzer().Analyze(TestCatalog.State(0,
             ("Leona", "ORDER", 0, new int[0]),
-            ("Jinx", "CHAOS", 5, new int[0])));
+            ("Jinx", "CHAOS", 5, new[] { 3031, 1018 })));   // Filo Infinito + Capa: crítico real
         var vsBruiser = Analyzer().Analyze(TestCatalog.State(0,
             ("Leona", "ORDER", 0, new int[0]),
             ("Aatrox", "CHAOS", 5, new int[0])));
 
         Assert.True(vsMarksman.CritThreat > 0.6, $"crit vs marksman fue {vsMarksman.CritThreat}");
         Assert.True(vsBruiser.CritThreat < 0.3, $"crit vs bruiser fue {vsBruiser.CritThreat}");
+    }
+
+    [Fact]
+    public void CritThreat_LowAgainstMarksmanWithoutCritItems()
+    {
+        // Un tirador sin crítico comprado (on-hit/lifesteal) NO dispara anti-crit: el peso
+        // de tiradores ya no cuenta doble con el skew físico (corrección S2).
+        var threat = Analyzer().Analyze(TestCatalog.State(0,
+            ("Leona", "ORDER", 0, new int[0]),
+            ("Jinx", "CHAOS", 5, new int[0])));
+
+        Assert.True(threat.CritThreat < 0.3, $"crit={threat.CritThreat}");
     }
 
     [Fact]
