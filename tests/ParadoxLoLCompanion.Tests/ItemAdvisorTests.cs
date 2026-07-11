@@ -653,6 +653,29 @@ public class ItemAdvisorTests
         Assert.Contains("Lord Dominik's Regards", names);    // NO bloqueado por el grupo
     }
 
+    [Fact]
+    public void ShopAlert_QuotesRemainingCost_WhenComponentsOwned()
+    {
+        // Jinx muerta con componentes ya comprados: el aviso de tienda abierta debe citar
+        // lo que FALTA pagar del top (RemainingCost), no su precio de lista — es la
+        // ventana donde el jugador actúa sobre el consejo.
+        var state = TestCatalog.AramState(3000,
+            ("Jinx", "ORDER", 0, new[] { 1018, 1036, 1053 }),
+            ("Malzahar", "CHAOS", 0, None));
+        state.AllPlayers[0].IsDead = true;
+        var advisor = new ItemAdvisor(TestCatalog.Catalog());
+
+        var plan = advisor.Advise(state)!;
+        var top = plan.Recommendations[0];
+
+        Assert.NotNull(plan.ShopAlert);
+        Assert.True(top.Purchase.CanFinishNow, "el escenario espera un top ya alcanzable");
+        Assert.True(top.Purchase.RemainingCost < top.Item.GoldTotal,
+            "el escenario debe descontar componentes; si no, ajustar los items poseídos");
+        Assert.Contains(top.Purchase.RemainingCost.ToString("N0",
+            System.Globalization.CultureInfo.InvariantCulture), plan.ShopAlert);
+    }
+
     /// <summary>Ayuda de test: busca el puntaje de un item por id en un plan (0 si no está).</summary>
     private sealed class StaticItemScore
     {

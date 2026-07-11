@@ -6,7 +6,9 @@ namespace ParadoxLoLCompanion.Core.Items;
 /// <param name="Target">El item final al que se apunta.</param>
 /// <param name="RemainingCost">Oro que falta gastar (descontando componentes ya comprados).</param>
 /// <param name="NextComponent">La mejor compra inmediata con el oro actual (el objetivo mismo si alcanza).</param>
-public sealed record PurchasePlan(StaticItem Target, int RemainingCost, StaticItem? NextComponent)
+/// <param name="NextComponentCost">Oro que falta pagar por <paramref name="NextComponent"/> (no su precio de lista): descuenta subcomponentes ya comprados.</param>
+public sealed record PurchasePlan(StaticItem Target, int RemainingCost,
+    StaticItem? NextComponent, int NextComponentCost = 0)
 {
     public bool CanFinishNow => NextComponent is not null && NextComponent.Id == Target.Id;
 }
@@ -28,10 +30,10 @@ public static class BuildPathPlanner
         // RemainingCost consume del multiconjunto: se sondea sobre una copia.
         var remaining = RemainingCost(data, target, new Dictionary<int, int>(owned));
         if (remaining <= gold)
-            return new PurchasePlan(target, remaining, target);
+            return new PurchasePlan(target, remaining, target, remaining);
 
         var next = BestAffordable(data, target, owned, gold);
-        return new PurchasePlan(target, remaining, next?.Item);
+        return new PurchasePlan(target, remaining, next?.Item, next?.Cost ?? 0);
     }
 
     /// <summary>Oro que falta para terminar <paramref name="item"/>, consumiendo componentes poseídos.</summary>

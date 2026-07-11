@@ -396,9 +396,9 @@ public sealed class ItemAdvisor
             return null;
         var top = recommendations[0];
         if (top.Purchase.CanFinishNow)
-            return $"Shop open while dead — finish {top.Item.Name} now ({GoldFmt(top.Item.GoldTotal)}).";
+            return $"Shop open while dead — finish {top.Item.Name} now ({GoldFmt(top.Purchase.RemainingCost)}).";
         if (top.Purchase.NextComponent is { } component)
-            return $"Shop open while dead — buy {component.Name} ({GoldFmt(component.GoldTotal)}) toward {top.Item.Name}.";
+            return $"Shop open while dead — buy {component.Name} ({GoldFmt(top.Purchase.NextComponentCost)}) toward {top.Item.Name}.";
         return null;
     }
 

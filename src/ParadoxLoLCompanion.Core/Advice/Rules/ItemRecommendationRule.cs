@@ -58,8 +58,8 @@ public sealed class ItemRecommendationRule : IAdviceRule
         if (top is not null)
         {
             var line = $"Next item: {Describe(top.Item)} — {string.Join("; ", top.Reasons)}.";
-            if (!top.Affordable && top.Purchase.NextComponent is not null)
-                line += $" Buy now: {Describe(top.Purchase.NextComponent)}.";
+            if (!top.Affordable && top.Purchase.NextComponent is { } component)
+                line += $" Buy now: {component.Name} ({top.Purchase.NextComponentCost.ToString("N0", CultureInfo.InvariantCulture)}).";
             yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Info, "item-next", line);
         }
 
