@@ -161,6 +161,43 @@ public sealed class ItemRecoRowViewModel
     public string Priority { get; }
 }
 
+/// <summary>Fila del cheat-sheet de augments de Mayhem (overlay y MATCH tab).</summary>
+public sealed class AugmentRowViewModel
+{
+    public AugmentRowViewModel(Core.Mayhem.AugmentSuggestion suggestion)
+    {
+        Id = suggestion.Id;
+        Name = suggestion.Name;
+        TierLabel = suggestion.TierLabel;
+        RarityLabel = suggestion.Rarity.ToString().ToUpperInvariant();
+        IconUrl = suggestion.IconUrl.Length == 0 ? null : suggestion.IconUrl;
+        FitsMyChampion = suggestion.FitsMyChampion;
+        FitChip = suggestion.FitsMyChampion ? "★ YOUR CHAMP" : "";
+        TierBrush = suggestion.Tier switch
+        {
+            1 => Palette.Gold,
+            2 => Palette.Green,
+            _ => Palette.Muted,
+        };
+        RarityBrush = suggestion.Rarity switch
+        {
+            Core.Augments.AugmentRarity.Prismatic => Palette.Cyan,
+            Core.Augments.AugmentRarity.Gold => Palette.Gold,
+            _ => Palette.Muted,
+        };
+    }
+
+    public int Id { get; }
+    public string Name { get; }
+    public string TierLabel { get; }
+    public string RarityLabel { get; }
+    public string? IconUrl { get; }
+    public bool FitsMyChampion { get; }
+    public string FitChip { get; }
+    public Brush TierBrush { get; }
+    public Brush RarityBrush { get; }
+}
+
 /// <summary>Tile del panel ENEMY X-RAY: retrato, KDA, rol y estado del enemigo.</summary>
 public sealed class EnemyTileViewModel
 {

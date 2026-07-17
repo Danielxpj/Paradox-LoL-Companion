@@ -1,3 +1,4 @@
+using ParadoxLoLCompanion.Core.Augments;
 using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Mayhem;
 using ParadoxLoLCompanion.Core.Models;
@@ -115,5 +116,56 @@ public class MayhemAdvisorTests
     {
         var state = new GameState();
         Assert.Null(Advisor().Advise(state));
+    }
+
+    private static AugmentTierList TierList() => new()
+    {
+        Augments = new[]
+        {
+            new AugmentInfo { Id = 1, Name = "Eureka", Rarity = AugmentRarity.Prismatic, Tier = 1 },
+            new AugmentInfo { Id = 2, Name = "Goliath", Rarity = AugmentRarity.Prismatic, Tier = 2 },
+            new AugmentInfo { Id = 3, Name = "Dual Wield", Rarity = AugmentRarity.Prismatic, Tier = 2,
+                TopChampions = new[] { "Jinx" } },
+            new AugmentInfo { Id = 4, Name = "Bad One", Rarity = AugmentRarity.Prismatic, Tier = 5 },
+            new AugmentInfo { Id = 5, Name = "Deft", Rarity = AugmentRarity.Gold, Tier = 1 },
+            new AugmentInfo { Id = 6, Name = "Unranked", Rarity = AugmentRarity.Gold, Tier = null },
+            new AugmentInfo { Id = 7, Name = "Witchful", Rarity = AugmentRarity.Silver, Tier = 1 },
+        },
+    };
+
+    [Fact]
+    public void TopAugments_RankChampionFitFirst_ThenTier()
+    {
+        // Jugamos Jinx: Dual Wield (tier 2 pero favorito para Jinx) va por
+        // delante de Eureka (tier 1 global) dentro de los prismáticos.
+        var advice = Advisor().Advise(State(7, enemies: ("Ahri", "CHAOS", 0, None)),
+            augments: TierList())!;
+
+        var prismatic = advice.TopAugments
+            .Where(a => a.Rarity == AugmentRarity.Prismatic).ToList();
+        Assert.Equal("Dual Wield", prismatic[0].Name);
+        Assert.True(prismatic[0].FitsMyChampion);
+        Assert.Equal("Eureka", prismatic[1].Name);
+        Assert.DoesNotContain(advice.TopAugments, a => a.Name == "Bad One");   // tier 5 fuera
+        Assert.DoesNotContain(advice.TopAugments, a => a.Name == "Unranked");  // sin tier fuera
+        Assert.Contains(advice.TopAugments, a => a.Name == "Deft");
+        Assert.Contains(advice.TopAugments, a => a.Name == "Witchful");
+    }
+
+    [Fact]
+    public void TopAugments_PrismaticListedFirst()
+    {
+        var advice = Advisor().Advise(State(7, enemies: ("Ahri", "CHAOS", 0, None)),
+            augments: TierList())!;
+
+        Assert.Equal(AugmentRarity.Prismatic, advice.TopAugments[0].Rarity);
+        Assert.Equal(AugmentRarity.Silver, advice.TopAugments[^1].Rarity);
+    }
+
+    [Fact]
+    public void NoTierList_TopAugmentsEmpty()
+    {
+        var advice = Advisor().Advise(State(7, enemies: ("Ahri", "CHAOS", 0, None)))!;
+        Assert.Empty(advice.TopAugments);
     }
 }

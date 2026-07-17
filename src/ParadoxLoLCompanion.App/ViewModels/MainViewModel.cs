@@ -16,6 +16,7 @@ using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Draft;
 using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Live;
+using ParadoxLoLCompanion.Core.Augments;
 using ParadoxLoLCompanion.Core.Mayhem;
 using ParadoxLoLCompanion.Core.Models;
 using ParadoxLoLCompanion.Core.Stats;
@@ -65,6 +66,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     // fijada y la partida entera corría sin prior, botas meta, item sets ni runas.
     private readonly Dictionary<string, (int Attempts, DateTime NextRetryUtc)> _statsRetry = new();
     private const int StatsMaxAttempts = 3;
+    // Tier list de augments de Mayhem (Blitz): un fetch por parche, con throttle
+    // de reintento — sin él, cada tick de un fallo re-dispararía la descarga.
+    private readonly AugmentProvider _augmentProvider;
+    private AugmentTierList? _augmentTiers;
+    private string? _augmentFetchPatch;
+    private DateTime _augmentRetryAtUtc = DateTime.MinValue;
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -89,6 +96,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _ddragon = new DataDragonClient(itemsConfig: config.Items);
         // El porqué de cada fallo de OP.GG va a la consola: "sin stats" a secas no se puede diagnosticar.
         _statsProvider = new StatsProvider(log: line => OnUi(() => AppendConsole($"[stats] {line}")));
+        _augmentProvider = new AugmentProvider(log: line => OnUi(() => AppendConsole($"[augments] {line}")));
 
         Scorecards = new ObservableCollection<ScorecardViewModel>
         {
@@ -243,6 +251,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private string _mayhemGuidance = "";
     public string MayhemGuidance { get => _mayhemGuidance; private set => SetProperty(ref _mayhemGuidance, value); }
+
+    /// <summary>Cheat-sheet de augments (tier list de Blitz), rankeado para MI campeón.</summary>
+    public ObservableCollection<AugmentRowViewModel> MayhemAugments { get; } = new();
 
     private string _itemPanelHint = "The advisor activates once the data catalog loads and a game is detected.";
     public string ItemPanelHint { get => _itemPanelHint; private set => SetProperty(ref _itemPanelHint, value); }
@@ -882,12 +893,16 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         var isMayhem = _config.Mayhem.QueueIds.Contains(_currentQueueId)
             || (_replayMode && isAramMap);
 
-        var advice = isMayhem ? _mayhemAdvisor?.Advise(state, _forcedArchetype) : null;
+        if (isMayhem)
+            RequestAugmentsIfNeeded();
+
+        var advice = isMayhem ? _mayhemAdvisor?.Advise(state, _forcedArchetype, _augmentTiers) : null;
         if (advice is null)
         {
             MayhemStatus = "";
             MayhemPickNow = "";
             MayhemGuidance = "";
+            MayhemAugments.Clear();
             return;
         }
 
@@ -895,6 +910,55 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         MayhemPickNow = advice.PickNowLine ?? "";
         // Strip horizontal estilo HUD: guías separadas por "//" (antes bullets).
         MayhemGuidance = string.Join("   //   ", advice.Guidance);
+        SyncMayhemAugments(advice.TopAugments);
+    }
+
+    /// <summary>Repobla solo si cambió (el tick es 1 s; recrear filas iguales parpadea).</summary>
+    private void SyncMayhemAugments(IReadOnlyList<AugmentSuggestion> top)
+    {
+        if (MayhemAugments.Count == top.Count
+            && MayhemAugments.Zip(top).All(p => p.First.Id == p.Second.Id))
+            return;
+        MayhemAugments.Clear();
+        foreach (var suggestion in top)
+            MayhemAugments.Add(new AugmentRowViewModel(suggestion));
+    }
+
+    /// <summary>Un fetch del tier list por parche; tras un fallo, reintento con throttle.</summary>
+    private void RequestAugmentsIfNeeded()
+    {
+        if (!_catalog.IsLoaded || _catalog.Version == _augmentFetchPatch
+            || DateTime.UtcNow < _augmentRetryAtUtc)
+            return;
+        _augmentFetchPatch = _catalog.Version;
+        _augmentRetryAtUtc = DateTime.UtcNow.AddSeconds(60);
+        _ = FetchAugmentsAsync(_catalog.Version);
+    }
+
+    private async Task FetchAugmentsAsync(string patch)
+    {
+        AugmentTierList? list = null;
+        try
+        {
+            list = await _augmentProvider.GetAsync(patch).ConfigureAwait(false);
+        }
+        catch
+        {
+            // El provider ya degrada a null; cinturón extra del hilo async.
+        }
+        OnUi(() =>
+        {
+            _augmentTiers = list;
+            if (list is null)
+            {
+                _augmentFetchPatch = null;   // reintento (throttled) en el próximo tick de Mayhem
+                AppendConsole("[augments] Blitz tier list unavailable — Mayhem card shows generic guidance only.");
+                return;
+            }
+            AppendConsole($"[augments] Blitz Mayhem tier list loaded ({list.Augments.Count} augments).");
+            if (_lastGameState is { } s)
+                RebuildMayhemAdvice(s);
+        });
     }
 
     private void ApplyLiveStatus(ConnectionStatus status, string? message)

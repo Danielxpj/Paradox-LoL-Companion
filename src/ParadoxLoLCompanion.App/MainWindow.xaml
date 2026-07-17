@@ -652,6 +652,62 @@
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
+                            <!-- Cheat-sheet de augments de Mayhem (tier list de Blitz): S/A por
+                                 rareza, con estrella si Blitz lo marca top para MI campeón. -->
+                            <Border Padding="16,10">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding MayhemAugments.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="AUGMENT TIER LIST (BLITZ)" Style="{StaticResource CardTitle}" />
+                                    <ItemsControl ItemsSource="{Binding MayhemAugments}" Margin="0,6,0,0">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#101512" BorderBrush="{StaticResource CardBorder}"
+                                                        BorderThickness="1" CornerRadius="3" Margin="0,0,6,6" Padding="6,4"
+                                                        ToolTip="{Binding RarityLabel}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="22" Height="22" CornerRadius="3" Margin="0,0,6,0"
+                                                                BorderBrush="{Binding RarityBrush}" BorderThickness="1">
+                                                            <Border.Background>
+                                                                <ImageBrush ImageSource="{Binding IconUrl, TargetNullValue={x:Null}}"
+                                                                            Stretch="UniformToFill" />
+                                                            </Border.Background>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding TierLabel}" FontFamily="{StaticResource HudFont}"
+                                                                   FontSize="11" FontWeight="Bold" Foreground="{Binding TierBrush}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Name}" FontSize="12" Margin="6,0,0,0"
+                                                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                                        <TextBlock Text="★" Margin="5,0,0,0" FontSize="11"
+                                                                   Foreground="{StaticResource Gold}" VerticalAlignment="Center"
+                                                                   ToolTip="{Binding FitChip}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding FitsMyChampion}" Value="False">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                             <!-- Items que conviene vender (ya no pegan con la build). -->
                             <Border Padding="16,10">
                                 <Border.Style>

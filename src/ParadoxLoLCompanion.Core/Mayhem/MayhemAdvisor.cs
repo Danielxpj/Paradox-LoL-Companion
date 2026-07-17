@@ -1,10 +1,16 @@
 using System.Globalization;
+using ParadoxLoLCompanion.Core.Augments;
 using ParadoxLoLCompanion.Core.Config;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Items;
 using ParadoxLoLCompanion.Core.Models;
 
 namespace ParadoxLoLCompanion.Core.Mayhem;
+
+/// <summary>Un augment sugerido del cheat-sheet (fuente: tier list de Blitz).</summary>
+public sealed record AugmentSuggestion(
+    int Id, string Name, AugmentRarity Rarity, int Tier, string TierLabel,
+    bool FitsMyChampion, string IconUrl);
 
 /// <summary>Estado y guía de augments para una partida de ARAM: Mayhem.</summary>
 /// <param name="UnlockedPicks">Picks de augment desbloqueados hasta ahora (1 inicial + por nivel).</param>
@@ -17,7 +23,12 @@ public sealed record MayhemAdvice(
     bool PickWindowNow,
     string StatusLine,
     string? PickNowLine,
-    IReadOnlyList<string> Guidance);
+    IReadOnlyList<string> Guidance)
+{
+    /// <summary>Cheat-sheet rankeado por rareza (vacío sin tier list descargado).</summary>
+    public IReadOnlyList<AugmentSuggestion> TopAugments { get; init; } =
+        Array.Empty<AugmentSuggestion>();
+}
 
 /// <summary>
 /// Asesor de ARAM: Mayhem. Las opciones de augment ofrecidas NO se exponen por API,
@@ -27,6 +38,10 @@ public sealed record MayhemAdvice(
 /// </summary>
 public sealed class MayhemAdvisor
 {
+    /// <summary>Sugerencias por rareza: para decidir en segundos, no un catálogo.</summary>
+    private const int MaxPerRarity = 4;
+
+    private readonly IStaticData _data;
     private readonly ItemsConfig _itemsConfig;
     private readonly MayhemConfig _config;
     private readonly ChampionProfiler _profiler;
@@ -34,6 +49,7 @@ public sealed class MayhemAdvisor
 
     public MayhemAdvisor(IStaticData data, ItemsConfig? itemsConfig = null, MayhemConfig? config = null)
     {
+        _data = data;
         _itemsConfig = itemsConfig ?? new ItemsConfig();
         _config = config ?? new MayhemConfig();
         _profiler = new ChampionProfiler(data, _itemsConfig);
@@ -45,7 +61,8 @@ public sealed class MayhemAdvisor
     /// <c>null</c> si no hay datos del jugador activo. <paramref name="forcedArchetype"/>:
     /// arquetipo forzado por el jugador en la UI (anula la detección por inventario).
     /// </summary>
-    public MayhemAdvice? Advise(GameState state, BuildArchetype? forcedArchetype = null)
+    public MayhemAdvice? Advise(GameState state, BuildArchetype? forcedArchetype = null,
+        AugmentTierList? augments = null)
     {
         var me = state.ActivePlayerEntry;
         if (me is null)
@@ -71,7 +88,30 @@ public sealed class MayhemAdvisor
         }
 
         return new MayhemAdvice(unlocked, total, next, me.IsDead, status, pickNow,
-            Guidance(state, me, forcedArchetype));
+            Guidance(state, me, forcedArchetype))
+        { TopAugments = TopAugments(augments, me) };
+    }
+
+    /// <summary>
+    /// Por rareza (prismático primero): los favoritos de Blitz para MI campeón
+    /// arriba, después por tier; solo tiers 1-2 (S/A) — el pick dura segundos.
+    /// </summary>
+    private IReadOnlyList<AugmentSuggestion> TopAugments(AugmentTierList? list, Player me)
+    {
+        if (list is null || list.Augments.Count == 0)
+            return Array.Empty<AugmentSuggestion>();
+        var champKey = _data.ResolveChampion(me.ChampionName, me.RawChampionName)?.Key;
+        return list.Augments
+            .Where(a => a.Tier is 1 or 2)
+            .Select(a => (Augment: a, Fits: list.FitsChampion(a, champKey)))
+            .OrderByDescending(x => x.Augment.Rarity)
+            .ThenByDescending(x => x.Fits)
+            .ThenBy(x => x.Augment.Tier)
+            .GroupBy(x => x.Augment.Rarity)
+            .SelectMany(g => g.Take(MaxPerRarity))
+            .Select(x => new AugmentSuggestion(x.Augment.Id, x.Augment.Name, x.Augment.Rarity,
+                x.Augment.Tier!.Value, x.Augment.TierLabel, x.Fits, x.Augment.IconUrl))
+            .ToArray();
     }
 
     private IReadOnlyList<string> Guidance(GameState state, Player me, BuildArchetype? forcedArchetype)

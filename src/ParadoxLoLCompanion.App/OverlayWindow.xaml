@@ -142,6 +142,55 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
+                <!-- Cheat-sheet de augments (Mayhem): S/A del tier list de Blitz,
+                     ★ = favorito para MI campeón. Solo visible con tier list cargado. -->
+                <StackPanel Margin="2,2,2,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MayhemAugments.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="AUGMENTS (BLITZ TIERS)" FontFamily="{StaticResource HudFont}"
+                               FontSize="9" FontWeight="Bold"
+                               Foreground="{StaticResource TextFaint}" Margin="0,2,0,4" />
+                    <ItemsControl ItemsSource="{Binding MayhemAugments}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#101512" BorderBrush="{Binding RarityBrush}"
+                                        BorderThickness="1" CornerRadius="3" Margin="0,0,4,4" Padding="5,3"
+                                        ToolTip="{Binding RarityLabel}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding TierLabel}" FontFamily="{StaticResource HudFont}"
+                                                   FontSize="10" FontWeight="Bold" Foreground="{Binding TierBrush}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontSize="11" Margin="5,0,0,0"
+                                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="★" Margin="4,0,0,0" FontSize="10"
+                                                   Foreground="{StaticResource Gold}" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding FitsMyChampion}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <TextBlock Text="Waiting for a live match…" Margin="2,2,2,4"
                            FontFamily="{StaticResource HudFont}" FontSize="11"
                            Foreground="{StaticResource TextMuted}">
