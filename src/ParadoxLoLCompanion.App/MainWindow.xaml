@@ -665,6 +665,53 @@
                                     </Style>
                                 </Border.Style>
                                 <StackPanel>
+                                    <!-- Ofrecidos AHORA (OCR): solo mientras la ventana de pick está abierta. -->
+                                    <StackPanel Margin="0,0,0,8">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding OfferedAugments.Count}" Value="0">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBlock Text="OFFERED NOW (ON SCREEN)" Style="{StaticResource CardTitle}"
+                                                   Foreground="{StaticResource Amber}" />
+                                        <ItemsControl ItemsSource="{Binding OfferedAugments}" Margin="0,6,0,0">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderThickness="1" CornerRadius="3" Margin="0,0,6,6" Padding="8,5">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#101512" />
+                                                                <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsBest}" Value="True">
+                                                                        <Setter Property="Background" Value="#241C08" />
+                                                                        <Setter Property="BorderBrush" Value="{StaticResource Gold}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding TierLabel}" FontFamily="{StaticResource HudFont}"
+                                                                       FontSize="11" FontWeight="Bold" Foreground="{Binding TierBrush}"
+                                                                       VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold" Margin="6,0,0,0"
+                                                                       Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding Verdict}" FontFamily="{StaticResource HudFont}"
+                                                                       FontSize="10" FontWeight="Bold" Margin="8,0,0,0"
+                                                                       Foreground="{StaticResource Gold}" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
                                     <TextBlock Text="AUGMENT TIER LIST (BLITZ)" Style="{StaticResource CardTitle}" />
                                     <ItemsControl ItemsSource="{Binding MayhemAugments}" Margin="0,6,0,0">
                                         <ItemsControl.ItemsPanel>

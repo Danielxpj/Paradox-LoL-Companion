@@ -198,6 +198,32 @@ public sealed class AugmentRowViewModel
     public Brush RarityBrush { get; }
 }
 
+/// <summary>Augment ofrecido detectado por OCR, con su veredicto.</summary>
+public sealed class OfferedAugmentRowViewModel
+{
+    public OfferedAugmentRowViewModel(Core.Augments.OfferedAugment offered)
+    {
+        Name = offered.Name;
+        TierLabel = offered.TierLabel;
+        IsBest = offered.IsBest;
+        Verdict = offered.IsBest ? "◆ PICK THIS" : "";
+        TierBrush = offered.Tier switch
+        {
+            1 => Palette.Gold,
+            2 => Palette.Green,
+            3 => Palette.Blue,
+            null => Palette.Muted,
+            _ => Palette.Amber,
+        };
+    }
+
+    public string Name { get; }
+    public string TierLabel { get; }
+    public bool IsBest { get; }
+    public string Verdict { get; }
+    public Brush TierBrush { get; }
+}
+
 /// <summary>Tile del panel ENEMY X-RAY: retrato, KDA, rol y estado del enemigo.</summary>
 public sealed class EnemyTileViewModel
 {

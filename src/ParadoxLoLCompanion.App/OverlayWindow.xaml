@@ -142,6 +142,54 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
+                <!-- Augments OFRECIDOS ahora (OCR de la pantalla, estás muerto):
+                     el mejor según Blitz resaltado en dorado. -->
+                <StackPanel Margin="2,2,2,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding OfferedAugments.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="OFFERED NOW" FontFamily="{StaticResource HudFont}"
+                               FontSize="9" FontWeight="Bold"
+                               Foreground="{StaticResource Amber}" Margin="0,2,0,4" />
+                    <ItemsControl ItemsSource="{Binding OfferedAugments}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="1" CornerRadius="3" Margin="0,0,0,4" Padding="7,5">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#101512" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsBest}" Value="True">
+                                                    <Setter Property="Background" Value="#241C08" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource Gold}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Verdict}"
+                                                   FontFamily="{StaticResource HudFont}" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{StaticResource Gold}" VerticalAlignment="Center"
+                                                   Margin="8,0,0,0" />
+                                        <TextBlock Text="{Binding TierLabel}" FontFamily="{StaticResource HudFont}"
+                                                   FontSize="11" FontWeight="Bold" Foreground="{Binding TierBrush}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold" Margin="7,0,0,0"
+                                                   Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <!-- Cheat-sheet de augments (Mayhem): S/A del tier list de Blitz,
                      ★ = favorito para MI campeón. Solo visible con tier list cargado. -->
                 <StackPanel Margin="2,2,2,0">

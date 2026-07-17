@@ -72,6 +72,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private AugmentTierList? _augmentTiers;
     private string? _augmentFetchPatch;
     private DateTime _augmentRetryAtUtc = DateTime.MinValue;
+    // Detección OCR de los augments ofrecidos: solo corre durante la ventana de
+    // pick (muerto), throttled y de a una — el OCR de un frame tarda ~100-300 ms.
+    private OfferedAugmentDetector? _offeredDetector;
+    private bool _ocrBusy;
+    private DateTime _lastOcrUtc = DateTime.MinValue;
+    private bool _aliasesRequested;
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -254,6 +260,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>Cheat-sheet de augments (tier list de Blitz), rankeado para MI campeón.</summary>
     public ObservableCollection<AugmentRowViewModel> MayhemAugments { get; } = new();
+
+    /// <summary>Augments ofrecidos AHORA (leídos de pantalla por OCR), el mejor marcado.</summary>
+    public ObservableCollection<OfferedAugmentRowViewModel> OfferedAugments { get; } = new();
 
     private string _itemPanelHint = "The advisor activates once the data catalog loads and a game is detected.";
     public string ItemPanelHint { get => _itemPanelHint; private set => SetProperty(ref _itemPanelHint, value); }
@@ -903,6 +912,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             MayhemPickNow = "";
             MayhemGuidance = "";
             MayhemAugments.Clear();
+            OfferedAugments.Clear();
             return;
         }
 
@@ -911,6 +921,55 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         // Strip horizontal estilo HUD: guías separadas por "//" (antes bullets).
         MayhemGuidance = string.Join("   //   ", advice.Guidance);
         SyncMayhemAugments(advice.TopAugments);
+
+        // Ventana de pick abierta: leer la pantalla en busca de los 3 ofrecidos.
+        if (advice.PickWindowNow)
+        {
+            if (_offeredDetector is not null && !_ocrBusy
+                && DateTime.UtcNow - _lastOcrUtc > TimeSpan.FromSeconds(2))
+                _ = DetectOfferedAsync();
+        }
+        else if (OfferedAugments.Count > 0)
+        {
+            OfferedAugments.Clear();   // revivió: la oferta en pantalla ya no está
+        }
+    }
+
+    /// <summary>
+    /// Captura + OCR + match en background; el resultado (si hay) reemplaza la
+    /// lista. Best-effort: en Fullscreen exclusivo la captura sale negra y
+    /// simplemente no hay matches — el cheat-sheet sigue cubriendo el pick.
+    /// </summary>
+    private async Task DetectOfferedAsync()
+    {
+        _ocrBusy = true;
+        _lastOcrUtc = DateTime.UtcNow;
+        try
+        {
+            var frame = await Task.Run(Capture.GameWindowCapture.Capture).ConfigureAwait(false);
+            if (frame is null)
+                return;
+            var lines = await Capture.WindowsOcrReader.ReadLinesAsync(frame).ConfigureAwait(false);
+            var offered = _offeredDetector!.Detect(lines);
+            OnUi(() =>
+            {
+                // Sin matches se conserva lo último visto: el jugador pudo abrir
+                // el tab del scoreboard encima; una lectura vacía no borra la buena.
+                if (offered.Count == 0)
+                    return;
+                OfferedAugments.Clear();
+                foreach (var augment in offered)
+                    OfferedAugments.Add(new OfferedAugmentRowViewModel(augment));
+            });
+        }
+        catch
+        {
+            // La detección nunca debe voltear el resto del advisor.
+        }
+        finally
+        {
+            _ocrBusy = false;
+        }
     }
 
     /// <summary>Repobla solo si cambió (el tick es 1 s; recrear filas iguales parpadea).</summary>
@@ -956,8 +1015,42 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 return;
             }
             AppendConsole($"[augments] Blitz Mayhem tier list loaded ({list.Augments.Count} augments).");
+            _offeredDetector = new OfferedAugmentDetector(list);
+            RequestOcrAliasesOnce(list);
             if (_lastGameState is { } s)
                 RebuildMayhemAdvice(s);
+        });
+    }
+
+    /// <summary>
+    /// Aliases es_MX de cdragon para el matcher de OCR (cliente de LoL en
+    /// español): fire-and-forget, una vez por sesión; sin ellos el matcher
+    /// funciona igual con los nombres en inglés de Blitz.
+    /// </summary>
+    private void RequestOcrAliasesOnce(AugmentTierList list)
+    {
+        if (_aliasesRequested)
+            return;
+        _aliasesRequested = true;
+        _ = Task.Run(async () =>
+        {
+            var aliases = await new CdragonAugmentNames().GetAliasesAsync("es_mx")
+                .ConfigureAwait(false);
+            if (aliases.Count == 0)
+                return;
+            OnUi(() =>
+            {
+                if (_offeredDetector is not { } detector)
+                    return;
+                var added = 0;
+                foreach (var augment in list.Augments)
+                    if (aliases.TryGetValue(augment.Name.ToLowerInvariant(), out var localized))
+                    {
+                        detector.Matcher.AddAlias(augment.Id, localized);
+                        added++;
+                    }
+                AppendConsole($"[augments] {added} es_MX augment names loaded for on-screen detection.");
+            });
         });
     }
 
