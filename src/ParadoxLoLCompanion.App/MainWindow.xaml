@@ -153,6 +153,12 @@
                                        FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
                                        FontSize="13" VerticalAlignment="Center"
                                        ToolTip="Built with Claude Fable" />
+                            <TextBlock Text="·" Foreground="{StaticResource TextFaint}"
+                                       FontSize="12" Margin="6,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding AppVersion}" Foreground="{StaticResource TextFaint}"
+                                       FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       ToolTip="Installed version (auto-updates on launch from GitHub Releases)" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Content="{Binding PauseLabel}" Command="{Binding PauseConsoleCommand}"

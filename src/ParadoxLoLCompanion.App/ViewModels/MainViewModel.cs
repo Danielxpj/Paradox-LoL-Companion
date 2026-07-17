@@ -258,6 +258,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private string _mayhemGuidance = "";
     public string MayhemGuidance { get => _mayhemGuidance; private set => SetProperty(ref _mayhemGuidance, value); }
 
+    /// <summary>Versión del exe ("v2.1.1"), para el pie de la consola: la misma que
+    /// compara el auto-update, así se ve de un vistazo qué build corre.</summary>
+    public string AppVersion { get; } =
+        "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "?");
+
     /// <summary>Cheat-sheet de augments (tier list de Blitz), rankeado para MI campeón.</summary>
     public ObservableCollection<AugmentRowViewModel> MayhemAugments { get; } = new();
 
