@@ -78,6 +78,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _ocrBusy;
     private DateTime _lastOcrUtc = DateTime.MinValue;
     private bool _aliasesRequested;
+    private bool _ocrDumpDone;   // un volcado de líneas OCR por muerte, no por tick
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -268,6 +269,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>Augments ofrecidos AHORA (leídos de pantalla por OCR), el mejor marcado.</summary>
     public ObservableCollection<OfferedAugmentRowViewModel> OfferedAugments { get; } = new();
+
+    private bool _mayhemPickWindow;
+    /// <summary>Estás muerto eligiendo augment: el overlay muestra el cheat-sheet
+    /// SOLO en esta ventana (mostrarlo toda la partida era ruido).</summary>
+    public bool MayhemPickWindow
+    { get => _mayhemPickWindow; private set => SetProperty(ref _mayhemPickWindow, value); }
 
     private string _itemPanelHint = "The advisor activates once the data catalog loads and a game is detected.";
     public string ItemPanelHint { get => _itemPanelHint; private set => SetProperty(ref _itemPanelHint, value); }
@@ -918,6 +925,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             MayhemGuidance = "";
             MayhemAugments.Clear();
             OfferedAugments.Clear();
+            MayhemPickWindow = false;
             return;
         }
 
@@ -927,6 +935,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         MayhemGuidance = string.Join("   //   ", advice.Guidance);
         SyncMayhemAugments(advice.TopAugments);
 
+        MayhemPickWindow = advice.PickWindowNow;
+
         // Ventana de pick abierta: leer la pantalla en busca de los 3 ofrecidos.
         if (advice.PickWindowNow)
         {
@@ -934,9 +944,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 && DateTime.UtcNow - _lastOcrUtc > TimeSpan.FromSeconds(2))
                 _ = DetectOfferedAsync();
         }
-        else if (OfferedAugments.Count > 0)
+        else
         {
-            OfferedAugments.Clear();   // revivió: la oferta en pantalla ya no está
+            if (OfferedAugments.Count > 0)
+                OfferedAugments.Clear();   // revivió: la oferta en pantalla ya no está
+            _ocrDumpDone = false;          // próxima muerte: un dump de diagnóstico de nuevo
         }
     }
 
@@ -953,28 +965,69 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             var frame = await Task.Run(Capture.GameWindowCapture.Capture).ConfigureAwait(false);
             if (frame is null)
+            {
+                LogOcr("game window not found or capture failed — no on-screen detection.");
                 return;
+            }
+
+            // Pase 1: frame completo a resolución nativa.
             var lines = await Capture.WindowsOcrReader.ReadLinesAsync(frame).ConfigureAwait(false);
             var offered = _offeredDetector!.Detect(lines);
+
+            // Pase 2 (solo si el 1 no vio nada): recorte central reescalado x2 —
+            // los títulos chicos a 1080p suelen necesitarlo.
+            if (offered.Count == 0)
+            {
+                var cropped = Capture.FrameOps.CenterCropUpscaled(frame);
+                var lines2 = await Capture.WindowsOcrReader.ReadLinesAsync(cropped).ConfigureAwait(false);
+                offered = _offeredDetector.Detect(lines.Concat(lines2).ToList());
+                LogOcr($"frame {frame.Width}x{frame.Height}: pass1 {lines.Count} lines, " +
+                       $"pass2 {lines2.Count} lines → {offered.Count} augment matches.");
+                // Cero matches con la ventana de pick abierta: volcar lo que el OCR
+                // SÍ leyó (una vez por muerte) — es el dato que explica el porqué.
+                if (offered.Count == 0 && !_ocrDumpDone)
+                {
+                    _ocrDumpDone = true;
+                    var sample = string.Join(" | ", lines.Concat(lines2)
+                        .Where(l => l.Trim().Length > 2).Take(30));
+                    FileLog.Write($"[ocr] no augment matches; OCR saw: {sample}");
+                }
+            }
+            else
+            {
+                LogOcr($"frame {frame.Width}x{frame.Height}: {lines.Count} lines → " +
+                       $"{offered.Count} augment matches ({string.Join(", ", offered.Select(o => o.Name))}).");
+            }
+
+            var found = offered;
             OnUi(() =>
             {
                 // Sin matches se conserva lo último visto: el jugador pudo abrir
                 // el tab del scoreboard encima; una lectura vacía no borra la buena.
-                if (offered.Count == 0)
+                if (found.Count == 0)
                     return;
                 OfferedAugments.Clear();
-                foreach (var augment in offered)
+                foreach (var augment in found)
                     OfferedAugments.Add(new OfferedAugmentRowViewModel(augment));
             });
         }
-        catch
+        catch (Exception ex)
         {
             // La detección nunca debe voltear el resto del advisor.
+            LogOcr($"detection failed: {ex.Message}");
         }
         finally
         {
             _ocrBusy = false;
         }
+    }
+
+    /// <summary>Diagnóstico de OCR a consola Y a session.log (la partida jugada
+    /// sin rastro en disco demostró que la consola sola no alcanza).</summary>
+    private void LogOcr(string message)
+    {
+        FileLog.Write($"[ocr] {message}");
+        OnUi(() => AppendConsole($"[ocr] {message}"));
     }
 
     /// <summary>Repobla solo si cambió (el tick es 1 s; recrear filas iguales parpadea).</summary>

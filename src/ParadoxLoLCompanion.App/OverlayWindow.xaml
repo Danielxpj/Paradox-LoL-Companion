@@ -191,12 +191,16 @@
                 </StackPanel>
 
                 <!-- Cheat-sheet de augments (Mayhem): S/A del tier list de Blitz,
-                     ★ = favorito para MI campeón. Solo visible con tier list cargado. -->
+                     ★ = favorito para MI campeón. SOLO durante la ventana de pick
+                     (muerto): toda la partida era ruido. El MATCH tab lo tiene siempre. -->
                 <StackPanel Margin="2,2,2,0">
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding MayhemAugments.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding MayhemPickWindow}" Value="False">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
                             </Style.Triggers>

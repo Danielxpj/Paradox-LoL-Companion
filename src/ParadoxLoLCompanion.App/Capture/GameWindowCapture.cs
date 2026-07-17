@@ -42,11 +42,24 @@ public static class GameWindowCapture
                 return null;
             var old = SelectObject(memDc, bitmap);
             var ok = PrintWindow(hwnd, memDc, PwRenderfullcontent);
-            SelectObject(memDc, old);
-            if (!ok)
-                return null;
             var buffer = new byte[width * height * 4];
-            Marshal.Copy(bits, buffer, 0, buffer.Length);
+            if (ok)
+                Marshal.Copy(bits, buffer, 0, buffer.Length);
+
+            // PrintWindow suele devolver negro con juegos DirectX aunque "funcione".
+            // Fallback: BitBlt desde la pantalla sobre el rect del cliente — en
+            // Borderless la ventana está visible, así que lo que hay en pantalla
+            // ES el juego. (En Fullscreen exclusivo tampoco hay nada que hacer.)
+            if (!ok || IsMostlyBlack(buffer))
+            {
+                var origin = new NativePoint();
+                if (ClientToScreen(hwnd, ref origin)
+                    && BitBlt(memDc, 0, 0, width, height, screenDc, origin.X, origin.Y, Srccopy))
+                    Marshal.Copy(bits, buffer, 0, buffer.Length);
+                else if (!ok)
+                    return null;
+            }
+            SelectObject(memDc, old);
             return new CapturedFrame(buffer, width, height);
         }
         finally
@@ -67,8 +80,25 @@ public static class GameWindowCapture
             : FindWindow(null, "League of Legends (TM) Client");
     }
 
+    /// <summary>Muestrea 1 de cada ~1000 píxeles: si casi todos son ~negros, la
+    /// captura falló de facto (PrintWindow "exitoso" pero vacío).</summary>
+    internal static bool IsMostlyBlack(byte[] bgra)
+    {
+        int samples = 0, dark = 0;
+        for (var i = 0; i < bgra.Length; i += 4000)
+        {
+            samples++;
+            if (bgra[i] < 16 && bgra[i + 1] < 16 && bgra[i + 2] < 16)
+                dark++;
+        }
+        return samples > 0 && dark >= samples * 0.98;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct NativeRect { public int Left, Top, Right, Bottom; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint { public int X, Y; }
 
     /// <summary>BITMAPINFOHEADER pelado (sin tabla de colores: 32 bpp no la usa).</summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -101,6 +131,15 @@ public static class GameWindowCapture
 
     [DllImport("user32.dll")]
     private static extern bool PrintWindow(IntPtr hwnd, IntPtr dc, uint flags);
+
+    [DllImport("user32.dll")]
+    private static extern bool ClientToScreen(IntPtr hwnd, ref NativePoint point);
+
+    private const uint Srccopy = 0x00CC0020;
+
+    [DllImport("gdi32.dll")]
+    private static extern bool BitBlt(IntPtr destDc, int x, int y, int w, int h,
+        IntPtr srcDc, int srcX, int srcY, uint rop);
 
     [DllImport("gdi32.dll")]
     private static extern IntPtr CreateCompatibleDC(IntPtr dc);
