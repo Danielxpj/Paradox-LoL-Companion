@@ -10,4 +10,7 @@ internal static class Fixtures
 
     /// <summary>Respuesta JSON-RPC real de lol_get_champion_analysis (Jayce top, 2026-07-04).</summary>
     public static string OpggJayce() => File.ReadAllText(Path("opgg-champion-analysis-jayce.json"));
+
+    /// <summary>Página SSR real de blitz.gg/lol/aram-mayhem-augments (2026-07-17, scripts vaciados).</summary>
+    public static string BlitzMayhemAugments() => File.ReadAllText(Path("blitz-aram-mayhem-augments.html"));
 }
