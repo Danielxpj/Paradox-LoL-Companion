@@ -1,5 +1,12 @@
 # ARAM Mayhem Augment Advisor Implementation Plan
 
+> **STATUS: IMPLEMENTED (2026-07-17).** All 7 tasks landed (commits `feat(augments)…`
+> → `feat(mayhem)…`); 349 tests green. Deviations from plan: none functional —
+> `CdragonAugmentNames` joins by English name (Blitz id 1030 ≠ cdragon id 30,
+> verified), alias tests use inline JSON instead of a fixture file, and the empty-OCR
+> read keeps the last good offer instead of clearing (scoreboard-over-cards case).
+> Live-game OCR validation pending a real Mayhem session (no queue during dev).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Give the Mayhem advisor real augment knowledge: a per-patch Blitz.gg tier list rendered as a ranked cheat-sheet in the overlay (L1), and live detection of the three augments the player is being offered via screen capture + Windows OCR, marking the best one (L2).

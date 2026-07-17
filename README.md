@@ -67,6 +67,9 @@ screen, not a mod.
   dead" alert (the only moment ARAM lets you buy).
 - **ARAM: Mayhem** — detected via LCU queue id 2400; tracks augment pick unlocks (start +
   levels 7/11/15, only redeemable while dead) and gives archetype/threat-tuned guidance.
+  Plus: a **Blitz.gg tier-list cheat-sheet** (S/A augments per rarity, ★ for your champion,
+  cached per patch) and **on-screen offer detection** — while you pick, the app OCRs the
+  game window, recognizes the augments offered and marks the best one (**◆ PICK THIS**).
 - **Champ select bench advisor (ARAM)** — scores your team composition and tells you which
   bench champion balances the team best, with reasons.
 - **Quality-of-life advice no app gives** — full-inventory handling (flags items you have
@@ -106,13 +109,15 @@ src/
     Stats/            OpggMcpClient · McpTextParser · StatsCache · StatsProvider ·
                       ItemSetBuilder (meta stats layer)
     Draft/            TeamBalanceAdvisor (ARAM bench)
-    Mayhem/           MayhemAdvisor (augment tracker)
+    Mayhem/           MayhemAdvisor (augment tracker + Blitz-ranked cheat-sheet)
+    Augments/         Blitz tier list (client/parser/cache/provider) + OCR matcher/detector
     Advice/           rule-based general advice feed (objectives, CS/min, gold)
     Objectives/       Dragon/Baron timer estimates
   ParadoxLoLCompanion.App/           # WPF, MVVM, dark "Tactical HUD" theme
+    Capture/          game-window capture (PrintWindow) + Windows OCR reader
     Update/           Updater (self-update on launch) + splash
 tests/
-  ParadoxLoLCompanion.Tests/         # 236 tests: parsers, engine, planners, stats, LCU
+  ParadoxLoLCompanion.Tests/         # 349 tests: parsers, engine, planners, stats, LCU
 ```
 
 Data flow, once per tick (~1 s):
@@ -366,6 +371,30 @@ and a tracker follows pick unlocks (start + levels 7/11/15) and the redemption r
 death — plus archetype/threat guidance ("enemy damage is 89% physical — defensive
 augments against physical are high value").
 
+On top of that, two data-driven layers (added 2026-07-17):
+
+- **Blitz tier-list cheat-sheet** — `BlitzAugmentClient` downloads Blitz.gg's
+  hand-curated ARAM Mayhem augment tier list (server-rendered HTML; needs a browser
+  User-Agent or Cloudflare answers 403), `BlitzAugmentParser` extracts ~220 augments
+  (rarity, tier 1–5, description, icon, **top champions per augment**) anchored on
+  stable structure (never Svelte class hashes), and it's cached per patch
+  (`%LOCALAPPDATA%/ParadoxLoLCompanion/augments`, 48 h refresh) like the OP.GG stats.
+  The Mayhem card and the overlay then show the S/A augments per rarity, with a ★ on
+  the ones Blitz ranks top **for your champion**. A sanity floor (≥ 100 parsed
+  augments) protects the cache from a Blitz redesign; on any failure the advisor
+  degrades to the generic guidance above.
+- **On-screen offer detection (OCR)** — while the pick window is open (you're dead),
+  the app captures the game window (`PrintWindow`, same Borderless/Windowed
+  requirement as the overlay), runs the built-in Windows OCR
+  (`Windows.Media.Ocr`) over the full frame and fuzzy-matches every recognized line
+  against the augment names (Levenshtein budget for l/i/1-style OCR noise; es_MX
+  aliases pulled from CommunityDragon's arena data for the Arena-shared augments —
+  Mayhem-only ones match by their English names). Two or more distinct matches are
+  treated as the real offer, ranked by Blitz tier, and the best is marked
+  **◆ PICK THIS** in the overlay and MATCH tab. No card geometry is assumed, so any
+  resolution works; in exclusive Fullscreen the capture is black and the feature
+  silently stands down to the cheat-sheet.
+
 ## Writing back to the client: rune pages & item sets
 
 The only two writes the app ever performs, both through the official LCU endpoints:
@@ -410,7 +439,7 @@ Requirements: **.NET 10 SDK** (WindowsDesktop/WPF workload), Windows.
 
 ```powershell
 dotnet build ParadoxLoLCompanion.slnx        # build
-dotnet test                                  # 236 tests (parsers, engine, planners, stats)
+dotnet test                                  # 349 tests (parsers, engine, planners, stats)
 dotnet run --project src/ParadoxLoLCompanion.App
 ```
 
@@ -425,8 +454,10 @@ and descriptions on your machine (it soft-skips if you have no cache yet).
   the local API doesn't expose actual timers.
 - **Champion classification is data-driven** (Data Dragon tags + `info`) with config
   overrides for the misleading cases; a misclassification is a config edit, not a code fix.
-- The **Mayhem augment choices** offered to you are simply not available through any
-  local API — the tracker works around that honestly rather than pretending.
+- The **Mayhem augment choices** offered to you are not available through any local
+  API — the tracker reads them from the screen (Windows OCR) instead, best-effort:
+  needs Borderless/Windowed, ≥ 2 recognized names, and degrades to the Blitz
+  cheat-sheet when it can't see the cards.
 - OP.GG stats are a *prior*, never a verdict: low-sample data is ramped toward zero, and
   live-game counters can always outscore the meta pick.
 - Design documents for each engine iteration live in [`docs/superpowers/specs/`](docs/superpowers/specs/).
