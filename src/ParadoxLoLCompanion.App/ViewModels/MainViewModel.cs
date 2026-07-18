@@ -276,6 +276,18 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Augments ofrecidos AHORA (leídos de pantalla por OCR), el mejor marcado.</summary>
     public ObservableCollection<OfferedAugmentRowViewModel> OfferedAugments { get; } = new();
 
+    /// <summary>Badges sobre las cartas (ventana click-through). Poblado junto a
+    /// OfferedAugments cuando además tenemos geometría y origen de pantalla.</summary>
+    public ObservableCollection<AugmentBadgeViewModel> AugmentBadges { get; } = new();
+
+    /// <summary>Rect (screen px) que la ventana de badges debe cubrir = área
+    /// cliente del juego en el momento de la última detección.</summary>
+    public System.Windows.Int32Rect BadgeSurfacePx { get; private set; }
+
+    /// <summary>Escala DPI del monitor (MainWindow la mantiene al día); las cajas
+    /// OCR vienen en px físicos y WPF posiciona en DIPs.</summary>
+    public double DpiScale { get; set; } = 1.0;
+
     private bool _mayhemPickWindow;
     /// <summary>Estás muerto eligiendo augment: el overlay muestra el cheat-sheet
     /// SOLO en esta ventana (mostrarlo toda la partida era ruido).</summary>
@@ -938,6 +950,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             MayhemAugments.Clear();
             OverlayAugments.Clear();
             OfferedAugments.Clear();
+            AugmentBadges.Clear();
             MayhemPickWindow = false;
             _pickWindow.Reset();
             return;
@@ -965,6 +978,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         else if (OfferedAugments.Count > 0)
         {
             OfferedAugments.Clear();   // gracia vencida: la oferta ya no aplica
+            AugmentBadges.Clear();
         }
     }
 
@@ -986,37 +1000,44 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 return;
             }
 
-            // Pase 1: frame completo a resolución nativa.
-            var lines = await Capture.WindowsOcrReader.ReadLinesAsync(frame).ConfigureAwait(false);
-            var offered = _offeredDetector!.Detect(lines);
+            // Pase 1: frame completo a resolución nativa (transform identidad).
+            var pass1 = await Capture.WindowsOcrReader.ReadLinesWithBoxesAsync(frame)
+                .ConfigureAwait(false);
+            var texts = pass1.Select(l => l.Text).ToList();
+            var boxes = pass1.Select(l => (l.Box, FrameTransform.Identity)).ToList();
+            var offered = _offeredDetector!.Detect(texts);
 
             // Pase 2 (solo si el 1 no vio nada): recorte central reescalado x2 —
             // los títulos chicos a 1080p suelen necesitarlo.
             if (offered.Count == 0)
             {
                 var (cropped, cropTransform) = Capture.FrameOps.CenterCropUpscaled(frame);
-                var lines2 = await Capture.WindowsOcrReader.ReadLinesAsync(cropped).ConfigureAwait(false);
-                offered = _offeredDetector.Detect(lines.Concat(lines2).ToList());
-                LogOcr($"frame {frame.Width}x{frame.Height}: pass1 {lines.Count} lines, " +
-                       $"pass2 {lines2.Count} lines → {offered.Count} augment matches.");
+                var pass2 = await Capture.WindowsOcrReader.ReadLinesWithBoxesAsync(cropped)
+                    .ConfigureAwait(false);
+                texts = texts.Concat(pass2.Select(l => l.Text)).ToList();
+                boxes.AddRange(pass2.Select(l => (l.Box, cropTransform)));
+                offered = _offeredDetector.Detect(texts);
+                LogOcr($"frame {frame.Width}x{frame.Height}: pass1 {pass1.Count} lines, " +
+                       $"pass2 {pass2.Count} lines → {offered.Count} augment matches.");
                 // Cero matches con la ventana de pick abierta: volcar lo que el OCR
                 // SÍ leyó, cada ~8 s — el dump único por muerte caía siempre ANTES
                 // de que el jugador abriera el picker y nunca capturaba las cartas.
                 if (offered.Count == 0 && DateTime.UtcNow - _lastOcrDumpUtc > TimeSpan.FromSeconds(8))
                 {
                     _lastOcrDumpUtc = DateTime.UtcNow;
-                    var sample = string.Join(" | ", lines.Concat(lines2)
+                    var sample = string.Join(" | ", texts
                         .Where(l => l.Trim().Length > 2).Take(30));
                     FileLog.Write($"[ocr] no augment matches; OCR saw: {sample}");
                 }
             }
             else
             {
-                LogOcr($"frame {frame.Width}x{frame.Height}: {lines.Count} lines → " +
+                LogOcr($"frame {frame.Width}x{frame.Height}: {pass1.Count} lines → " +
                        $"{offered.Count} augment matches ({string.Join(", ", offered.Select(o => o.Name))}).");
             }
 
             var found = offered;
+            var origin = Capture.GameWindowCapture.GetClientOrigin();
             OnUi(() =>
             {
                 // Sin matches se conserva lo último visto: el jugador pudo abrir
@@ -1026,6 +1047,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 OfferedAugments.Clear();
                 foreach (var augment in found)
                     OfferedAugments.Add(new OfferedAugmentRowViewModel(augment));
+                RebuildAugmentBadges(found, boxes, frame.Width, frame.Height, origin);
             });
         }
         catch (Exception ex)
@@ -1036,6 +1058,37 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         finally
         {
             _ocrBusy = false;
+        }
+    }
+
+    /// <summary>Ancla un badge centrado sobre la caja del título de cada carta.
+    /// Fail-open: sin origen o sin caja para un match, ese badge no se muestra —
+    /// la lista OFFERED NOW sigue siendo la red de seguridad.</summary>
+    private void RebuildAugmentBadges(IReadOnlyList<OfferedAugment> offered,
+        IReadOnlyList<(OcrBox Box, FrameTransform Transform)> lineBoxes,
+        int frameWidth, int frameHeight, (int X, int Y)? origin)
+    {
+        AugmentBadges.Clear();
+        if (origin is not { } o)
+            return;
+        BadgeSurfacePx = new System.Windows.Int32Rect(o.X, o.Y, frameWidth, frameHeight);
+        var dpi = DpiScale > 0 ? DpiScale : 1.0;
+        foreach (var augment in offered)
+        {
+            if (augment.LineIndex < 0 || augment.LineIndex >= lineBoxes.Count)
+                continue;
+            var (box, transform) = lineBoxes[augment.LineIndex];
+            if (box.Width == 0)
+                continue;   // línea sin palabras: no hay ancla
+            var native = transform.ToNative(box);
+            AugmentBadges.Add(new AugmentBadgeViewModel
+            {
+                Left = (native.X + native.Width / 2.0) / dpi - 80,
+                Top = native.Y / dpi - 32,
+                TierLabel = augment.TierLabel,
+                IsBest = augment.IsBest,
+                TierBrush = OfferedAugmentRowViewModel.BrushForTier(augment.Tier),
+            });
         }
     }
 

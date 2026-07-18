@@ -212,21 +212,36 @@ public sealed class OfferedAugmentRowViewModel
         TierLabel = offered.TierLabel;
         IsBest = offered.IsBest;
         Verdict = offered.IsBest ? "◆ PICK THIS" : "";
-        TierBrush = offered.Tier switch
-        {
-            1 => Palette.Gold,
-            2 => Palette.Green,
-            3 => Palette.Blue,
-            null => Palette.Muted,
-            _ => Palette.Amber,
-        };
+        TierBrush = BrushForTier(offered.Tier);
     }
+
+    /// <summary>Mismo código de color de tier para la lista y los badges on-card.</summary>
+    internal static Brush BrushForTier(int? tier) => tier switch
+    {
+        1 => Palette.Gold,
+        2 => Palette.Green,
+        3 => Palette.Blue,
+        null => Palette.Muted,
+        _ => Palette.Amber,
+    };
 
     public string Name { get; }
     public string TierLabel { get; }
     public bool IsBest { get; }
     public string Verdict { get; }
     public Brush TierBrush { get; }
+}
+
+/// <summary>Badge anclado sobre una carta de augment in-game. Left/Top en DIPs
+/// relativos a la ventana de badges (que cubre el área cliente del juego);
+/// Left ya viene corrido -80 para centrar el contenedor de 160 DIP.</summary>
+public sealed class AugmentBadgeViewModel
+{
+    public double Left { get; init; }
+    public double Top { get; init; }
+    public string TierLabel { get; init; } = "";
+    public bool IsBest { get; init; }
+    public Brush TierBrush { get; init; } = Palette.Muted;
 }
 
 /// <summary>Tile del panel ENEMY X-RAY: retrato, KDA, rol y estado del enemigo.</summary>
