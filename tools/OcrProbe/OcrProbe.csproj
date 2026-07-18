@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Sonda de laboratorio: corre el OCR de Windows sobre un PNG capturado del
+       juego con distintas recetas de recorte/escala, para elegir la que lee los
+       títulos de las cartas de augment ANTES de cablearla en la app. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+</Project>

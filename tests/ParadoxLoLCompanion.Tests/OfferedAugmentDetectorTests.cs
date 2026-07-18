@@ -45,6 +45,31 @@ public class OfferedAugmentDetectorTests
     }
 
     [Fact]
+    public void RealPickerOcrLines_DetectAllThree_AgainstRealTierList()
+    {
+        // Líneas EXACTAS que el OCR de Windows leyó del frame real del picker
+        // (tools/OcrProbe sobre la captura del 2026-07-17, receta center 70x50 x2).
+        var list = BlitzAugmentParser.Parse(Fixtures.BlitzMayhemAugments());
+        var offered = new OfferedAugmentDetector(list).Detect(new[]
+        {
+            "Shrink Ray", "Utility", "Your Attacks reduce the target's damage",
+            "and size by 15% On-Hit.",
+            "Skilled Sniper", "Damage", "Snipe an enemy with a non-Ultimate",
+            "Ability refunds 80% Cooldown (65% for", "periodic A bilities).",
+            "With Haste", "Gain Move Speed equal to 70% of your", "Ability Haste.",
+        });
+
+        Assert.Equal(3, offered.Count);
+        Assert.Contains(offered, a => a.Name == "Shrink Ray");
+        Assert.Contains(offered, a => a.Name == "Skilled Sniper");
+        Assert.Contains(offered, a => a.Name == "With Haste");
+        // El mejor es uno de los dos tier 2 (Skilled Sniper / With Haste), nunca
+        // Shrink Ray (tier 5).
+        Assert.True(offered[0].IsBest);
+        Assert.NotEqual("Shrink Ray", offered[0].Name);
+    }
+
+    [Fact]
     public void UnrankedAugment_SortsLast_AndRankedOneIsBest()
     {
         var offered = new OfferedAugmentDetector(List)
