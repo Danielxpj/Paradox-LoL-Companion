@@ -14,12 +14,20 @@ public partial class MainWindow : Window
 {
     private CtrlXHotkey? _hotkey;
     private OverlayWindow? _overlay;
+    private AugmentBadgeWindow? _badges;
 
     public MainWindow()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
         SourceInitialized += OnSourceInitialized;
+        // DPI real recién con el árbol visual listo; las cajas OCR (px físicos)
+        // se convierten a DIPs con esta escala.
+        Loaded += (_, _) =>
+        {
+            if (DataContext is MainViewModel vm)
+                vm.DpiScale = System.Windows.Media.VisualTreeHelper.GetDpi(this).DpiScaleX;
+        };
         // Consola oculta de entrada (no guardar la altura del XAML como "elegida").
         SetConsoleCollapsed(true, remember: false);
     }
@@ -64,6 +72,7 @@ public partial class MainWindow : Window
     {
         _hotkey?.Dispose();
         _overlay?.Close();
+        _badges?.Close();
         base.OnClosed(e);
     }
 
@@ -73,7 +82,32 @@ public partial class MainWindow : Window
         {
             vm.ConsoleLines.CollectionChanged += OnConsoleLinesChanged;
             vm.DataUpdateAvailable += info => OnUpdateAvailable(vm, info);
+            vm.AugmentBadges.CollectionChanged += (_, _) => SyncBadgeWindow(vm);
         }
+    }
+
+    /// <summary>Vida de la ventana de badges: existe mientras haya badges que
+    /// mostrar; se re-posiciona en cada detección (el juego pudo moverse).</summary>
+    private void SyncBadgeWindow(MainViewModel vm)
+    {
+        if (vm.AugmentBadges.Count == 0)
+        {
+            _badges?.Hide();
+            return;
+        }
+        if (_badges is null)
+        {
+            _badges = new AugmentBadgeWindow { DataContext = vm };
+            _badges.Closed += (_, _) => _badges = null;
+        }
+        _badges.ShowOver(vm.BadgeSurfacePx);
+    }
+
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        if (DataContext is MainViewModel vm)
+            vm.DpiScale = newDpi.DpiScaleX;
     }
 
     private void OnUpdateAvailable(MainViewModel vm, DataUpdateInfo info)
