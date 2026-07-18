@@ -70,6 +70,16 @@ public class OfferedAugmentDetectorTests
     }
 
     [Fact]
+    public void Matches_ReportTheSourceLineIndex()
+    {
+        var offered = new OfferedAugmentDetector(List).Detect(new[]
+        { "CHOOSE ONE", "Goliath", "noise", "Eureka" });
+
+        Assert.Equal(3, offered.Single(a => a.Name == "Eureka").LineIndex);
+        Assert.Equal(1, offered.Single(a => a.Name == "Goliath").LineIndex);
+    }
+
+    [Fact]
     public void UnrankedAugment_SortsLast_AndRankedOneIsBest()
     {
         var offered = new OfferedAugmentDetector(List)
