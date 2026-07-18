@@ -155,9 +155,15 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Text="OFFERED NOW" FontFamily="{StaticResource HudFont}"
-                               FontSize="9" FontWeight="Bold"
-                               Foreground="{StaticResource Amber}" Margin="0,2,0,4" />
+                    <DockPanel Margin="0,2,0,4">
+                        <TextBlock DockPanel.Dock="Right" Text="POWERED BY BLITZ.GG"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{StaticResource HudFont}" FontSize="8"
+                                   Foreground="{StaticResource TextFaint}" />
+                        <TextBlock Text="OFFERED NOW" FontFamily="{StaticResource HudFont}"
+                                   FontSize="9" FontWeight="Bold"
+                                   Foreground="{StaticResource Amber}" />
+                    </DockPanel>
                     <ItemsControl ItemsSource="{Binding OfferedAugments}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -211,9 +217,15 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Text="RECOMMENDED AUGMENTS" FontFamily="{StaticResource HudFont}"
-                               FontSize="9" FontWeight="Bold"
-                               Foreground="{StaticResource TextFaint}" Margin="0,2,0,4" />
+                    <DockPanel Margin="0,2,0,4">
+                        <TextBlock DockPanel.Dock="Right" Text="POWERED BY BLITZ.GG"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{StaticResource HudFont}" FontSize="8"
+                                   Foreground="{StaticResource TextFaint}" />
+                        <TextBlock Text="RECOMMENDED AUGMENTS" FontFamily="{StaticResource HudFont}"
+                                   FontSize="9" FontWeight="Bold"
+                                   Foreground="{StaticResource TextFaint}" />
+                    </DockPanel>
                     <ItemsControl ItemsSource="{Binding OverlayAugments}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
