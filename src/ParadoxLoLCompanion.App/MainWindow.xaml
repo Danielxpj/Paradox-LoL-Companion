@@ -149,6 +149,12 @@
                                        ToolTip="Champion and item catalog data from Riot's Data Dragon" />
                             <TextBlock Text="·" Foreground="{StaticResource TextFaint}"
                                        FontSize="12" Margin="6,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Blitz.gg" Foreground="{StaticResource Amber}"
+                                       FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       ToolTip="Mayhem augment tier list from Blitz.gg" />
+                            <TextBlock Text="·" Foreground="{StaticResource TextFaint}"
+                                       FontSize="12" Margin="6,0,6,0" VerticalAlignment="Center" />
                             <TextBlock Text="Claude Fable" Foreground="{StaticResource Gold}"
                                        FontFamily="{StaticResource DisplayFontCondensed}" FontWeight="Bold"
                                        FontSize="13" VerticalAlignment="Center"
