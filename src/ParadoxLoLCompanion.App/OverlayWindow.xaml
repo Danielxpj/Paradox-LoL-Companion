@@ -219,10 +219,34 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#101512" BorderBrush="{Binding RarityBrush}"
-                                        BorderThickness="1" CornerRadius="3" Margin="0,0,4,4" Padding="5,3"
+                                <Border BorderThickness="1" CornerRadius="3" Margin="0,0,4,4" Padding="5,3"
                                         ToolTip="{Binding RarityLabel}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#101512" />
+                                            <Setter Property="BorderBrush" Value="{Binding RarityBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsTop}" Value="True">
+                                                    <Setter Property="Background" Value="#241C08" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource Gold}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding TopChip}" FontFamily="{StaticResource HudFont}"
+                                                   FontSize="10" FontWeight="Bold" Margin="0,0,5,0"
+                                                   Foreground="{StaticResource Gold}" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTop}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                         <TextBlock Text="{Binding TierLabel}" FontFamily="{StaticResource HudFont}"
                                                    FontSize="10" FontWeight="Bold" Foreground="{Binding TierBrush}"
                                                    VerticalAlignment="Center" />

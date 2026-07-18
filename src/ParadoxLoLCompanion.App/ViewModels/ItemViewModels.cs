@@ -164,8 +164,10 @@ public sealed class ItemRecoRowViewModel
 /// <summary>Fila del cheat-sheet de augments de Mayhem (overlay y MATCH tab).</summary>
 public sealed class AugmentRowViewModel
 {
-    public AugmentRowViewModel(Core.Mayhem.AugmentSuggestion suggestion)
+    public AugmentRowViewModel(Core.Mayhem.AugmentSuggestion suggestion, bool isTop = false)
     {
+        IsTop = isTop;
+        TopChip = isTop ? "◆ BEST" : "";
         Id = suggestion.Id;
         Name = suggestion.Name;
         TierLabel = suggestion.TierLabel;
@@ -196,6 +198,9 @@ public sealed class AugmentRowViewModel
     public string FitChip { get; }
     public Brush TierBrush { get; }
     public Brush RarityBrush { get; }
+    /// <summary>El mejor de los recomendados: el overlay lo resalta en dorado.</summary>
+    public bool IsTop { get; }
+    public string TopChip { get; }
 }
 
 /// <summary>Augment ofrecido detectado por OCR, con su veredicto.</summary>

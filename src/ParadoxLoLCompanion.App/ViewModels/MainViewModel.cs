@@ -1064,7 +1064,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             OverlayAugments.Clear();
             foreach (var suggestion in recommended)
-                OverlayAugments.Add(new AugmentRowViewModel(suggestion));
+                OverlayAugments.Add(new AugmentRowViewModel(suggestion,
+                    isTop: OverlayAugments.Count == 0));
         }
     }
 
