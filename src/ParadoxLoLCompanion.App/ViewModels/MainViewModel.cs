@@ -73,8 +73,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private string? _augmentFetchPatch;
     private DateTime _augmentRetryAtUtc = DateTime.MinValue;
     // Detección OCR de los augments ofrecidos: solo corre durante la ventana de
-    // pick (muerto), throttled y de a una — el OCR de un frame tarda ~100-300 ms.
+    // pick (muerto + gracia post-respawn), throttled y de a una — el OCR de un
+    // frame tarda ~100-300 ms.
     private OfferedAugmentDetector? _offeredDetector;
+    private readonly PickWindowTracker _pickWindow = new();
     private bool _ocrBusy;
     private DateTime _lastOcrUtc = DateTime.MinValue;
     private bool _aliasesRequested;
@@ -937,6 +939,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             OverlayAugments.Clear();
             OfferedAugments.Clear();
             MayhemPickWindow = false;
+            _pickWindow.Reset();
             return;
         }
 
@@ -946,10 +949,14 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         MayhemGuidance = string.Join("   //   ", advice.Guidance);
         SyncMayhemAugments(advice.TopAugments);
 
-        MayhemPickWindow = advice.PickWindowNow;
+        // La señal cruda (IsDead) se apaga al revivir, pero el picker sigue abierto
+        // en pantalla hasta elegir: el tracker sostiene la ventana durante la gracia
+        // post-respawn para que las recomendaciones no desaparezcan antes del click.
+        var pickWindowActive = _pickWindow.Update(advice.PickWindowNow, DateTime.UtcNow);
+        MayhemPickWindow = pickWindowActive;
 
-        // Ventana de pick abierta: leer la pantalla en busca de los 3 ofrecidos.
-        if (advice.PickWindowNow)
+        // Ventana de pick activa: leer la pantalla en busca de los 3 ofrecidos.
+        if (pickWindowActive)
         {
             if (_offeredDetector is not null && !_ocrBusy
                 && DateTime.UtcNow - _lastOcrUtc > TimeSpan.FromSeconds(2))
@@ -957,7 +964,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
         else if (OfferedAugments.Count > 0)
         {
-            OfferedAugments.Clear();   // revivió: la oferta en pantalla ya no está
+            OfferedAugments.Clear();   // gracia vencida: la oferta ya no aplica
         }
     }
 

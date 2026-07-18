@@ -142,8 +142,9 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <!-- Augments OFRECIDOS ahora (OCR de la pantalla, estás muerto):
-                     el mejor según Blitz resaltado en dorado. -->
+                <!-- Augments OFRECIDOS ahora (OCR de la pantalla; muerto o en la
+                     gracia post-respawn con el picker aún abierto): el mejor según
+                     Blitz resaltado en dorado. -->
                 <StackPanel Margin="2,2,2,0">
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">
