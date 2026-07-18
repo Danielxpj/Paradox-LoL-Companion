@@ -72,15 +72,19 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private AugmentTierList? _augmentTiers;
     private string? _augmentFetchPatch;
     private DateTime _augmentRetryAtUtc = DateTime.MinValue;
-    // Detección OCR de los augments ofrecidos: solo corre durante la ventana de
-    // pick (muerto + gracia post-respawn), throttled y de a una — el OCR de un
-    // frame tarda ~100-300 ms.
+    // Detección OCR de los augments ofrecidos: escaneo continuo durante la
+    // partida — rápido (2 s) con la ventana de pick activa, de guardia (6 s) el
+    // resto — throttled y de a una; el OCR de un frame tarda ~100-300 ms.
     private OfferedAugmentDetector? _offeredDetector;
     private readonly PickWindowTracker _pickWindow = new();
     private bool _ocrBusy;
     private DateTime _lastOcrUtc = DateTime.MinValue;
     private bool _aliasesRequested;
     private DateTime _lastOcrDumpUtc = DateTime.MinValue;   // dump de diagnóstico cada ~8 s muerto
+    // Última vez que el OCR VIO una oferta en pantalla: el picker puede estar
+    // abierto en momentos que la API no delata (pick inicial vivo, reabierto con
+    // la tecla) — verlo mantiene la ventana de pick activa.
+    private DateTime _lastOfferSeenUtc = DateTime.MinValue;
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -962,20 +966,23 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         MayhemGuidance = string.Join("   //   ", advice.Guidance);
         SyncMayhemAugments(advice.TopAugments);
 
-        // La señal cruda (IsDead) se apaga al revivir, pero el picker sigue abierto
-        // en pantalla hasta elegir: el tracker sostiene la ventana durante la gracia
-        // post-respawn para que las recomendaciones no desaparezcan antes del click.
-        var pickWindowActive = _pickWindow.Update(advice.PickWindowNow, DateTime.UtcNow);
+        // La señal cruda (muerto / arranque de partida) se apaga sola, pero el
+        // picker sigue abierto en pantalla hasta elegir: el tracker sostiene la
+        // ventana durante la gracia, y VER la oferta con el OCR también la
+        // mantiene viva (cubre picks en momentos que la API no delata).
+        var offerOnScreen = DateTime.UtcNow - _lastOfferSeenUtc < TimeSpan.FromSeconds(10);
+        var pickWindowActive = _pickWindow.Update(
+            advice.PickWindowNow || offerOnScreen, DateTime.UtcNow);
         MayhemPickWindow = pickWindowActive;
 
-        // Ventana de pick activa: leer la pantalla en busca de los 3 ofrecidos.
-        if (pickWindowActive)
-        {
-            if (_offeredDetector is not null && !_ocrBusy
-                && DateTime.UtcNow - _lastOcrUtc > TimeSpan.FromSeconds(2))
-                _ = DetectOfferedAsync();
-        }
-        else if (OfferedAugments.Count > 0)
+        // Escaneo continuo: rápido con la ventana activa, lento de guardia el
+        // resto de la partida (el picker reabierto se detecta en ≤6 s).
+        var cadence = pickWindowActive ? TimeSpan.FromSeconds(2) : TimeSpan.FromSeconds(6);
+        if (_offeredDetector is not null && !_ocrBusy
+            && DateTime.UtcNow - _lastOcrUtc > cadence)
+            _ = DetectOfferedAsync();
+
+        if (!pickWindowActive && OfferedAugments.Count > 0)
         {
             OfferedAugments.Clear();   // gracia vencida: la oferta ya no aplica
             AugmentBadges.Clear();
@@ -1022,7 +1029,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 // Cero matches con la ventana de pick abierta: volcar lo que el OCR
                 // SÍ leyó, cada ~8 s — el dump único por muerte caía siempre ANTES
                 // de que el jugador abriera el picker y nunca capturaba las cartas.
-                if (offered.Count == 0 && DateTime.UtcNow - _lastOcrDumpUtc > TimeSpan.FromSeconds(8))
+                if (offered.Count == 0 && MayhemPickWindow
+                    && DateTime.UtcNow - _lastOcrDumpUtc > TimeSpan.FromSeconds(8))
                 {
                     _lastOcrDumpUtc = DateTime.UtcNow;
                     var sample = string.Join(" | ", texts
@@ -1037,6 +1045,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             }
 
             var found = offered;
+            // Con la ventana cerrada (escaneo de guardia) exigir las 3 cartas:
+            // 2 nombres sueltos pueden ser kill feed (visto en vivo: "E: BONK!"),
+            // no el picker abierto.
+            if (found.Count is > 0 and < 3 && !MayhemPickWindow)
+                found = Array.Empty<OfferedAugment>();
+            if (found.Count > 0)
+                _lastOfferSeenUtc = DateTime.UtcNow;
             var origin = Capture.GameWindowCapture.GetClientOrigin();
             OnUi(() =>
             {

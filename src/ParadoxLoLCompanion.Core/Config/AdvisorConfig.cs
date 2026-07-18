@@ -60,6 +60,9 @@ public sealed class MayhemConfig
     public List<int> QueueIds { get; set; } = new() { 2400 };
     /// <summary>Niveles donde se desbloquea un pick adicional (además del inicial).</summary>
     public List<int> PickLevels { get; set; } = new() { 7, 11, 15 };
+    /// <summary>El pick INICIAL se hace vivo, en el spawn: la ventana de pick se
+    /// considera abierta durante estos primeros segundos de partida.</summary>
+    public double InitialPickWindowSeconds { get; set; } = 90;
 }
 
 public sealed class CsConfig

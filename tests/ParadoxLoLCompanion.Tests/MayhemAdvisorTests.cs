@@ -12,10 +12,12 @@ public class MayhemAdvisorTests
     private static MayhemAdvisor Advisor() => new(TestCatalog.Catalog());
 
     private static GameState State(int level, bool dead = false, double respawn = 0,
+        double gameTime = 600,
         params (string Champ, string Team, int Kills, int[] ItemIds)[] enemies)
     {
         var players = new[] { ("Jinx", "ORDER", 0, None) }.Concat(enemies).ToArray();
         var state = TestCatalog.AramState(1000, players);
+        state.GameData.GameTime = gameTime;
         state.ActivePlayer!.Level = level;
         state.AllPlayers[0].Level = level;
         state.AllPlayers[0].IsDead = dead;
@@ -44,7 +46,7 @@ public class MayhemAdvisorTests
     public void Dead_OpensThePickWindow()
     {
         var advice = Advisor().Advise(State(11, dead: true, respawn: 12,
-            ("Ahri", "CHAOS", 0, None)))!;
+            enemies: ("Ahri", "CHAOS", 0, None)))!;
 
         Assert.True(advice.PickWindowNow);
         Assert.NotNull(advice.PickNowLine);
@@ -53,12 +55,37 @@ public class MayhemAdvisorTests
     }
 
     [Fact]
-    public void Alive_NoPickWindow()
+    public void Alive_MidGame_NoPickWindow()
     {
-        var advice = Advisor().Advise(State(11, enemies: ("Ahri", "CHAOS", 0, None)))!;
+        var advice = Advisor().Advise(State(11, gameTime: 600,
+            enemies: ("Ahri", "CHAOS", 0, None)))!;
 
         Assert.False(advice.PickWindowNow);
         Assert.Null(advice.PickNowLine);
+    }
+
+    [Fact]
+    public void GameStart_AliveAtSpawn_OpensThePickWindow()
+    {
+        // El PRIMER pick de augment se hace en el spawn inicial, VIVO: el bug
+        // real (2026-07-18) era que la ventana solo abría al morir y en el
+        // arranque no se mostraba ninguna recomendación.
+        var advice = Advisor().Advise(State(1, gameTime: 20,
+            enemies: ("Ahri", "CHAOS", 0, None)))!;
+
+        Assert.True(advice.PickWindowNow);
+        Assert.NotNull(advice.PickNowLine);
+        Assert.Contains("first augment", advice.PickNowLine);
+    }
+
+    [Fact]
+    public void GameStart_ButDead_KeepsDeathMessage()
+    {
+        var advice = Advisor().Advise(State(1, dead: true, respawn: 5, gameTime: 60,
+            enemies: ("Ahri", "CHAOS", 0, None)))!;
+
+        Assert.True(advice.PickWindowNow);
+        Assert.Contains("dead", advice.PickNowLine);
     }
 
     [Fact]

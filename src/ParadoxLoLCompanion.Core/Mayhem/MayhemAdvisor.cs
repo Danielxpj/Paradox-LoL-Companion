@@ -78,6 +78,9 @@ public sealed class MayhemAdvisor
             ? $"Augment picks unlocked: {unlocked} of {total} — next at level {n}."
             : $"All {total} augment picks unlocked.";
 
+        // El pick inicial se hace VIVO en el spawn (bug real: solo-muerto dejaba
+        // el arranque de partida sin ninguna recomendación).
+        var initialWindow = state.GameData.GameTime < _config.InitialPickWindowSeconds;
         string? pickNow = null;
         if (me.IsDead)
         {
@@ -86,8 +89,12 @@ public sealed class MayhemAdvisor
                 : "";
             pickNow = $"You're dead{respawn} — augments can only be picked now.";
         }
+        else if (initialWindow)
+        {
+            pickNow = "Game start — pick your first augment now.";
+        }
 
-        return new MayhemAdvice(unlocked, total, next, me.IsDead, status, pickNow,
+        return new MayhemAdvice(unlocked, total, next, me.IsDead || initialWindow, status, pickNow,
             Guidance(state, me, forcedArchetype))
         { TopAugments = TopAugments(augments, me) };
     }
