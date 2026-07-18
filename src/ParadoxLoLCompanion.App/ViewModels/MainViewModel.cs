@@ -85,6 +85,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     // abierto en momentos que la API no delata (pick inicial vivo, reabierto con
     // la tecla) — verlo mantiene la ventana de pick activa.
     private DateTime _lastOfferSeenUtc = DateTime.MinValue;
+    // Lecturas vacías CONSECUTIVAS con oferta visible: 1 puede ser el scoreboard
+    // encima; 3 seguidas (~6 s) = el jugador ya eligió y el picker se cerró.
+    private int _ocrMissStreak;
+    // Oferta consumida: apaga la ventana inicial de arranque para que los paneles
+    // no queden colgados el resto de los 90 s (la muerte siempre la reabre).
+    private bool _offerGone;
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -957,6 +963,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             AugmentBadges.Clear();
             MayhemPickWindow = false;
             _pickWindow.Reset();
+            _ocrMissStreak = 0;
+            _offerGone = false;
             return;
         }
 
@@ -971,8 +979,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         // ventana durante la gracia, y VER la oferta con el OCR también la
         // mantiene viva (cubre picks en momentos que la API no delata).
         var offerOnScreen = DateTime.UtcNow - _lastOfferSeenUtc < TimeSpan.FromSeconds(10);
-        var pickWindowActive = _pickWindow.Update(
-            advice.PickWindowNow || offerOnScreen, DateTime.UtcNow);
+        // Muerte = señal dura, siempre abre. Ventana inicial y avistamientos se
+        // suprimen una vez que el OCR confirmó que la oferta ya no está.
+        var windowSignal = advice.IsDeadNow
+            || (!_offerGone && (advice.PickWindowNow || offerOnScreen));
+        var pickWindowActive = _pickWindow.Update(windowSignal, DateTime.UtcNow);
         MayhemPickWindow = pickWindowActive;
 
         // Escaneo continuo: rápido con la ventana activa, lento de guardia el
@@ -1055,10 +1066,24 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             var origin = Capture.GameWindowCapture.GetClientOrigin();
             OnUi(() =>
             {
-                // Sin matches se conserva lo último visto: el jugador pudo abrir
-                // el tab del scoreboard encima; una lectura vacía no borra la buena.
                 if (found.Count == 0)
+                {
+                    // Una lectura vacía no borra (el scoreboard pudo tapar las
+                    // cartas), pero 3 seguidas con oferta visible = ya elegiste:
+                    // cerrar paneles y ventana YA, no un minuto después.
+                    if (OfferedAugments.Count > 0 && ++_ocrMissStreak >= 3)
+                    {
+                        OfferedAugments.Clear();
+                        AugmentBadges.Clear();
+                        _offerGone = true;
+                        _lastOfferSeenUtc = DateTime.MinValue;
+                        _pickWindow.Reset();
+                        LogOcr("offer no longer on screen (3 empty reads) — cleared.");
+                    }
                     return;
+                }
+                _ocrMissStreak = 0;
+                _offerGone = false;
                 OfferedAugments.Clear();
                 foreach (var augment in found)
                     OfferedAugments.Add(new OfferedAugmentRowViewModel(augment));

@@ -25,6 +25,10 @@ public sealed record MayhemAdvice(
     string? PickNowLine,
     IReadOnlyList<string> Guidance)
 {
+    /// <summary>Muerto AHORA MISMO: señal dura que siempre reabre la ventana (a
+    /// diferencia de la ventana inicial, que se apaga cuando ya elegiste).</summary>
+    public bool IsDeadNow { get; init; }
+
     /// <summary>Cheat-sheet rankeado por rareza (vacío sin tier list descargado).</summary>
     public IReadOnlyList<AugmentSuggestion> TopAugments { get; init; } =
         Array.Empty<AugmentSuggestion>();
@@ -96,7 +100,7 @@ public sealed class MayhemAdvisor
 
         return new MayhemAdvice(unlocked, total, next, me.IsDead || initialWindow, status, pickNow,
             Guidance(state, me, forcedArchetype))
-        { TopAugments = TopAugments(augments, me) };
+        { TopAugments = TopAugments(augments, me), IsDeadNow = me.IsDead };
     }
 
     /// <summary>

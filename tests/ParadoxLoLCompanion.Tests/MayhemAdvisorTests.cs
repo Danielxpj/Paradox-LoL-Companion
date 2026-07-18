@@ -79,6 +79,22 @@ public class MayhemAdvisorTests
     }
 
     [Fact]
+    public void IsDeadNow_DistinguishesDeathFromInitialWindow()
+    {
+        // El VM necesita saber si la ventana está abierta POR MUERTE (señal dura,
+        // siempre respetada) o por el arranque de partida (se apaga cuando el OCR
+        // confirma que el jugador ya eligió).
+        var atSpawn = Advisor().Advise(State(1, gameTime: 20,
+            enemies: ("Ahri", "CHAOS", 0, None)))!;
+        var dead = Advisor().Advise(State(11, dead: true, respawn: 8,
+            enemies: ("Ahri", "CHAOS", 0, None)))!;
+
+        Assert.False(atSpawn.IsDeadNow);
+        Assert.True(atSpawn.PickWindowNow);
+        Assert.True(dead.IsDeadNow);
+    }
+
+    [Fact]
     public void GameStart_ButDead_KeepsDeathMessage()
     {
         var advice = Advisor().Advise(State(1, dead: true, respawn: 5, gameTime: 60,
