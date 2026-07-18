@@ -994,7 +994,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             // los títulos chicos a 1080p suelen necesitarlo.
             if (offered.Count == 0)
             {
-                var cropped = Capture.FrameOps.CenterCropUpscaled(frame);
+                var (cropped, cropTransform) = Capture.FrameOps.CenterCropUpscaled(frame);
                 var lines2 = await Capture.WindowsOcrReader.ReadLinesAsync(cropped).ConfigureAwait(false);
                 offered = _offeredDetector.Detect(lines.Concat(lines2).ToList());
                 LogOcr($"frame {frame.Width}x{frame.Height}: pass1 {lines.Count} lines, " +

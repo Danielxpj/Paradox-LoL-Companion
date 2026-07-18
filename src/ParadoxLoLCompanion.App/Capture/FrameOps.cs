@@ -1,3 +1,5 @@
+using ParadoxLoLCompanion.Core.Augments;
+
 namespace ParadoxLoLCompanion.App.Capture;
 
 /// <summary>
@@ -19,7 +21,8 @@ public static class FrameOps
     /// y 20-70 %, y a x2 los títulos pasan de ~14 px (ilegibles para el OCR de
     /// Windows: 0 líneas) a ~28 px (lee títulos Y descripciones completas).
     /// </summary>
-    public static CapturedFrame CenterCropUpscaled(CapturedFrame frame)
+    public static (CapturedFrame Frame, FrameTransform Transform) CenterCropUpscaled(
+        CapturedFrame frame)
     {
         int cropX = (int)(frame.Width * 0.15), cropW = (int)(frame.Width * 0.70);
         int cropY = (int)(frame.Height * 0.20), cropH = (int)(frame.Height * 0.50);
@@ -45,6 +48,7 @@ public static class FrameOps
                 output[dst + 3] = frame.Bgra[src + 3];
             }
         }
-        return new CapturedFrame(output, outW, outH);
+        return (new CapturedFrame(output, outW, outH),
+            new FrameTransform(cropX, cropY, scale));
     }
 }
