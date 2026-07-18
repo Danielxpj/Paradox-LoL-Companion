@@ -190,26 +190,30 @@
                     </ItemsControl>
                 </StackPanel>
 
-                <!-- Cheat-sheet de augments (Mayhem): S/A del tier list de Blitz,
-                     ★ = favorito para MI campeón. SOLO durante la ventana de pick
-                     (muerto): toda la partida era ruido. El MATCH tab lo tiene siempre. -->
+                <!-- Recomendados de augments (Mayhem): SOLO los ~4 que valen (★ de tu
+                     campeón + S), SOLO durante la ventana de pick, y OCULTO si el OCR
+                     ya identificó los 3 ofrecidos (OFFERED NOW manda). El catálogo
+                     completo vive en el MATCH tab. -->
                 <StackPanel Margin="2,2,2,0">
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding MayhemAugments.Count}" Value="0">
+                                <DataTrigger Binding="{Binding OverlayAugments.Count}" Value="0">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding MayhemPickWindow}" Value="False">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding HasOfferedAugments}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Text="AUGMENTS (BLITZ TIERS)" FontFamily="{StaticResource HudFont}"
+                    <TextBlock Text="RECOMMENDED AUGMENTS" FontFamily="{StaticResource HudFont}"
                                FontSize="9" FontWeight="Bold"
                                Foreground="{StaticResource TextFaint}" Margin="0,2,0,4" />
-                    <ItemsControl ItemsSource="{Binding MayhemAugments}">
+                    <ItemsControl ItemsSource="{Binding OverlayAugments}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>

@@ -60,4 +60,29 @@ public class AugmentNameMatcherTests
     [Fact]
     public void BoundedLevenshtein_OverBudget_ReturnsMinusOne() =>
         Assert.Equal(-1, AugmentNameMatcher.BoundedLevenshtein("completely", "different!!", 2));
+
+    // El OCR real (partida 2026-07-17) devuelve los nombres INCRUSTADOS en líneas
+    // con basura alrededor ("10:33 E,-r.: BONK!"), nunca la línea limpia.
+    [Theory]
+    [InlineData("Choose one: Jeweled Gauntlet")]        // prefijo de UI
+    [InlineData("10:33 E: Jeweled Gauntlet proc")]      // kill feed con timestamp
+    [InlineData("Jeweled Gauntiet +35% crit")]          // sufijo + typo de OCR
+    public void Matches_NameEmbeddedInNoisyLine(string line) =>
+        Assert.Equal(1, Matcher().Match(line)!.Id);
+
+    [Fact]
+    public void ShortName_RequiresExactToken_InsideNoisyLine()
+    {
+        var list = new AugmentTierList { Augments = new[]
+        {
+            new AugmentInfo { Id = 9, Name = "BONK!", Rarity = AugmentRarity.Gold, Tier = 3 },
+        } };
+        var matcher = new AugmentNameMatcher(list);
+        Assert.Equal(9, matcher.Match("10:33 E,-r.: BONK!")!.Id);
+        Assert.Null(matcher.Match("10:33 E,-r.: BONX!"));   // corto: sin fuzz embebido
+    }
+
+    [Fact]
+    public void EmbeddedMatching_DoesNotFalsePositive_OnGenericHudText() =>
+        Assert.Null(Matcher().Match("Shop [P] 1883 BACK IN 335 SHUT DOWN!"));
 }

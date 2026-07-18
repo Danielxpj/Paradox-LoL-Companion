@@ -78,7 +78,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _ocrBusy;
     private DateTime _lastOcrUtc = DateTime.MinValue;
     private bool _aliasesRequested;
-    private bool _ocrDumpDone;   // un volcado de líneas OCR por muerte, no por tick
+    private DateTime _lastOcrDumpUtc = DateTime.MinValue;   // dump de diagnóstico cada ~8 s muerto
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -104,6 +104,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         // El porqué de cada fallo de OP.GG va a la consola: "sin stats" a secas no se puede diagnosticar.
         _statsProvider = new StatsProvider(log: line => OnUi(() => AppendConsole($"[stats] {line}")));
         _augmentProvider = new AugmentProvider(log: line => OnUi(() => AppendConsole($"[augments] {line}")));
+        OfferedAugments.CollectionChanged += (_, _) => HasOfferedAugments = OfferedAugments.Count > 0;
 
         Scorecards = new ObservableCollection<ScorecardViewModel>
         {
@@ -267,6 +268,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Cheat-sheet de augments (tier list de Blitz), rankeado para MI campeón.</summary>
     public ObservableCollection<AugmentRowViewModel> MayhemAugments { get; } = new();
 
+    /// <summary>Versión corta para el overlay: solo los ~4 recomendados (★ + S).</summary>
+    public ObservableCollection<AugmentRowViewModel> OverlayAugments { get; } = new();
+
     /// <summary>Augments ofrecidos AHORA (leídos de pantalla por OCR), el mejor marcado.</summary>
     public ObservableCollection<OfferedAugmentRowViewModel> OfferedAugments { get; } = new();
 
@@ -275,6 +279,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// SOLO en esta ventana (mostrarlo toda la partida era ruido).</summary>
     public bool MayhemPickWindow
     { get => _mayhemPickWindow; private set => SetProperty(ref _mayhemPickWindow, value); }
+
+    private bool _hasOfferedAugments;
+    /// <summary>Con los 3 ofrecidos detectados, el overlay esconde los recomendados
+    /// genéricos: OFFERED NOW es estrictamente mejor información.</summary>
+    public bool HasOfferedAugments
+    { get => _hasOfferedAugments; private set => SetProperty(ref _hasOfferedAugments, value); }
 
     private string _itemPanelHint = "The advisor activates once the data catalog loads and a game is detected.";
     public string ItemPanelHint { get => _itemPanelHint; private set => SetProperty(ref _itemPanelHint, value); }
@@ -924,6 +934,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             MayhemPickNow = "";
             MayhemGuidance = "";
             MayhemAugments.Clear();
+            OverlayAugments.Clear();
             OfferedAugments.Clear();
             MayhemPickWindow = false;
             return;
@@ -944,11 +955,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 && DateTime.UtcNow - _lastOcrUtc > TimeSpan.FromSeconds(2))
                 _ = DetectOfferedAsync();
         }
-        else
+        else if (OfferedAugments.Count > 0)
         {
-            if (OfferedAugments.Count > 0)
-                OfferedAugments.Clear();   // revivió: la oferta en pantalla ya no está
-            _ocrDumpDone = false;          // próxima muerte: un dump de diagnóstico de nuevo
+            OfferedAugments.Clear();   // revivió: la oferta en pantalla ya no está
         }
     }
 
@@ -984,10 +993,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 LogOcr($"frame {frame.Width}x{frame.Height}: pass1 {lines.Count} lines, " +
                        $"pass2 {lines2.Count} lines → {offered.Count} augment matches.");
                 // Cero matches con la ventana de pick abierta: volcar lo que el OCR
-                // SÍ leyó (una vez por muerte) — es el dato que explica el porqué.
-                if (offered.Count == 0 && !_ocrDumpDone)
+                // SÍ leyó, cada ~8 s — el dump único por muerte caía siempre ANTES
+                // de que el jugador abriera el picker y nunca capturaba las cartas.
+                if (offered.Count == 0 && DateTime.UtcNow - _lastOcrDumpUtc > TimeSpan.FromSeconds(8))
                 {
-                    _ocrDumpDone = true;
+                    _lastOcrDumpUtc = DateTime.UtcNow;
                     var sample = string.Join(" | ", lines.Concat(lines2)
                         .Where(l => l.Trim().Length > 2).Take(30));
                     FileLog.Write($"[ocr] no augment matches; OCR saw: {sample}");
@@ -1033,12 +1043,29 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Repobla solo si cambió (el tick es 1 s; recrear filas iguales parpadea).</summary>
     private void SyncMayhemAugments(IReadOnlyList<AugmentSuggestion> top)
     {
-        if (MayhemAugments.Count == top.Count
-            && MayhemAugments.Zip(top).All(p => p.First.Id == p.Second.Id))
-            return;
-        MayhemAugments.Clear();
-        foreach (var suggestion in top)
-            MayhemAugments.Add(new AugmentRowViewModel(suggestion));
+        if (MayhemAugments.Count != top.Count
+            || !MayhemAugments.Zip(top).All(p => p.First.Id == p.Second.Id))
+        {
+            MayhemAugments.Clear();
+            foreach (var suggestion in top)
+                MayhemAugments.Add(new AugmentRowViewModel(suggestion));
+        }
+
+        // Overlay: SOLO lo recomendable de verdad — tus ★ de campeón primero,
+        // después los S — y a lo sumo 4. El catálogo entero vive en el MATCH tab.
+        var recommended = top
+            .OrderByDescending(s => s.FitsMyChampion)
+            .ThenBy(s => s.Tier)
+            .ThenByDescending(s => s.Rarity)
+            .Take(4)
+            .ToList();
+        if (OverlayAugments.Count != recommended.Count
+            || !OverlayAugments.Zip(recommended).All(p => p.First.Id == p.Second.Id))
+        {
+            OverlayAugments.Clear();
+            foreach (var suggestion in recommended)
+                OverlayAugments.Add(new AugmentRowViewModel(suggestion));
+        }
     }
 
     /// <summary>Un fetch del tier list por parche; tras un fallo, reintento con throttle.</summary>
