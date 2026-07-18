@@ -71,6 +71,20 @@ public static class GameWindowCapture
         }
     }
 
+    /// <summary>
+    /// Origen (screen px) del área cliente del juego: los píxeles del frame
+    /// capturado son coordenadas de cliente, esto los vuelve absolutos para
+    /// posicionar la ventana de badges. <c>null</c> si el juego no está.
+    /// </summary>
+    public static (int X, int Y)? GetClientOrigin()
+    {
+        var hwnd = FindGameWindow();
+        if (hwnd == IntPtr.Zero)
+            return null;
+        var origin = new NativePoint();
+        return ClientToScreen(hwnd, ref origin) ? (origin.X, origin.Y) : null;
+    }
+
     /// <summary>La ventana in-game de LoL (no el cliente/lobby, que es CEF).</summary>
     private static IntPtr FindGameWindow()
     {
