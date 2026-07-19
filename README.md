@@ -5,16 +5,28 @@ game's **local APIs live** and turns them into actionable, explained advice — 
 **item advisor** as its core: every recommendation tells you *why*, reacting in real time
 to how fed each enemy is, what they're building, and what you're actually building.
 
-No overlay, no injection, no reading game memory: everything comes from the two official
-local HTTP APIs that Riot ships with the game, plus public static data. It's a second
-screen, not a mod.
+No injection, no reading game memory: everything comes from the two official local HTTP
+APIs that Riot ships with the game, plus public static data. It's a second screen, not a
+mod — and the optional in-game overlay (Ctrl+X) is a plain always-on-top window drawn by
+Windows, never injected into the game.
 
 > **Download:** grab the installer from
 > [**Releases**](https://github.com/Danielxpj/Paradox-LoL-Companion/releases) →
 > `ParadoxLoLCompanion-Setup-<version>.exe`. Installs per-user (no admin) and
 > **auto-updates itself** on launch.
 
-![Paradox LoL Companion — Tactical HUD: enemy X-ray, item advisor with reasons and buy-now plans, Mayhem augment tracker](docs/img/screenshot.png)
+![Paradox LoL Companion — Tactical HUD: enemy X-ray, item advisor with reasons and buy-now plans](docs/img/screenshot.png)
+
+**ARAM: Mayhem** — augment pick tracker, Blitz tier cheat-sheet (★ = ranked top for your
+champion) and the pick-now window while you're dead:
+
+![ARAM: Mayhem — augment tracker, Blitz cheat-sheet and pick window](docs/img/mayhem.png)
+
+**In-game overlay (Ctrl+X)** — top item recommendations with their reasons and buy-now
+plans, build override, recommended boots, and the recommended augments during a Mayhem
+pick window:
+
+![In-game overlay — item advisor with reasons, boots and recommended augments](docs/img/overlay.png)
 
 ---
 
@@ -69,7 +81,13 @@ screen, not a mod.
   levels 7/11/15, only redeemable while dead) and gives archetype/threat-tuned guidance.
   Plus: a **Blitz.gg tier-list cheat-sheet** (S/A augments per rarity, ★ for your champion,
   cached per patch) and **on-screen offer detection** — while you pick, the app OCRs the
-  game window, recognizes the augments offered and marks the best one (**◆ PICK THIS**).
+  game window, recognizes the augments offered, marks the best one (**◆ PICK THIS**) and
+  pins a **tier badge directly over each card** via a click-through topmost window. Once
+  you pick, everything clears itself within ~3 seconds.
+- **In-game overlay (Ctrl+X)** — a compact, draggable always-on-top panel with the top
+  item recommendations (reasons included), the build override selector, the recommended
+  boots, and the offered/recommended augments during a Mayhem pick window. Requires
+  Borderless/Windowed (in exclusive Fullscreen, Windows draws no windows over the game).
 - **Champ select bench advisor (ARAM)** — scores your team composition and tells you which
   bench champion balances the team best, with reasons.
 - **Quality-of-life advice no app gives** — full-inventory handling (flags items you have
@@ -94,7 +112,7 @@ your client language — players are matched via locale-independent ids.
 ## Architecture
 
 Two projects with a hard boundary: **Core has no UI dependency and is fully testable**
-(236 xUnit tests); the WPF app is a thin MVVM shell over it.
+(373 xUnit tests); the WPF app is a thin MVVM shell over it.
 
 ```
 src/
@@ -109,15 +127,17 @@ src/
     Stats/            OpggMcpClient · McpTextParser · StatsCache · StatsProvider ·
                       ItemSetBuilder (meta stats layer)
     Draft/            TeamBalanceAdvisor (ARAM bench)
-    Mayhem/           MayhemAdvisor (augment tracker + Blitz-ranked cheat-sheet)
+    Mayhem/           MayhemAdvisor (augment tracker + Blitz-ranked cheat-sheet) ·
+                      PickWindowTracker (pick-window lifecycle: grace + OCR-driven close)
     Augments/         Blitz tier list (client/parser/cache/provider) + OCR matcher/detector
     Advice/           rule-based general advice feed (objectives, CS/min, gold)
     Objectives/       Dragon/Baron timer estimates
   ParadoxLoLCompanion.App/           # WPF, MVVM, dark "Tactical HUD" theme
     Capture/          game-window capture (PrintWindow) + Windows OCR reader
     Update/           Updater (self-update on launch) + splash
+    OverlayWindow · AugmentBadgeWindow   # Ctrl+X overlay + click-through on-card badges
 tests/
-  ParadoxLoLCompanion.Tests/         # 349 tests: parsers, engine, planners, stats, LCU
+  ParadoxLoLCompanion.Tests/         # 373 tests: parsers, engine, planners, stats, LCU
 ```
 
 Data flow, once per tick (~1 s):
@@ -391,9 +411,15 @@ On top of that, two data-driven layers (added 2026-07-17):
   aliases pulled from CommunityDragon's arena data for the Arena-shared augments —
   Mayhem-only ones match by their English names). Two or more distinct matches are
   treated as the real offer, ranked by Blitz tier, and the best is marked
-  **◆ PICK THIS** in the overlay and MATCH tab. No card geometry is assumed, so any
+  **◆ PICK THIS** in the overlay and MATCH tab — plus a **tier badge pinned over each
+  card**, anchored on the OCR word bounding boxes and drawn on a click-through topmost
+  window (the game receives every click). No card geometry is assumed, so any
   resolution works; in exclusive Fullscreen the capture is black and the feature
-  silently stands down to the cheat-sheet.
+  silently stands down to the cheat-sheet. The offer's lifecycle is OCR-driven both
+  ways: sighting the cards opens the panels (and keeps them alive across your respawn,
+  since the picker stays open until you choose), and once you pick, a few consecutive
+  empty reads close everything within ~3 seconds — with no flicker in between, panels
+  and badges only redraw when the offer actually changes.
 
 ## Writing back to the client: rune pages & item sets
 
@@ -439,7 +465,7 @@ Requirements: **.NET 10 SDK** (WindowsDesktop/WPF workload), Windows.
 
 ```powershell
 dotnet build ParadoxLoLCompanion.slnx        # build
-dotnet test                                  # 349 tests (parsers, engine, planners, stats)
+dotnet test                                  # 373 tests (parsers, engine, planners, stats)
 dotnet run --project src/ParadoxLoLCompanion.App
 ```
 
