@@ -22,6 +22,19 @@
         <ItemsControl.ItemTemplate>
             <DataTemplate>
                 <Grid Width="160">
+                    <!-- Fade-in por badge: solo se recrean cuando la oferta o la
+                         posición cambian de verdad, así que esto suaviza el pop
+                         sin parpadear en cada scan. -->
+                    <Grid.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                     From="0" To="1" Duration="0:0:0.15" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Grid.Triggers>
                     <Border HorizontalAlignment="Center" BorderThickness="1"
                             CornerRadius="3" Padding="8,3">
                         <Border.Style>

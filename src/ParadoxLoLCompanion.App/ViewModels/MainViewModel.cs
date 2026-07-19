@@ -86,11 +86,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     // la tecla) — verlo mantiene la ventana de pick activa.
     private DateTime _lastOfferSeenUtc = DateTime.MinValue;
     // Lecturas vacías CONSECUTIVAS con oferta visible: 1 puede ser el scoreboard
-    // encima; 3 seguidas (~6 s) = el jugador ya eligió y el picker se cerró.
+    // encima; 3 seguidas = el jugador ya eligió y el picker se cerró (con el
+    // rescan acelerado tras el primer miss, la confirmación tarda ~3 s, no ~6-10).
     private int _ocrMissStreak;
-    // Oferta consumida: apaga la ventana inicial de arranque para que los paneles
-    // no queden colgados el resto de los 90 s (la muerte siempre la reabre).
-    private bool _offerGone;
 
     private readonly ScorecardViewModel _clockCard = new("Time", Palette.Muted);
     private readonly ScorecardViewModel _goldCard = new("Gold", Palette.Amber);
@@ -964,7 +962,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             MayhemPickWindow = false;
             _pickWindow.Reset();
             _ocrMissStreak = 0;
-            _offerGone = false;
             return;
         }
 
@@ -977,18 +974,22 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         // La señal cruda (muerto / arranque de partida) se apaga sola, pero el
         // picker sigue abierto en pantalla hasta elegir: el tracker sostiene la
         // ventana durante la gracia, y VER la oferta con el OCR también la
-        // mantiene viva (cubre picks en momentos que la API no delata).
+        // mantiene viva (cubre picks en momentos que la API no delata). Cuando el
+        // OCR confirma que la oferta se fue (OfferGone), el tracker cierra YA y
+        // queda suprimido hasta la próxima muerte — sin él, seguir muerto
+        // re-armaba la gracia y el panel quedaba un minuto tras elegir.
         var offerOnScreen = DateTime.UtcNow - _lastOfferSeenUtc < TimeSpan.FromSeconds(10);
-        // Muerte = señal dura, siempre abre. Ventana inicial y avistamientos se
-        // suprimen una vez que el OCR confirmó que la oferta ya no está.
-        var windowSignal = advice.IsDeadNow
-            || (!_offerGone && (advice.PickWindowNow || offerOnScreen));
-        var pickWindowActive = _pickWindow.Update(windowSignal, DateTime.UtcNow);
+        var pickWindowActive = _pickWindow.Update(advice.IsDeadNow,
+            softOpen: advice.PickWindowNow || offerOnScreen, DateTime.UtcNow);
         MayhemPickWindow = pickWindowActive;
 
         // Escaneo continuo: rápido con la ventana activa, lento de guardia el
-        // resto de la partida (el picker reabierto se detecta en ≤6 s).
-        var cadence = pickWindowActive ? TimeSpan.FromSeconds(2) : TimeSpan.FromSeconds(6);
+        // resto de la partida (el picker reabierto se detecta en ≤6 s). Tras un
+        // miss con oferta visible, rescan inmediato: confirmar el cierre del
+        // picker en ~3 s en vez de ~6-10 (el panel colgado molesta en pantalla).
+        var cadence = _ocrMissStreak > 0 && OfferedAugments.Count > 0
+            ? TimeSpan.FromMilliseconds(700)
+            : pickWindowActive ? TimeSpan.FromSeconds(2) : TimeSpan.FromSeconds(6);
         if (_offeredDetector is not null && !_ocrBusy
             && DateTime.UtcNow - _lastOcrUtc > cadence)
             _ = DetectOfferedAsync();
@@ -1075,18 +1076,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                     {
                         OfferedAugments.Clear();
                         AugmentBadges.Clear();
-                        _offerGone = true;
                         _lastOfferSeenUtc = DateTime.MinValue;
-                        _pickWindow.Reset();
+                        _pickWindow.OfferGone();
                         LogOcr("offer no longer on screen (3 empty reads) — cleared.");
                     }
                     return;
                 }
                 _ocrMissStreak = 0;
-                _offerGone = false;
-                OfferedAugments.Clear();
-                foreach (var augment in found)
-                    OfferedAugments.Add(new OfferedAugmentRowViewModel(augment));
+                _pickWindow.OfferSeen();
+                SyncOfferedAugments(found);
                 RebuildAugmentBadges(found, boxes, frame.Width, frame.Height, origin);
             });
         }
@@ -1101,18 +1099,37 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    /// <summary>Repobla OFFERED NOW solo si la oferta cambió de verdad: el rebuild
+    /// incondicional cada scan hacía parpadear el panel (y el flap de
+    /// HasOfferedAugments flasheaba el strip RECOMMENDED) cada 2 s.</summary>
+    private void SyncOfferedAugments(IReadOnlyList<OfferedAugment> found)
+    {
+        if (OfferedAugments.Count == found.Count
+            && OfferedAugments.Zip(found).All(p =>
+                p.First.Id == p.Second.Id && p.First.IsBest == p.Second.IsBest))
+            return;
+        OfferedAugments.Clear();
+        foreach (var augment in found)
+            OfferedAugments.Add(new OfferedAugmentRowViewModel(augment));
+    }
+
     /// <summary>Ancla un badge centrado sobre la caja del título de cada carta.
     /// Fail-open: sin origen o sin caja para un match, ese badge no se muestra —
-    /// la lista OFFERED NOW sigue siendo la red de seguridad.</summary>
+    /// la lista OFFERED NOW sigue siendo la red de seguridad. Si los badges nuevos
+    /// son los mismos (± jitter de OCR de unos px) no se repobla: recrearlos cada
+    /// scan los hacía parpadear sobre el juego.</summary>
     private void RebuildAugmentBadges(IReadOnlyList<OfferedAugment> offered,
         IReadOnlyList<(OcrBox Box, FrameTransform Transform)> lineBoxes,
         int frameWidth, int frameHeight, (int X, int Y)? origin)
     {
-        AugmentBadges.Clear();
         if (origin is not { } o)
+        {
+            AugmentBadges.Clear();
             return;
-        BadgeSurfacePx = new System.Windows.Int32Rect(o.X, o.Y, frameWidth, frameHeight);
+        }
+        var surface = new System.Windows.Int32Rect(o.X, o.Y, frameWidth, frameHeight);
         var dpi = DpiScale > 0 ? DpiScale : 1.0;
+        var fresh = new List<AugmentBadgeViewModel>(offered.Count);
         foreach (var augment in offered)
         {
             if (augment.LineIndex < 0 || augment.LineIndex >= lineBoxes.Count)
@@ -1121,7 +1138,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (box.Width == 0)
                 continue;   // línea sin palabras: no hay ancla
             var native = transform.ToNative(box);
-            AugmentBadges.Add(new AugmentBadgeViewModel
+            fresh.Add(new AugmentBadgeViewModel
             {
                 Left = (native.X + native.Width / 2.0) / dpi - 80,
                 Top = native.Y / dpi - 32,
@@ -1130,6 +1147,19 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 TierBrush = OfferedAugmentRowViewModel.BrushForTier(augment.Tier),
             });
         }
+
+        if (surface == BadgeSurfacePx && fresh.Count == AugmentBadges.Count
+            && AugmentBadges.Zip(fresh).All(p =>
+                p.First.TierLabel == p.Second.TierLabel
+                && p.First.IsBest == p.Second.IsBest
+                && Math.Abs(p.First.Left - p.Second.Left) < 3
+                && Math.Abs(p.First.Top - p.Second.Top) < 3))
+            return;
+
+        BadgeSurfacePx = surface;
+        AugmentBadges.Clear();
+        foreach (var badge in fresh)
+            AugmentBadges.Add(badge);
     }
 
     /// <summary>Diagnóstico de OCR a consola Y a session.log (la partida jugada

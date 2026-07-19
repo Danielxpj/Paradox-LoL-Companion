@@ -152,6 +152,18 @@
                                 <DataTrigger Binding="{Binding OfferedAugments.Count}" Value="0">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
+                                <!-- Fade-in al aparecer; el ocultado queda instantáneo
+                                     (la queja real era que tardaba en IRSE). -->
+                                <Trigger Property="Visibility" Value="Visible">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                 From="0" To="1" Duration="0:0:0.18" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                </Trigger>
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
@@ -214,6 +226,17 @@
                                 <DataTrigger Binding="{Binding HasOfferedAugments}" Value="True">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
+                                <!-- Fade-in al aparecer; el ocultado queda instantáneo. -->
+                                <Trigger Property="Visibility" Value="Visible">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                 From="0" To="1" Duration="0:0:0.18" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                </Trigger>
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>

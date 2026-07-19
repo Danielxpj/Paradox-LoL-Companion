@@ -28,7 +28,13 @@ public partial class AugmentBadgeWindow : Window
         if (px.Width <= 0 || px.Height <= 0)
             return;
         if (!IsVisible)
+        {
             Show();
+            // Fade-in corto al aparecer; el Hide sigue siendo instantáneo (lo
+            // molesto era el badge colgado, no que aparezca de golpe).
+            BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(
+                0, 1, TimeSpan.FromMilliseconds(150)));
+        }
         var hwnd = new WindowInteropHelper(this).Handle;
         SetWindowPos(hwnd, HwndTopmost, px.X, px.Y, px.Width, px.Height,
             SwpNoactivate | SwpShowwindow);

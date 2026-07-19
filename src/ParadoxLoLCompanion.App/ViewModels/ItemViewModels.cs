@@ -208,6 +208,7 @@ public sealed class OfferedAugmentRowViewModel
 {
     public OfferedAugmentRowViewModel(Core.Augments.OfferedAugment offered)
     {
+        Id = offered.Id;
         Name = offered.Name;
         TierLabel = offered.TierLabel;
         IsBest = offered.IsBest;
@@ -225,6 +226,7 @@ public sealed class OfferedAugmentRowViewModel
         _ => Palette.Amber,
     };
 
+    public int Id { get; }
     public string Name { get; }
     public string TierLabel { get; }
     public bool IsBest { get; }
