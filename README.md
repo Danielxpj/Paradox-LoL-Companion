@@ -154,8 +154,14 @@ flowchart LR
     TA --> IA[ItemAdvisor<br/>score every candidate]
     CP --> IA
     IA --> BP[BuildPathPlanner<br/>what to buy right now]
-    BP --> UI[ItemAdvicePlan → UI<br/>recos + reasons + categories]
+    BP --> UI[UI: MATCH tab + Ctrl+X overlay<br/>recos + reasons + categories]
     OP --> RW[Rune pages & item sets<br/>written into the LoL client]
+    BZ[Blitz.gg augment tier list<br/>ARAM: Mayhem, per patch] --> MA
+    GS --> MA[MayhemAdvisor<br/>pick unlocks + ranked cheat-sheet]
+    SCR[Game screen<br/>PrintWindow + Windows OCR] --> OD
+    BZ --> OD[OfferedAugmentDetector<br/>fuzzy match, ◆ PICK THIS + badges]
+    MA --> UI
+    OD --> UI
 ```
 
 ---
