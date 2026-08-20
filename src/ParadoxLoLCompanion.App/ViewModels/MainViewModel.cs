@@ -833,9 +833,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         SellRows.Clear();
         foreach (var sell in plan.Sells)
             SellRows.Add(new SellRowViewModel(sell, _catalog.Version));
+        // El set COMPLETO de apertura: op.gg trae la compra inicial como conjunto
+        // (Jayce abre Lágrima + Daga Dentada) y mostrar solo el primero escondía la mitad.
         StarterLine = plan.Starter is null
             ? ""
-            : $"Start: {plan.Starter.Item.Name} ({plan.Starter.Item.GoldTotal.ToString("N0", CultureInfo.InvariantCulture)}) — {plan.Starter.Reason}";
+            : $"Start: {string.Join(" + ", plan.Starter.Items.Select(i => i.Name))} "
+              + $"({plan.Starter.Items.Sum(i => i.GoldTotal).ToString("N0", CultureInfo.InvariantCulture)}) "
+              + $"— {plan.Starter.Reason}";
         StarterIconUrl = plan.Starter is null
             ? null
             : DdragonImages.ItemIcon(_catalog.Version, plan.Starter.Item.Id);

@@ -86,11 +86,12 @@ public class ItemAdvisorStatsTests
         var advisor = new ItemAdvisor(Catalog());
         var state = State();
 
-        // Sin stats, ambos items AP puros empatan; con prior, 4002 debe ir primero.
+        // Sin stats, ambos items AP puros empatan; con el espinazo meta, 4002 va primero
+        // y la carta explica de dónde sale (core build del campeón, no fit de arquetipo).
         var withStats = advisor.Advise(state, BuildArchetype.Mage, StatsWith(4002))!;
         Assert.Equal("Pure AP Item", withStats.Recommendations[0].Item.Name);
         Assert.Contains(withStats.Recommendations[0].Reasons,
-            r => r.Contains("of Test Champ builds"));
+            r => r.Contains("core build for Test Champ"));
     }
 
     [Fact]

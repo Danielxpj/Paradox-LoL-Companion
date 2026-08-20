@@ -64,6 +64,24 @@ public sealed class ItemAdvisor
     /// <summary>μ mínimo para que una regla aporte bono y emita razón (evita ruido sub-umbral).</summary>
     private const double MuGate = 0.05;
 
+    // --- Espinazo meta (ver MetaSpine) ---
+    // El meta SIEMBRA el ranking en vez de sumarse a él. Medido sobre los datos reales: el
+    // prior aditivo vale 0.00 puntos para Jayce (μ = 0.029 cae bajo MuGate) y 1.35 para
+    // Nautilus, contra una diferencia de 2.58 puntos entre Heartsteel y el 3.er slot. Ningún
+    // valor de StatCoreMag alcanza; con un bono plano de +8 el core meta sigue afuera.
+    /// <summary>Piso del bono por estar en la build meta: por encima de cualquier puntaje crudo (~12), así el espinazo manda.</summary>
+    private const double SpineBaseMag = 20.0;
+    /// <summary>Cuánto vale un puesto del espinazo. Lo situacional puede saltar un rango si supera esto: ahí es donde lo difuso REORDENA el meta.</summary>
+    private const double SpineSlotMag = 4.0;
+    /// <summary>Profundidad nominal del espinazo para convertir rango en bono (decreciente).</summary>
+    private const int SpineDepth = 8;
+    /// <summary>
+    /// Contribución situacional mínima para que un counter que NO está en el meta pueda
+    /// disputar el último slot mostrado (y desplazar al slot meta más débil). 4.0 exige una
+    /// amenaza seria — limpiar una supresión (CleanseMag 3.0) o un muro completo (DefenseCap 4.0).
+    /// </summary>
+    private const double EvictionSituationalGate = 4.0;
+
     public ItemAdvisor(IStaticData data, ItemsConfig? config = null)
     {
         _data = data;
@@ -211,7 +229,17 @@ public sealed class ItemAdvisor
         var snowballing = me.Scores.Kills + me.Scores.Assists >= _config.SnowballMinTakedowns
             && me.Scores.Deaths <= _config.SnowballMaxDeaths;
 
-        var scored = new List<(StaticItem Item, double Score, List<string> Reasons, RecommendationCategory Category)>();
+        // El espinazo meta: la build que los jugadores de este campeón realmente arman, ya
+        // sin lo que llevás puesto. Vacío sin estadísticas → el camino difuso de siempre.
+        var spine = MetaSpine.Build(_data, _config, stats, mapNumber, owned);
+        var spineBySlot = spine.ToDictionary(s => s.Item.Id);
+        // El espinazo SIN descontar lo comprado: lo que la build meta quiere en total.
+        // Es lo que mira la venta — un item del meta que ya tenés no se vende.
+        var metaIds = new HashSet<int>(
+            MetaSpine.Build(_data, _config, stats, mapNumber).Select(s => s.Item.Id));
+
+        var scored = new List<(StaticItem Item, double Score, List<string> Reasons,
+            RecommendationCategory Category, double Situational)>();
 
         foreach (var item in _data.CompletedItemsFor(mapNumber))
         {
@@ -235,10 +263,12 @@ public sealed class ItemAdvisor
             if (!snowballing && _config.SnowballItemIds.Contains(item.Id))
                 continue;
 
-            var (score, reasons, category) = ScoreItem(item, profile, threat, weights, teamHasGw,
+            var (score, reasons, category, situational) = ScoreItem(item, profile, threat, weights, teamHasGw,
                 defenseNeed, stats, champName, currentCrit, ahead, behind, completedCount);
-            if (score > 0)
-                scored.Add((item, score, reasons, category));
+            // Un slot del espinazo entra aunque su fit de arquetipo sea nulo: la build real
+            // manda sobre la tabla de tags (Heartsteel puntúa 3.5 de fit y es el core del tanque).
+            if (score > 0 || spineBySlot.ContainsKey(item.Id))
+                scored.Add((item, score, reasons, category, situational));
         }
 
         // Alcanzable ya = empujón: ante puntajes parejos gana lo comprable ahora
@@ -246,7 +276,7 @@ public sealed class ItemAdvisor
         var ranked = scored
             .Select(c =>
             {
-                var plan = BuildPathPlanner.Plan(_data, c.Item, ownedIds, gold);
+                var plan = BuildPathPlanner.Plan(_data, c.Item, ownedIds, gold, _config.StackingComponentIds);
                 // Empujón aditivo continuo en oro: entra gradual entre 0.5·faltante y el
                 // faltante, en vez del salto multiplicativo ×1.25 que flipeaba el orden al
                 // cruzar cada umbral de compra (la mayor discontinuidad que quedaba en v3).
@@ -256,7 +286,18 @@ public sealed class ItemAdvisor
                 // input (la "lista que tiembla"). Muy por debajo de cualquier counter.
                 var incumbent = previousTopIds is not null && previousTopIds.Contains(c.Item.Id)
                     ? _config.HysteresisBonus : 0;
-                var score = c.Score + afford + incumbent;
+                // Espinazo: el bono decrece con el rango, así el orden de compra del meta es
+                // el orden por defecto. Lo difuso sigue vivo dentro del puntaje crudo, y un
+                // delta situacional mayor a un puesto (SpineSlotMag) REORDENA el espinazo.
+                var spineBonus = 0.0;
+                if (spineBySlot.TryGetValue(c.Item.Id, out var slot))
+                    spineBonus = SpineBaseMag + SpineSlotMag * (SpineDepth - Math.Min(slot.Rank, SpineDepth));
+                else if (spine.Count > 0 && c.Situational >= EvictionSituationalGate)
+                    // Desplazo: un counter con amenaza severa disputa el ÚLTIMO slot mostrado
+                    // (no se suma a la lista: le compite en mérito al slot meta más débil).
+                    spineBonus = SpineBaseMag
+                        + SpineSlotMag * (SpineDepth - Math.Min(_config.MaxRecommendations - 1, SpineDepth));
+                var score = c.Score + afford + incumbent + spineBonus;
                 return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan);
             })
             .OrderByDescending(c => c.Score)
@@ -301,6 +342,14 @@ public sealed class ItemAdvisor
                 takenExclusiveGroups.Add(rankedGroup);
             takenPassives.UnionWith(item.PassiveNames);
 
+            // Razón del espinazo: la carta dice de dónde sale ANTES que cualquier
+            // contrapartida, y reemplaza al texto del prior aditivo (que dice lo mismo peor,
+            // y que en muestras chicas de ARAM ni siquiera se emite).
+            if (spineBySlot.TryGetValue(item.Id, out var metaSlot))
+            {
+                reasons.RemoveAll(r => r.StartsWith("bought in", StringComparison.Ordinal));
+                reasons.Insert(0, MetaReason(metaSlot, champName));
+            }
             if (reasons.Count == 0)
                 reasons.Add(FitReason(item, profile.Archetype, weights));
             var missing = (int)Math.Max(0, plan.RemainingCost - gold);
@@ -332,7 +381,7 @@ public sealed class ItemAdvisor
             recommendations,
             BootsFor(me, profile, threat, mapNumber, stats, ownedIds, gold),
             SellSuggestions(me, profile, threat, weights,
-                recommendations.Count > 0 ? recommendations[0] : null, inventoryFull),
+                recommendations.Count > 0 ? recommendations[0] : null, inventoryFull, metaIds),
             StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats, gold),
             ShopAlertFor(me, isAram, recommendations))
         {
@@ -494,7 +543,7 @@ public sealed class ItemAdvisor
     private List<SellSuggestion> SellSuggestions(
         Player me, ChampionProfile profile, TeamThreat threat,
         IReadOnlyDictionary<string, double> myWeights,
-        ItemRecommendation? top, bool inventoryFull)
+        ItemRecommendation? top, bool inventoryFull, IReadOnlySet<int> metaIds)
     {
         var allWeights = ArchetypeWeights.All
             .ToDictionary(a => a, a => ArchetypeWeights.For(a, _config));
@@ -528,6 +577,12 @@ public sealed class ItemAdvisor
                         "starter outlived its value — selling frees the slot"));
                 continue;
             }
+
+            // Un item que la build meta del campeón pide no se vende, aunque la tabla de
+            // tags del arquetipo lo puntúe bajo: esa tabla es justamente la que se equivoca
+            // con los items meta (Heartsteel puntúa 3.5 de fit y es el core del tanque).
+            if (metaIds.Contains(item.Id))
+                continue;
 
             // Solo items finales con valor real: componentes, botas, consumibles,
             // trinkets e items de quest no son decisiones de venta interesantes.
@@ -601,7 +656,7 @@ public sealed class ItemAdvisor
     /// las recomendaciones entran y salen de forma gradual y estable, no a saltos.
     /// Devuelve además la categoría que explica por qué el item está donde está.
     /// </summary>
-    private (double Score, List<string> Reasons, RecommendationCategory Category) ScoreItem(
+    private (double Score, List<string> Reasons, RecommendationCategory Category, double Situational) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
         IReadOnlyDictionary<string, double> weights, bool teamHasGw, DefenseNeed need,
         ChampionBuildStats? stats, string champName, double currentCrit = 0,
@@ -799,7 +854,9 @@ public sealed class ItemAdvisor
         offense *= 1 + AheadOffenseBoost * ahead;
         defense *= 1 + BehindDefenseBoost * behind;
         var score = core + offense + defense + statBonus - penalty;
-        return (score, reasons, category);
+        // `situational` (limpio, pre-nudge) sale también hacia afuera: es el mérito con el
+        // que un counter fuera del meta puede disputarle el último slot al espinazo.
+        return (score, reasons, category, situational);
     }
 
     private static bool OffensiveMatch(StaticItem item, ChampionProfile me) =>
@@ -928,6 +985,20 @@ public sealed class ItemAdvisor
 
     private static bool HasAd(StaticItem item) => item.HasTag("Damage") || item.HasTag("AttackDamage");
     private static bool HasAp(StaticItem item) => item.HasTag("SpellDamage");
+
+    /// <summary>
+    /// Razón de un slot del espinazo: de qué parte de la build meta sale. El win rate solo
+    /// se muestra si es del conjunto (no del campeón) y vino con la muestra.
+    /// </summary>
+    private static string MetaReason(MetaSpineSlot slot, string champName)
+    {
+        var where = slot.IsCore
+            ? $"core build for {champName}"
+            : $"{slot.SlotLabel} item for {champName}";
+        return slot.WinRate > 0
+            ? $"{where} — {Pct(slot.PickRate)} of games, {Pct(slot.WinRate)} WR"
+            : where;
+    }
 
     /// <summary>Razón por defecto: los tags que más pesan para el arquetipo, con nombre legible.</summary>
     private static string FitReason(StaticItem item, BuildArchetype archetype,

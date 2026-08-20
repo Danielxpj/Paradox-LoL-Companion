@@ -20,7 +20,8 @@ public sealed record PurchasePlan(StaticItem Target, int RemainingCost,
 /// </summary>
 public static class BuildPathPlanner
 {
-    public static PurchasePlan Plan(IStaticData data, StaticItem target, IEnumerable<int> ownedItemIds, double gold)
+    public static PurchasePlan Plan(IStaticData data, StaticItem target, IEnumerable<int> ownedItemIds, double gold,
+        IReadOnlyCollection<int>? stackingComponentIds = null)
     {
         // Multiconjunto: cada item del inventario solo puede descontar una vez.
         var owned = new Dictionary<int, int>();
@@ -32,8 +33,37 @@ public static class BuildPathPlanner
         if (remaining <= gold)
             return new PurchasePlan(target, remaining, target, remaining);
 
+        // Componente que acumula (la Lágrima): comprarlo primero es el punto, aunque no sea
+        // la compra que más oro banquea. La regla general recomendaría el Martillo de
+        // Caulfield y la Lágrima terminaría comprándose último, sin stacks.
+        if (stackingComponentIds is { Count: > 0 }
+            && FirstStacking(data, target, new Dictionary<int, int>(owned), stackingComponentIds) is { } stacking
+            && stacking.GoldTotal <= gold)
+            return new PurchasePlan(target, remaining, stacking, stacking.GoldTotal);
+
         var next = BestAffordable(data, target, owned, gold);
         return new PurchasePlan(target, remaining, next?.Item, next?.Cost ?? 0);
+    }
+
+    /// <summary>
+    /// El primer componente que acumula del árbol de <paramref name="item"/> que todavía no
+    /// esté comprado, o <c>null</c>.
+    /// </summary>
+    private static StaticItem? FirstStacking(
+        IStaticData data, StaticItem item, Dictionary<int, int> owned, IReadOnlyCollection<int> stackingIds)
+    {
+        foreach (var component in Components(data, item))
+        {
+            if (stackingIds.Contains(component.Id))
+            {
+                if (!Consume(owned, component.Id))
+                    return component;
+                continue;
+            }
+            if (FirstStacking(data, component, owned, stackingIds) is { } deeper)
+                return deeper;
+        }
+        return null;
     }
 
     /// <summary>Oro que falta para terminar <paramref name="item"/>, consumiendo componentes poseídos.</summary>

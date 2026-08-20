@@ -137,7 +137,7 @@ src/
     Update/           Updater (self-update on launch) + splash
     OverlayWindow · AugmentBadgeWindow   # Ctrl+X overlay + click-through on-card badges
 tests/
-  ParadoxLoLCompanion.Tests/         # 373 tests: parsers, engine, planners, stats, LCU
+  ParadoxLoLCompanion.Tests/         # 376 tests: parsers, engine, planners, stats, LCU
 ```
 
 Data flow, once per tick (~1 s):
@@ -471,7 +471,7 @@ Requirements: **.NET 10 SDK** (WindowsDesktop/WPF workload), Windows.
 
 ```powershell
 dotnet build ParadoxLoLCompanion.slnx        # build
-dotnet test                                  # 373 tests (parsers, engine, planners, stats)
+dotnet test                                  # 376 tests (parsers, engine, planners, stats)
 dotnet run --project src/ParadoxLoLCompanion.App
 ```
 

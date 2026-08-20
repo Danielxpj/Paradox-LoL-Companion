@@ -170,6 +170,15 @@ public sealed class ItemsConfig
         [3121] = 3119,   // Fimbulwinter → Winter's Approach
     };
 
+    /// <summary>
+    /// Componentes que ACUMULAN con el tiempo: comprarlos temprano es todo el punto, así
+    /// que rompen la regla normal del plan de compra ("el componente más caro que el oro
+    /// alcanza"). Sin esto, yendo hacia Manamune con 1400 de oro el plan sugiere el Martillo
+    /// de Caulfield (1050) en vez de la Lágrima (400) — exactamente al revés de cómo se
+    /// juega. La Lágrima y su gemelo de ARAM (77xxxx) son el caso real.
+    /// </summary>
+    public List<int> StackingComponentIds { get; set; } = new() { 3070, 773070 };
+
     // Conocimiento de campeones (claves = id textual de ddragon, p.ej. "MonkeyKing").
     public List<string> HealerChampions { get; set; } = new()
     {
