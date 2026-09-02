@@ -62,9 +62,6 @@ public sealed class ItemAdvisor
     // Win rate: delta contra el WR global del campeón, ENCOGIDO por muestra (Bayes
     // ingenuo: con `StatWinShrinkPlays` partidas el delta pesa la mitad). Popular ≠ bueno:
     // en ARAM las builds se copian a ciegas, así que el WR manda sobre el pick rate.
-    private const double StatWinShrinkPlays = 800;
-    private const double StatWinGain = 8;
-    private const double StatWinClamp = 0.35;
     // Pen % vale más cuanto más daño crudo tenés (multiplicativo): sin AD/AP la pen no pega.
     private const double PenPowerFloor = 0.7;
     // Equipo aliado: con un equipo casi full-AD/AP los enemigos VAN a apilar la resistencia
@@ -870,7 +867,7 @@ public sealed class ItemAdvisor
             var orderMu = prior.IsCore ? CoreOrderMu(stats, item.Id, completedCount) : 1.0;
             var mu = pickMu * orderMu
                    * Fuzzy.Ramp(prior.Play, StatPlayFoot, StatPlayShoulder)
-                   * WinMultiplier(prior.WinRate, prior.Play,
+                   * ChampionBuildStats.WinMultiplier(prior.WinRate, prior.Play,
                        prior.IsCore ? stats.WinRate : stats.LateWinRateBaseline);
             if (mu > MuGate)
             {
@@ -1055,16 +1052,6 @@ public sealed class ItemAdvisor
             _ => (0.0, 0.0),
         };
         return stat <= 0 ? 1.0 : Math.Clamp(stat / reference, 0.5, 1.3);
-    }
-
-    /// <summary>Delta de WR contra el WR global del campeón, encogido por muestra, acotado ±35 %.</summary>
-    private static double WinMultiplier(double winRate, int play, double championWinRate)
-    {
-        if (winRate <= 0)
-            return 1;
-        var delta = (winRate - (championWinRate > 0 ? championWinRate : 0.5))
-                  * play / (play + StatWinShrinkPlays);
-        return 1 + Math.Clamp(delta * StatWinGain, -StatWinClamp, StatWinClamp);
     }
 
     /// <summary>Posición del item en el core ordenado vs. los completos que ya llevás.</summary>

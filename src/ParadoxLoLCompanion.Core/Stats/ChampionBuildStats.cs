@@ -46,6 +46,19 @@ public sealed class ChampionBuildStats
     public double WinRate { get; init; }
 
     /// <summary>
+    /// Multiplicador por win rate: delta contra una referencia, ENCOGIDO por muestra (con
+    /// 800 partidas pesa la mitad), acotado ±35 %. Popular ≠ bueno: en ARAM las builds se
+    /// copian a ciegas, así que el WR corrige al pick rate en vez de solo adornarlo.
+    /// </summary>
+    public static double WinMultiplier(double winRate, int play, double baseline)
+    {
+        if (winRate <= 0)
+            return 1;
+        var delta = (winRate - (baseline > 0 ? baseline : 0.5)) * play / (play + 800.0);
+        return 1 + Math.Clamp(delta * 8, -0.35, 0.35);
+    }
+
+    /// <summary>
     /// WR de referencia para los candidatos tardíos: promedio (ponderado por muestra) de
     /// TODOS los candidatos tardíos. Sus WR vienen inflados (solo comprás 4.º item si la
     /// partida va bien); compararlos contra su propio promedio quita ese sesgo de supervivencia.

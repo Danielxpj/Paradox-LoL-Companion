@@ -73,7 +73,10 @@ public static class MetaSpine
                  {
                      (stats.FourthItems, "4th"), (stats.FifthItems, "5th"), (stats.SixthItems, "6th"),
                  })
-            foreach (var set in sets.OrderByDescending(s => s.PickRate))
+            // Pick corregido por WR (contra el promedio del slot: quita el sesgo de "solo
+            // compraste 4.º item porque ibas ganando"): el popular que pierde cede el puesto.
+            foreach (var set in sets.OrderByDescending(s =>
+                         s.PickRate * ChampionBuildStats.WinMultiplier(s.WinRate, s.Play, stats.LateWinRateBaseline)))
                 AddSet(set, label);
 
         // Componentes absorbidos: op.gg lista la Lágrima Y su evolución en el mismo core
