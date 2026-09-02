@@ -57,6 +57,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly LcuRuneWriter _runeWriter = new();
     private readonly LcuItemSetWriter _itemSetWriter = new();
     private string? _itemSetsWrittenKey;   // "champKey|map|patch": una escritura por contexto
+    private string? _liveSetKey;           // top-3 vivo ya escrito en el cliente (ids)
+    private readonly GameJournal _journal = new();
+    private bool _wasDead;
     private string? _runesAppliedKey;      // "champKey|patch": una aplicación automática por campeón
     private ChampionBuildStats? _championStats;
     // Top de items del tick anterior: la histéresis del asesor lo usa para no "temblar".
@@ -360,6 +363,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>Se dispara cuando hay una versión de datos más nueva que la cargada (la UI pregunta).</summary>
     public event Action<DataUpdateInfo>? DataUpdateAvailable;
+    /// <summary>El jugador acaba de morir con recomendaciones en mano: la ventana de compra de ARAM.</summary>
+    public event Action? PlayerDied;
 
     /// <summary>Al arrancar: carga el catálogo cacheado al instante y luego chequea actualizaciones.</summary>
     private async Task InitStaticDataAsync()
@@ -711,6 +716,35 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _ = ApplyItemSetsAsync(pages, champ, mapNumber, key);
     }
 
+    /// <summary>
+    /// Página "Paradox: <campeón> · Live" con el top-3 vivo DENTRO de la tienda del juego.
+    /// Se reescribe solo cuando cambia el top (una llamada LCU por cambio), junto con las
+    /// páginas estáticas de op.gg (el writer reemplaza todas las de nuestro prefijo).
+    /// </summary>
+    private void WriteLiveItemSet(GameState state, ItemAdvicePlan? plan)
+    {
+        if (plan is null || plan.Recommendations.Count == 0
+            || state.ActivePlayerEntry is not { } me
+            || _catalog.ResolveChampion(me.ChampionName, me.RawChampionName) is not { } champ)
+            return;
+        var key = string.Join(",", plan.Recommendations.Select(r => r.Item.Id));
+        if (key == _liveSetKey)
+            return;
+        _liveSetKey = key;
+        var pages = new List<ItemSetPage>();
+        if (_championStats is { } stats)
+            pages.AddRange(ItemSetBuilder.Build(stats, champ.Name, id => _catalog.ItemById(id)?.Name));
+        var blocks = new List<ItemSetBlock>
+        {
+            new("Recommended now", plan.Recommendations.Select(r => r.Item.Id).ToList()),
+        };
+        if (plan.Boots is { } boots)
+            blocks.Add(new("Boots", new[] { boots.Boots.Id }));
+        pages.Insert(0, new ItemSetPage($"{ItemSetBuilder.TitlePrefix}{champ.Name} · Live", blocks));
+        var mapNumber = state.GameData.MapNumber == 12 ? 12 : 11;
+        _ = ApplyItemSetsAsync(pages, champ, mapNumber, _itemSetsWrittenKey ?? "");
+    }
+
     private async Task ApplyItemSetsAsync(IReadOnlyList<ItemSetPage> pages,
         StaticChampion champ, int mapNumber, string key)
     {
@@ -773,6 +807,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         ItemRecos.Clear();
         var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats, _previousTopIds);
         _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
+        _journal.Record(state, plan);
+        var dead = state.ActivePlayerEntry?.IsDead == true;
+        if (dead && !_wasDead && plan is not null && _config.Items.OverlayOnDeath)
+            PlayerDied?.Invoke();
+        _wasDead = dead;
+        WriteLiveItemSet(state, plan);
         if (plan is null)
         {
             ThreatSummary = "";
@@ -1283,6 +1323,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             _inGame = false;
             _lastGameState = null; // sin partida: que el reset no recalcule sobre datos viejos
             _previousTopIds = null; // la histéresis no debe filtrarse a la próxima partida
+            _liveSetKey = null;
+            _wasDead = false;
             ResetBuildRole();
             UpdateContext();
         }

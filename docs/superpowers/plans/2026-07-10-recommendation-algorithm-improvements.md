@@ -838,3 +838,23 @@ Fase 5 (G1–G3)  — sesiones de diseño propias; G3 alimenta a H1.
 - Revertir «las botas meta de op.gg mandan» (D4 solo agrega un piso de muestra mínima).
 - Parsear texto de spells como ÚNICA fuente (D5 lo usa en unión con curadas, nunca en reemplazo).
 - Runas/orden de habilidades más allá de lo ya integrado; augments de Mayhem por API (no expuestos).
+
+---
+
+## Addendum v5 (2026-09-02) — lo diferido, implementado con perfil bajo
+
+Todo en `Core` salvo tres ganchos en la app; 381 tests verdes (373 previos + 8 nuevos).
+
+| Diferido | Qué se hizo | Dónde |
+|---|---|---|
+| G3 telemetría | `GameJournal`: un JSONL por partida (`start`/`tick`/`buy`/`end`); cada compra lleva el rank que tenía en el top del tick anterior; `Adoption(dir)` = compras que salieron del top. Construye el corpus de H1 sin trabajo extra. | `Items/GameJournal.cs`, `%LocalAppData%\ParadoxLoLCompanion\journal\` |
+| S7 parte 2 | Fit por magnitud: cada tag pesa `weight × clamp(stat/típico, 0.5, 1.3)`; la pasiva/activa (tabla curada `ItemPassiveValue`) multiplica `(1 + 0.5·valor)` — amplifica un item que ya encaja, no lo convierte en otra cosa. | `ItemAdvisor.Magnitude`, `ItemsConfig.ItemPassiveValue` |
+| Rendimientos ofensivos | `Needs.PenPhysical/PenMagical`: la pen % escala con el AD/AP vivo (piso 0.7). Espejo de `DefenseNeed`. | `ItemAdvisor.NeedsFrom` |
+| Prior op.gg | WR = delta contra el WR del campeón (core) o contra el promedio del slot tardío (quita el sesgo de supervivencia), encogido por muestra, ±35 %. El core es un set ORDENADO: el item que toca pesa 1.0, salteado 0.9, adelantado 0.75. | `WinMultiplier`, `CoreOrderMu`, `ChampionBuildStats.LateWinRateBaseline` |
+| G1 aliados | Equipo casi mono-tipo (≥2 aliados) pre-valúa la pen antes de que el enemigo apile; único frontline ×1.25 en defensa; auras únicas que ya lleva un aliado salen del pool. | `Needs.Ally*`, `SoloFrontline`, `allyAuraPassives` |
+| G2 timing | Muerto en ARAM el oro se proyecta al respawn (`AramPassiveGoldPerSecond`); el overlay se abre solo al morir (`OverlayOnDeath`); página "Paradox: <champ> · Live" con el top-3 en la tienda (una escritura LCU por cambio de top). | `Advise`, `MainViewModel.WriteLiveItemSet`, `MainWindow` |
+| H2 sin corpus | `Fixtures/golden-scenarios.json` (23 escenarios etiquetados) + `GoldenScenarioTests`: agreement@3 con umbral 85 % y listado de desacuerdos. Hoy: 23/23. | `tests/GoldenScenarioTests.cs` |
+| Bug | El feed (`ItemRecommendationRule`) no pasaba `previousTopIds`: sin histéresis. Corregido. | `Advice/Rules/ItemRecommendationRule.cs` |
+| Doble conteo | Una limpieza (QSS/Mercurial) cobraba supervivencia por enganche Y anti-CC por el mismo Leona/Amumu: ahora máximo, no suma. | `ScoreItem` |
+
+Pendiente real: que el juego refresque las páginas de items DURANTE la partida no está confirmado (la LCU acepta la escritura; la tienda podría leerlas recién en la próxima). Si no lo hace, el costo es una llamada local por cambio de top.

@@ -1,0 +1,117 @@
+[
+  { "name": "ADC vs double sustain: anti-heal AD",
+    "aram": true, "gold": 9000, "me": "Jinx",
+    "enemies": [["Warwick", 3, []], ["Aatrox", 2, []], ["Soraka", 0, []]],
+    "expectAny": ["Mortal Reminder", "Grievous Edge"] },
+
+  { "name": "Mage vs double sustain: Morello",
+    "aram": true, "gold": 9000, "me": "Ahri",
+    "enemies": [["Warwick", 3, []], ["Soraka", 1, []], ["Leona", 0, []]],
+    "expectAny": ["Morellonomicon"] },
+
+  { "name": "Squishy mage vs fed engage + assassin: Zhonya",
+    "aram": true, "gold": 9000, "me": "Ahri",
+    "enemies": [["Leona", 4, []], ["Zed", 4, []], ["Jinx", 0, []]],
+    "expectAny": ["Zhonya's Hourglass"] },
+
+  { "name": "ADC vs fed suppression: cleanse",
+    "aram": true, "gold": 9000, "me": "Jinx",
+    "enemies": [["Malzahar", 5, []], ["Amumu", 1, []], ["Karma", 0, []]],
+    "expectAny": ["Mercurial Scimitar"] },
+
+  { "name": "Tank vs crit marksmen: anti-crit armor",
+    "aram": true, "gold": 9000, "me": "Leona",
+    "enemies": [["Jinx", 4, [3031]], ["Vayne", 3, [3031]], ["Zed", 1, []]],
+    "expectAny": ["Randuin's Omen", "Thornmail"] },
+
+  { "name": "Tank vs triple AP: magic resist",
+    "aram": true, "gold": 9000, "me": "Leona",
+    "enemies": [["Ahri", 3, []], ["Malzahar", 3, []], ["Karma", 2, []]],
+    "expectAny": ["Spirit Visage", "Banshee's Veil"] },
+
+  { "name": "Tank vs sustain-heavy physical: Thornmail",
+    "aram": true, "gold": 9000, "me": "Leona",
+    "enemies": [["Warwick", 4, []], ["Vayne", 3, []], ["Aatrox", 2, []]],
+    "expectAny": ["Thornmail"] },
+
+  { "name": "AD assassin vs stacked armor: % pen",
+    "aram": true, "gold": 9000, "me": "Zed",
+    "enemies": [["Leona", 0, [1029, 1029, 1029]], ["Amumu", 0, [1029, 1029]], ["Karma", 0, []]],
+    "expectAny": ["Lord Dominik's Regards", "Mortal Reminder"] },
+
+  { "name": "Mage vs stacked magic resist: Void Staff",
+    "aram": true, "gold": 9000, "me": "Ahri",
+    "enemies": [["Leona", 0, [1033, 1033, 1033]], ["Amumu", 0, [1033, 1033]], ["Jinx", 0, []]],
+    "expectAny": ["Void Staff", "Cryptbloom", "Bloodletter's Curse"] },
+
+  { "name": "Mage with no threats: Rabadon is a core spike",
+    "aram": true, "gold": 9000, "me": "Ahri",
+    "enemies": [["Jinx", 0, []], ["Vayne", 0, []], ["Soraka", 0, []]],
+    "expectAny": ["Rabadon's Deathcap"] },
+
+  { "name": "ADC with no threats: Infinity Edge is a core spike",
+    "aram": true, "gold": 9000, "me": "Jinx",
+    "enemies": [["Ahri", 0, []], ["Karma", 0, []], ["Soraka", 0, []]],
+    "expectAny": ["Infinity Edge"] },
+
+  { "name": "ADC vs HP-stacking tanks: on-hit / % pen",
+    "aram": true, "gold": 9000, "me": "Vayne",
+    "enemies": [["Leona", 0, [3083, 3068]], ["Amumu", 0, [3083, 3075]], ["Gragas", 0, [3083, 3143]]],
+    "expectAny": ["Blade of the Ruined King", "Lord Dominik's Regards", "Mortal Reminder"] },
+
+  { "name": "Mage vs fed AD assassin: Zhonya",
+    "aram": true, "gold": 9000, "me": "Malzahar",
+    "enemies": [["Zed", 6, []], ["Jinx", 1, []], ["Leona", 0, []]],
+    "expectAny": ["Zhonya's Hourglass"] },
+
+  { "name": "AD fighter vs triple AP: Spirit Visage / Maw",
+    "aram": true, "gold": 9000, "me": "Warwick",
+    "enemies": [["Ahri", 3, []], ["Malzahar", 3, []], ["Karma", 2, []]],
+    "expectAny": ["Spirit Visage", "Maw of Malmortius"] },
+
+  { "name": "AD assassin vs shielding support: Serpent's Fang",
+    "aram": true, "gold": 9000, "me": "Zed",
+    "enemies": [["Karma", 4, []], ["Soraka", 2, []], ["Jinx", 2, []]],
+    "expectAny": ["Serpent's Fang"] },
+
+  { "name": "Enchanter: Shurelya's",
+    "aram": true, "gold": 9000, "me": "Soraka",
+    "enemies": [["Jinx", 0, []], ["Zed", 0, []], ["Leona", 0, []]],
+    "expectAny": ["Shurelya's Battlesong"] },
+
+  { "name": "AP assassin vs fed AD assassin: Zhonya",
+    "aram": true, "gold": 9000, "me": "Ekko",
+    "enemies": [["Zed", 5, []], ["Jinx", 1, []], ["Leona", 0, []]],
+    "expectAny": ["Zhonya's Hourglass"] },
+
+  { "name": "ADC owning Lord Dominik's vs sustain: second Last Whisper is illegal",
+    "aram": true, "gold": 9000, "me": "Jinx", "myItems": [3031, 3036],
+    "enemies": [["Warwick", 3, []], ["Aatrox", 2, []], ["Soraka", 0, []]],
+    "expectAny": ["Grievous Edge"], "expectNone": ["Mortal Reminder"] },
+
+  { "name": "Full-AP ally team vs tanks: magic pen pre-valued",
+    "aram": true, "gold": 9000, "me": "Ahri",
+    "allies": [["Malzahar", []], ["Karma", []]],
+    "enemies": [["Leona", 0, []], ["Amumu", 0, []], ["Gragas", 0, []]],
+    "expectAny": ["Void Staff", "Cryptbloom", "Bloodletter's Curse"] },
+
+  { "name": "Tank vs mixed damage: raw HP wall",
+    "aram": true, "gold": 9000, "me": "Amumu",
+    "enemies": [["Jinx", 2, []], ["Ahri", 2, []], ["Zed", 2, []]],
+    "expectAny": ["Warmog's Armor", "Sunfire Aegis", "Randuin's Omen", "Spirit Visage"] },
+
+  { "name": "Rift: ADC vs sustain, Kraken stays in the pool",
+    "aram": false, "gold": 9000, "me": "Jinx",
+    "enemies": [["Zed", 0, []], ["Leona", 0, []], ["Ahri", 0, []]],
+    "expectAny": ["Infinity Edge", "Kraken Slayer"] },
+
+  { "name": "Poor ADC: cheapest coherent buy is still a marksman item",
+    "aram": true, "gold": 1500, "me": "Jinx",
+    "enemies": [["Ahri", 0, []], ["Karma", 0, []], ["Soraka", 0, []]],
+    "expectNone": ["Thornmail", "Spirit Visage", "Warmog's Armor"] },
+
+  { "name": "ADC vs enemy anti-heal: lifesteal not the headline",
+    "aram": true, "gold": 9000, "me": "Jinx",
+    "enemies": [["Zed", 3, [3165]], ["Ahri", 0, [3165]], ["Leona", 0, []]],
+    "expectAny": ["Infinity Edge", "Guardian Angel", "Lord Dominik's Regards"] }
+]

@@ -83,6 +83,12 @@ public partial class MainWindow : Window
             vm.ConsoleLines.CollectionChanged += OnConsoleLinesChanged;
             vm.DataUpdateAvailable += info => OnUpdateAvailable(vm, info);
             vm.AugmentBadges.CollectionChanged += (_, _) => SyncBadgeWindow(vm);
+            // Muerto = ventana de compra: el overlay aparece solo (si no estaba ya).
+            vm.PlayerDied += () =>
+            {
+                if (_overlay is null || !_overlay.IsVisible)
+                    ToggleOverlay();
+            };
         }
     }
 

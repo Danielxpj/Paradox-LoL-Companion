@@ -18,6 +18,7 @@ public sealed class ItemRecommendationRule : IAdviceRule
     private readonly ItemAdvisor _advisor;
     private readonly Func<BuildArchetype?>? _forcedArchetype;
     private readonly Func<ChampionBuildStats?>? _statsProvider;
+    private IReadOnlyList<int>? _previousTopIds;
 
     public ItemRecommendationRule(IStaticData data, ItemsConfig? config = null,
         Func<BuildArchetype?>? forcedArchetype = null,
@@ -45,7 +46,8 @@ public sealed class ItemRecommendationRule : IAdviceRule
 
     public IEnumerable<AdviceItem> Evaluate(GameState state)
     {
-        var plan = _advisor.Advise(state, _forcedArchetype?.Invoke(), _statsProvider?.Invoke());
+        var plan = _advisor.Advise(state, _forcedArchetype?.Invoke(), _statsProvider?.Invoke(), _previousTopIds);
+        _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
         if (plan is null)
             yield break;
 

@@ -311,6 +311,30 @@ public sealed class ItemsConfig
     public double AffordabilityBonus { get; set; } = 0.5;
     /// <summary>Bono de retención al item que ya estaba en el top el tick anterior: mata la oscilación en el borde (un retador debe superar al incumbente por más que esto para desplazarlo), muy por debajo de cualquier counter.</summary>
     public double HysteresisBonus { get; set; } = 0.3;
+    /// <summary>Oro pasivo por segundo en ARAM: muerto, el asesor proyecta el oro al reaparecer.</summary>
+    public double AramPassiveGoldPerSecond { get; set; } = 3.3;
+    /// <summary>Mostrar el overlay de items solo al morir (la ventana de compra en ARAM).</summary>
+    public bool OverlayOnDeath { get; set; } = true;
+    /// <summary>
+    /// Valor curado de la pasiva/activa por item (se SUMA al fit por tags, que ddragon tasa
+    /// solo por stats): Rabadon, Zhonya, Filo Infinito… valen por lo que no está en sus stats.
+    /// Escala: multiplica el fit por (1 + 0.5·valor); 1.0 = la pasiva vale la mitad de los stats.
+    /// </summary>
+    public Dictionary<int, double> ItemPassiveValue { get; set; } = new()
+    {
+        [3089] = 1.5, [3031] = 1.2, [3157] = 1.0, [3026] = 1.0, [3153] = 1.0, [3078] = 1.0,
+        [3084] = 1.0, [6333] = 0.9, [3124] = 0.9, [6672] = 0.8, [6653] = 0.8, [3083] = 0.8,
+        [6665] = 0.8, [3053] = 0.8, [3302] = 0.8, [2504] = 0.8, [3115] = 0.7, [4633] = 0.7,
+        [3085] = 0.7, [3100] = 0.7, [6657] = 0.7, [3072] = 0.6, [4645] = 0.6, [6655] = 0.6,
+        [3068] = 0.6, [3156] = 0.6, [6692] = 0.6, [3161] = 0.6, [3071] = 0.6, [3102] = 0.6,
+        [3748] = 0.6, [3074] = 0.6, [6698] = 0.6, [6675] = 0.6, [6673] = 0.6, [2503] = 0.6,
+        [3004] = 0.6, [3042] = 0.6, [3041] = 2.0, [3091] = 0.6, [2501] = 0.6, [6610] = 0.6,
+        [3135] = 0.5, [3036] = 0.5, [4646] = 0.5, [3075] = 0.5, [3065] = 0.5, [3152] = 0.5,
+        [3814] = 0.5, [3181] = 0.5, [2502] = 0.5, [8020] = 0.5, [3110] = 0.5, [6662] = 0.5,
+        [3087] = 0.5, [3032] = 0.5, [3508] = 0.5, [3118] = 0.5, [3040] = 0.5, [3003] = 0.5,
+        [3073] = 0.5, [3142] = 0.4, [4629] = 0.4, [3139] = 0.4, [3143] = 0.4, [3046] = 0.4,
+        [4628] = 0.4, [3116] = 0.4, [3137] = 0.4, [3165] = 0.3,
+    };
 }
 
 /// <summary>Modificador de balance ARAM de un campeón: factor de daño hecho y recibido (1.0 = neutral).</summary>

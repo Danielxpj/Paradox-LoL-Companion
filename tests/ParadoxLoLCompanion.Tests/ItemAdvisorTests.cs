@@ -371,9 +371,9 @@ public class ItemAdvisorTests
     {
         // Kraken Slayer (6672) es solo de Grieta en este catálogo: en la Grieta puede
         // recomendarse, en ARAM jamás. (Enemigo físico para no sesgar hacia defensa mágica.)
-        var onRift = Advisor().Advise(TestCatalog.State(9000,
+        var onRift = Wide().Advise(TestCatalog.State(9000,
             ("Jinx", "ORDER", 0, None), ("Zed", "CHAOS", 0, None)))!;
-        var onAram = Advisor().Advise(TestCatalog.AramState(9000,
+        var onAram = Wide().Advise(TestCatalog.AramState(9000,
             ("Jinx", "ORDER", 0, None), ("Zed", "CHAOS", 0, None)))!;
 
         Assert.Contains(onRift.Recommendations, r => r.Item.Id == 6672);
@@ -569,7 +569,7 @@ public class ItemAdvisorTests
         // Mismo enemigo físico; en un caso ya compró anti-curación (Ejecutor). El robo de
         // vida (Filo de Rey) debe puntuar MENOS cuando su curación ya está cortada.
         StaticItemScore Bork(params (string, string, int, int[])[] players) =>
-            new(new ItemAdvisor(TestCatalog.Catalog()).Advise(TestCatalog.State(6000, players))!);
+            new(Wide().Advise(TestCatalog.State(6000, players))!);
 
         // Morello (3165): Heridas Graves puras — sin lifesteal (no da "sustain" al enemigo)
         // ni armadura, así el ÚNICO cambio es EnemyAntiHeal. Zed sigue siendo físico. KDA
@@ -607,7 +607,7 @@ public class ItemAdvisorTests
         // Mismo item on-hit (Filo de Rey) vale MÁS contra un equipo gordo (aunque sea HP
         // puro, sin armadura) que contra uno frágil: tu daño quiere penetrar, no rebotar.
         double Bork(int[] enemyItems) => new StaticItemScore(
-            new ItemAdvisor(TestCatalog.Catalog()).Advise(TestCatalog.State(9000,
+            Wide().Advise(TestCatalog.State(9000,
                 ("Jinx", "ORDER", 0, None),
                 ("Leona", "CHAOS", 0, enemyItems)))!).Of(3153); // BotRK (OnHit)
 
@@ -871,6 +871,10 @@ public class ItemAdvisorTests
     }
 
     /// <summary>Ayuda de test: busca el puntaje de un item por id en un plan (0 si no está).</summary>
+    /// <summary>Asesor con lista ancha: para tests que comparan PUNTAJES, no la selección top-3.</summary>
+    private static ItemAdvisor Wide() =>
+        new(TestCatalog.Catalog(), new Core.Config.ItemsConfig { MaxRecommendations = 10 });
+
     private sealed class StaticItemScore
     {
         private readonly ItemAdvicePlan _plan;

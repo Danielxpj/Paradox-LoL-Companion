@@ -59,8 +59,18 @@ public sealed class ItemAdvisor
     // rates ruidosos; por debajo del pie el prior es ruido y no aporta.
     private const double StatPlayFoot = 300;
     private const double StatPlayShoulder = 2500;
-    private const double StatWinFoot = 0.48;
-    private const double StatWinShoulder = 0.54;
+    // Win rate: delta contra el WR global del campeón, ENCOGIDO por muestra (Bayes
+    // ingenuo: con `StatWinShrinkPlays` partidas el delta pesa la mitad). Popular ≠ bueno:
+    // en ARAM las builds se copian a ciegas, así que el WR manda sobre el pick rate.
+    private const double StatWinShrinkPlays = 800;
+    private const double StatWinGain = 8;
+    private const double StatWinClamp = 0.35;
+    // Pen % vale más cuanto más daño crudo tenés (multiplicativo): sin AD/AP la pen no pega.
+    private const double PenPowerFloor = 0.7;
+    // Equipo aliado: con un equipo casi full-AD/AP los enemigos VAN a apilar la resistencia
+    // que frena tu daño — la pen se pre-valúa antes de que compren.
+    private const double AllyPenMag = 1.2;
+    private const double SoloFrontlineDefense = 1.25;
     /// <summary>μ mínimo para que una regla aporte bono y emita razón (evita ruido sub-umbral).</summary>
     private const double MuGate = 0.05;
 
@@ -120,7 +130,10 @@ public sealed class ItemAdvisor
         var profile = forcedArchetype is { } forced
             ? _profiler.Profile(me) with { Archetype = forced }
             : _profiler.ProfileWithInventory(me);
-        var gold = state.ActivePlayer?.CurrentGold ?? 0;
+        // Muerto en ARAM la tienda abre AHORA y el oro pasivo sigue entrando hasta reaparecer:
+        // "te alcanza" se evalúa contra el oro proyectado al respawn, no contra el de este tick.
+        var gold = (state.ActivePlayer?.CurrentGold ?? 0)
+            + (isAram && me.IsDead ? me.RespawnTimer * _config.AramPassiveGoldPerSecond : 0);
         var ownedIds = me.Items
             .SelectMany(i => Enumerable.Repeat(i.ItemID, Math.Max(i.Count, 1)))
             .ToList();
@@ -198,7 +211,15 @@ public sealed class ItemAdvisor
             ownedIds.Sum(id => _data.ItemById(id)?.CritChance ?? 0));
 
         // Necesidad defensiva real (stats vivos): amortigua los muros ya cubiertos.
-        var defenseNeed = DefenseNeedFrom(state.ActivePlayer?.ChampionStats, me.Level);
+        var allies = state.AllPlayers.Where(p => p.Team == me.Team && p != me).ToList();
+        var defenseNeed = NeedsFrom(state.ActivePlayer?.ChampionStats, me.Level, profile,
+            allies.Select(_profiler.Profile).ToList());
+        // Auras únicas que un aliado YA lleva (Locket, Zeke's…): no se acumulan, fuera del pool.
+        var allyAuraPassives = new HashSet<string>(allies
+            .SelectMany(p => p.Items)
+            .Select(i => _data.ItemById(i.ItemID))
+            .Where(i => i is not null && i.HasTag("Aura"))
+            .SelectMany(i => i!.PassiveNames), StringComparer.OrdinalIgnoreCase);
 
         // Items completos ya comprados: da el contexto de slot al prior de op.gg (comprando
         // el 4.º/5.º/6.º item se pondera por la lista de ESE slot, no siempre por la del 4.º).
@@ -252,6 +273,8 @@ public sealed class ItemAdvisor
             if (OffensiveMismatch(item, profile))
                 continue;
             if (BlockedByOwnedPassive(item, ownedWithPassives))
+                continue;
+            if (item.HasTag("Aura") && item.PassiveNames.Overlaps(allyAuraPassives))
                 continue;
             // Ya tenés un item de su grupo excluyente ("límite de 1"): comprarlo es ilegal.
             if (ExclusiveGroupOf(item) is >= 0 and var itemGroup
@@ -658,12 +681,17 @@ public sealed class ItemAdvisor
     /// </summary>
     private (double Score, List<string> Reasons, RecommendationCategory Category, double Situational) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
-        IReadOnlyDictionary<string, double> weights, bool teamHasGw, DefenseNeed need,
+        IReadOnlyDictionary<string, double> weights, bool teamHasGw, Needs need,
         ChampionBuildStats? stats, string champName, double currentCrit = 0,
         double ahead = 0, double behind = 0, int completedCount = 0)
     {
         var reasons = new List<string>();
-        var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t));
+        // Fit consciente de magnitud: cada tag pesa por CUÁNTO stat trae el item respecto a
+        // uno típico (350 HP no es 800 HP), amplificado por el valor curado de la pasiva/activa
+        // (Rabadon, Zhonya, Filo Infinito…) que ddragon no tasa. Multiplicativo a propósito: la
+        // pasiva potencia un item que YA encaja; no convierte a Heartsteel en item de mago.
+        var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t) * Magnitude(item, t))
+                * (1 + 0.5 * _config.ItemPassiveValue.GetValueOrDefault(item.Id));
         // Crítico saturado: solo puntúa la fracción que NO desborda el cap de 100%
         // (a 75% un item de 25% entra entero; a 100% su crítico vale cero).
         var critWaste = CritWaste(item, currentCrit);
@@ -672,7 +700,8 @@ public sealed class ItemAdvisor
         // Raíz cuadrada: comprime el fit para que apilar tags no aplaste a los bonos
         // situacionales (un counter necesario debe poder ganarle a más stats crudos).
         var core = 3 * Math.Sqrt(fit) * (0.8 + 0.4 * Math.Min(Efficiency(item, critWaste), 1.2));
-        var df = DefenseFactor(me);
+        // Único frontline del equipo: la defensa propia vale más (nadie más absorbe).
+        var df = DefenseFactor(me) * (need.SoloFrontline ? SoloFrontlineDefense : 1);
         double offense = 0, defense = 0;
 
         // Anti-curación (grado de sustain, ya calibrado por mapa), con bono si además
@@ -695,16 +724,33 @@ public sealed class ItemAdvisor
 
         // Penetración cuando el enemigo apila la resistencia que bloquea tu daño.
         // La letalidad NO responde a la armadura apilada (pen plana): solo el %pen.
-        if (me.DealsPhysical && item.HasTag("ArmorPenetration") && !item.HasLethality
-            && threat.ArmorStack > MuGate)
+        // La pen % es multiplicativa con tu daño crudo (need.Pen*): con poco AD/AP rinde menos.
+        // Si el enemigo todavía no apiló, un equipo aliado casi mono-tipo la pre-valúa (lo van a hacer).
+        if (me.DealsPhysical && item.HasTag("ArmorPenetration") && !item.HasLethality)
         {
-            offense += PenMag * threat.ArmorStack;
-            reasons.Add($"enemies already bought {threat.EnemyBonusArmor:0} armor");
+            if (threat.ArmorStack > MuGate)
+            {
+                offense += PenMag * threat.ArmorStack * need.PenPhysical;
+                reasons.Add($"enemies already bought {threat.EnemyBonusArmor:0} armor");
+            }
+            else if (need.AllyPhysical > MuGate)
+            {
+                offense += AllyPenMag * need.AllyPhysical * need.PenPhysical;
+                reasons.Add("your team is mostly AD: expect stacked armor");
+            }
         }
-        if (me.DealsMagical && item.HasTag("MagicPenetration") && threat.MrStack > MuGate)
+        if (me.DealsMagical && item.HasTag("MagicPenetration"))
         {
-            offense += PenMag * threat.MrStack;
-            reasons.Add($"enemies already bought {threat.EnemyBonusMr:0} magic resist");
+            if (threat.MrStack > MuGate)
+            {
+                offense += PenMag * threat.MrStack * need.PenMagical;
+                reasons.Add($"enemies already bought {threat.EnemyBonusMr:0} magic resist");
+            }
+            else if (need.AllyMagical > MuGate)
+            {
+                offense += AllyPenMag * need.AllyMagical * need.PenMagical;
+                reasons.Add("your team is mostly AP: expect stacked magic resist");
+            }
         }
 
         // Defensa contra el tipo de daño dominante — atenuada si el enemigo ignora
@@ -742,13 +788,15 @@ public sealed class ItemAdvisor
         // suman, así un solo item defensivo no cobra dos veces por la misma amenaza. Para
         // squishies con ofensa acompañante; el factor de necesidad aplica al resist del burst.
         var survival = Fuzzy.Or(threat.Burst, threat.HardEngage);
+        double survivalBonus = 0;
         if (survival > MuGate && me.IsSquishy && OffensiveMatch(item, me)
             && (item.HasTag("Armor") || item.HasTag("SpellBlock") || item.RemovesCc))
         {
             var burstMagical = threat.BurstDamage == DamageProfile.Magical;
             var needFactor = item.HasTag(burstMagical ? "SpellBlock" : "Armor")
                 ? (burstMagical ? need.Mr : need.Armor) : 1.0;
-            defense += SurvivalMag * survival * needFactor;
+            survivalBonus = SurvivalMag * survival * needFactor;
+            defense += survivalBonus;
             reasons.Add(threat.Burst >= threat.HardEngage
                 ? $"to survive the burst from {threat.TopBurstName}"
                 : "survives the enemy engage");
@@ -782,9 +830,11 @@ public sealed class ItemAdvisor
                 antiCcReason = "cuts through the enemy crowd control";
             }
         }
+        // El enganche duro y el CC pesado son la MISMA amenaza vista dos veces: una limpieza
+        // que ya cobró supervivencia solo suma lo que el anti-CC le agrega por encima (máximo).
         if (antiCc > 0)
         {
-            offense += antiCc;
+            offense += item.RemovesCc ? Math.Max(0, antiCc - survivalBonus) : antiCc;
             reasons.Add(antiCcReason!);
         }
 
@@ -815,9 +865,13 @@ public sealed class ItemAdvisor
                     * Fuzzy.Ramp(prior.PickRate, StatPickFoot, StatPickShoulder)
                 : StatLateFactor
                     * Fuzzy.Ramp(prior.PickRate, StatLatePickFoot, StatLatePickShoulder);
-            var mu = pickMu
+            // El core es un SET ORDENADO: el item que toca según el progreso pesa entero,
+            // uno salteado casi entero, uno adelantado menos.
+            var orderMu = prior.IsCore ? CoreOrderMu(stats, item.Id, completedCount) : 1.0;
+            var mu = pickMu * orderMu
                    * Fuzzy.Ramp(prior.Play, StatPlayFoot, StatPlayShoulder)
-                   * (0.75 + 0.5 * Fuzzy.Ramp(prior.WinRate, StatWinFoot, StatWinShoulder));
+                   * WinMultiplier(prior.WinRate, prior.Play,
+                       prior.IsCore ? stats.WinRate : stats.LateWinRateBaseline);
             if (mu > MuGate)
             {
                 statBonus = StatCoreMag * mu;
@@ -949,20 +1003,77 @@ public sealed class ItemAdvisor
     /// armadura/RM/vida ya altas (dos defensivos comprados) un tercer muro rinde menos.
     /// Sin datos vivos (replays, MaxHealth=0) devuelve 1 en todo: cae al factor por arquetipo.
     /// </summary>
-    private readonly record struct DefenseNeed(double Armor, double Mr, double Hp)
+    /// <summary>
+    /// Necesidades del jugador: defensivas (Armor/Mr/Hp) y ofensivas (Pen*: la pen % rinde
+    /// según el daño crudo que ya tenés), más el contexto del equipo ALIADO (skew de daño
+    /// del equipo y si sos el único frontline). Sin datos vivos, las necesidades valen 1.
+    /// </summary>
+    private readonly record struct Needs(double Armor, double Mr, double Hp,
+        double PenPhysical, double PenMagical,
+        double AllyPhysical, double AllyMagical, bool SoloFrontline);
+
+    private static Needs NeedsFrom(ChampionStats? live, int level, ChampionProfile me,
+        IReadOnlyList<ChampionProfile> allies)
     {
-        public static DefenseNeed Full { get; } = new(1, 1, 1);
+        // Contexto aliado: solo con equipo real (≥2 aliados); un test de 1v3 no es "full AD".
+        var team = allies.Append(me).ToList();
+        var teamSkew = allies.Count < 2 ? (0.0, 0.0)
+            : (Fuzzy.Ramp(team.Count(p => p.Damage == DamageProfile.Physical) / (double)team.Count, 0.6, 1.0),
+               Fuzzy.Ramp(team.Count(p => p.Damage == DamageProfile.Magical) / (double)team.Count, 0.6, 1.0));
+        var needs = new Needs(1, 1, 1, 1, 1, teamSkew.Item1, teamSkew.Item2,
+            allies.Count >= 2 && !me.IsSquishy && allies.All(p => p.IsSquishy));
+        if (live is null || live.MaxHealth <= 0)
+            return needs;
+        var lvl = Math.Max(level, 1);
+        return needs with
+        {
+            Armor = 1 - Fuzzy.Ramp(live.Armor, 40 + 5 * lvl, 120 + 8 * lvl),
+            Mr = 1 - Fuzzy.Ramp(live.MagicResist, 30 + 4 * lvl, 100 + 6 * lvl),
+            Hp = 1 - Fuzzy.Ramp(live.MaxHealth, 800 + 90 * lvl, 1800 + 150 * lvl),
+            PenPhysical = PenPowerFloor + (1 - PenPowerFloor) * Fuzzy.Ramp(live.AttackDamage, 90, 220),
+            PenMagical = PenPowerFloor + (1 - PenPowerFloor) * Fuzzy.Ramp(live.AbilityPower, 80, 400),
+        };
     }
 
-    private static DefenseNeed DefenseNeedFrom(ChampionStats? live, int level)
+    /// <summary>
+    /// Cuánto stat trae el item respecto a uno típico del tag ([0.5, 1.3]): 350 HP no valen
+    /// lo que 800. Tags sin stat numérico (OnHit, Aura, Haste) o sin dato en ddragon valen 1.
+    /// </summary>
+    private static double Magnitude(StaticItem item, string tag)
     {
-        if (live is null || live.MaxHealth <= 0)
-            return DefenseNeed.Full;
-        var lvl = Math.Max(level, 1);
-        return new DefenseNeed(
-            1 - Fuzzy.Ramp(live.Armor, 40 + 5 * lvl, 120 + 8 * lvl),
-            1 - Fuzzy.Ramp(live.MagicResist, 30 + 4 * lvl, 100 + 6 * lvl),
-            1 - Fuzzy.Ramp(live.MaxHealth, 800 + 90 * lvl, 1800 + 150 * lvl));
+        var (stat, reference) = tag switch
+        {
+            "Damage" or "AttackDamage" => (item.AttackDamage, 55.0),
+            "SpellDamage" => (item.AbilityPower, 90.0),
+            "Armor" => (item.Armor, 55.0),
+            "SpellBlock" => (item.SpellBlock, 50.0),
+            "Health" => (item.Health, 450.0),
+            "AttackSpeed" => (item.AttackSpeedPct, 0.4),
+            "CriticalStrike" => (item.CritChance, 0.25),
+            "Mana" => (item.Mana, 600.0),
+            "LifeSteal" => (item.LifeStealPct, 0.1),
+            _ => (0.0, 0.0),
+        };
+        return stat <= 0 ? 1.0 : Math.Clamp(stat / reference, 0.5, 1.3);
+    }
+
+    /// <summary>Delta de WR contra el WR global del campeón, encogido por muestra, acotado ±35 %.</summary>
+    private static double WinMultiplier(double winRate, int play, double championWinRate)
+    {
+        if (winRate <= 0)
+            return 1;
+        var delta = (winRate - (championWinRate > 0 ? championWinRate : 0.5))
+                  * play / (play + StatWinShrinkPlays);
+        return 1 + Math.Clamp(delta * StatWinGain, -StatWinClamp, StatWinClamp);
+    }
+
+    /// <summary>Posición del item en el core ordenado vs. los completos que ya llevás.</summary>
+    private static double CoreOrderMu(ChampionBuildStats stats, int itemId, int completedCount)
+    {
+        var ids = stats.CoreItems!.ItemIds;
+        var index = ids.TakeWhile(id => id != itemId).Count();
+        return index >= ids.Count || index == completedCount ? 1.0
+             : index < completedCount ? 0.9 : 0.75;
     }
 
     /// <summary>

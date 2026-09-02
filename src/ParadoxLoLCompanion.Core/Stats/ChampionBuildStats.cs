@@ -46,6 +46,22 @@ public sealed class ChampionBuildStats
     public double WinRate { get; init; }
 
     /// <summary>
+    /// WR de referencia para los candidatos tardíos: promedio (ponderado por muestra) de
+    /// TODOS los candidatos tardíos. Sus WR vienen inflados (solo comprás 4.º item si la
+    /// partida va bien); compararlos contra su propio promedio quita ese sesgo de supervivencia.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public double LateWinRateBaseline
+    {
+        get
+        {
+            var sets = FourthItems.Concat(FifthItems).Concat(SixthItems).Concat(LateItems).ToList();
+            var play = sets.Sum(s => s.Play);
+            return play > 0 ? sets.Sum(s => (double)s.Win) / play : 0;
+        }
+    }
+
+    /// <summary>
     /// Prior de un item: primero el core build (la señal fuerte), luego los candidatos
     /// tardíos. <c>null</c> si el item no aparece en las builds del campeón.
     /// Trae la fuente y la muestra porque están en ESCALAS distintas: el pick del

@@ -24,15 +24,15 @@ public class ItemAdvisorStatsTests
           "4001":{"name":"Mana Tome Item","gold":{"total":2900,"sell":2030,"purchasable":true},
                   "tags":["SpellDamage","Mana","ManaRegen"],"maps":{"11":true,"12":true},
                   "from":["1026"],"depth":2,
-                  "stats":{"FlatMagicDamageMod":60}},
+                  "stats":{"FlatMagicDamageMod":90}},
           "4002":{"name":"Pure AP Item","gold":{"total":2900,"sell":2030,"purchasable":true},
                   "tags":["SpellDamage"],"maps":{"11":true,"12":true},
                   "from":["1026"],"depth":2,
-                  "stats":{"FlatMagicDamageMod":60}},
+                  "stats":{"FlatMagicDamageMod":90}},
           "4005":{"name":"Other AP Item","gold":{"total":2900,"sell":2030,"purchasable":true},
                   "tags":["SpellDamage"],"maps":{"11":true,"12":true},
                   "from":["1026"],"depth":2,
-                  "stats":{"FlatMagicDamageMod":60}}}}
+                  "stats":{"FlatMagicDamageMod":90}}}}
         """);
 
     internal static GameState State()
@@ -128,13 +128,13 @@ public class ItemAdvisorStatsTests
                       "tags":["SpellDamage"],"maps":{"11":true},"into":["4002","4004"]},
               "4002":{"name":"Buyable Form","gold":{"total":2900,"sell":2030,"purchasable":true},
                       "tags":["SpellDamage"],"maps":{"11":true},"from":["1026"],"depth":2,
-                      "stats":{"FlatMagicDamageMod":60}},
+                      "stats":{"FlatMagicDamageMod":90}},
               "4003":{"name":"Evolved Form","gold":{"total":2900,"sell":2030,"purchasable":false},
                       "tags":["SpellDamage"],"maps":{"11":true},
                       "stats":{"FlatMagicDamageMod":80}},
               "4004":{"name":"Other AP","gold":{"total":2900,"sell":2030,"purchasable":true},
                       "tags":["SpellDamage"],"maps":{"11":true},"from":["1026"],"depth":2,
-                      "stats":{"FlatMagicDamageMod":60}}}}
+                      "stats":{"FlatMagicDamageMod":90}}}}
             """, config);
         var advisor = new ItemAdvisor(catalog, config);
         var plan = advisor.Advise(State(), BuildArchetype.Mage, StatsWith(4003))!;

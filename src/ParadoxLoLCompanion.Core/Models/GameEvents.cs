@@ -24,6 +24,8 @@ public sealed class GameEvent
     public string? VictimName { get; set; }
     public string? DragonType { get; set; }
     public List<string>? Assisters { get; set; }
+    /// <summary>GameEnd: "Win" / "Lose".</summary>
+    public string? Result { get; set; }
 
     [JsonConverter(typeof(FlexibleBoolConverter))]
     public bool Stolen { get; set; }
