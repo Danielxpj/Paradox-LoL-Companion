@@ -42,6 +42,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 {
     private readonly Dispatcher _dispatcher;
     private readonly AdvisorConfig _config;
+    private readonly UserPreferences _prefs;
+    private readonly string _prefsPath;
     private AdviceEngine _engine;
     private readonly LcuConnector _lcu = new();
     private readonly DataDragonClient _ddragon;
@@ -107,11 +109,16 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _inChampSelect;
     private string _gameMode = "";
 
-    public MainViewModel(Dispatcher dispatcher, AdvisorConfig config, ReplaySamples? samples = null)
+    public MainViewModel(Dispatcher dispatcher, AdvisorConfig config, ReplaySamples? samples = null,
+        UserPreferences? preferences = null, string? preferencesPath = null)
     {
         _dispatcher = dispatcher;
         _samples = samples ?? ReplaySamples.Empty;
         _config = config;
+        // Las opciones que el usuario toca desde la UI viven aparte del JSON de reglas
+        // (que la auto-actualización pisa); si no hay archivo, el default sale de la config.
+        _prefs = preferences ?? new UserPreferences { OverlayOnDeath = config.Items.OverlayOnDeath };
+        _prefsPath = preferencesPath ?? UserPreferences.DefaultPath;
         _engine = AdviceEngine.CreateDefault(config);
         _ddragon = new DataDragonClient(itemsConfig: config.Items);
         // El porqué de cada fallo de OP.GG va a la consola: "sin stats" a secas no se puede diagnosticar.
@@ -365,6 +372,49 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public event Action<DataUpdateInfo>? DataUpdateAvailable;
     /// <summary>El jugador acaba de morir con recomendaciones en mano: la ventana de compra de ARAM.</summary>
     public event Action? PlayerDied;
+
+    // --- Opciones del overlay: menú OPTIONS del header + ticket dentro del propio overlay ---
+
+    /// <summary>Abrir el overlay solo al morir. Persiste en user-preferences.json.</summary>
+    public bool OverlayOnDeath
+    {
+        get => _prefs.OverlayOnDeath;
+        set
+        {
+            if (_prefs.OverlayOnDeath == value)
+                return;
+            _prefs.OverlayOnDeath = value;
+            OnPropertyChanged();
+            SavePreferences();
+        }
+    }
+
+    /// <summary>Cerrar solo ese overlay pasados <see cref="AutoCloseSeconds"/> segundos.</summary>
+    public bool OverlayAutoCloseOnDeath
+    {
+        get => _prefs.AutoCloseOnDeath;
+        set
+        {
+            if (_prefs.AutoCloseOnDeath == value)
+                return;
+            _prefs.AutoCloseOnDeath = value;
+            OnPropertyChanged();
+            SavePreferences();
+        }
+    }
+
+    /// <summary>Segundos del cierre automático (5 por defecto, ajustable en el JSON).</summary>
+    public double AutoCloseSeconds => _prefs.AutoCloseSeconds <= 0 ? 5 : _prefs.AutoCloseSeconds;
+
+    /// <summary>Etiqueta del ticket del overlay, con los segundos reales.</summary>
+    public string AutoCloseLabel =>
+        $"AUTO-CLOSE {AutoCloseSeconds.ToString("0.#", CultureInfo.InvariantCulture)}s";
+
+    private void SavePreferences()
+    {
+        if (_prefs.Save(_prefsPath) is { } error)
+            AppendConsole($"[options] preferences not saved: {error}");
+    }
 
     /// <summary>Al arrancar: carga el catálogo cacheado al instante y luego chequea actualizaciones.</summary>
     private async Task InitStaticDataAsync()
@@ -809,7 +859,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
         _journal.Record(state, plan);
         var dead = state.ActivePlayerEntry?.IsDead == true;
-        if (dead && !_wasDead && plan is not null && _config.Items.OverlayOnDeath)
+        if (dead && !_wasDead && plan is not null && OverlayOnDeath)
             PlayerDied?.Invoke();
         _wasDead = dead;
         WriteLiveItemSet(state, plan);

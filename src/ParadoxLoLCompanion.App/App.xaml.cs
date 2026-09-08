@@ -39,7 +39,11 @@ public partial class App : Application
             AramGame: LoadAsset("sample-allgamedata-aram.json"),
             ChampSelect: LoadAsset("sample-champselect.json"));
         var config = LoadConfig();
-        _viewModel = new MainViewModel(Dispatcher, config, samples);
+        // Las opciones de la UI (overlay al morir, autocierre) viven en su propio archivo:
+        // el advisor-config.json empaquetado se pisa en cada actualización.
+        var prefsPath = UserPreferences.DefaultPath;
+        var prefs = UserPreferences.Load(prefsPath, config.Items.OverlayOnDeath);
+        _viewModel = new MainViewModel(Dispatcher, config, samples, prefs, prefsPath);
 
         var window = new MainWindow { DataContext = _viewModel };
         MainWindow = window;

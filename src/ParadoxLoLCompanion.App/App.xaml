@@ -184,6 +184,37 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
+        <!-- Botón de menú desplegable (OPTIONS): mismo look que Button, con el borde
+             dorado mientras el menú está abierto. -->
+        <Style x:Key="MenuToggleButton" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="FontFamily" Value="{StaticResource HudFont}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="Transparent"
+                                BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1"
+                                CornerRadius="2" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Neon}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardBgHover}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Gold}" />
+                                <Setter Property="Foreground" Value="{StaticResource Gold}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Radio "segmento" (selector de build): caja rectangular, verde al activarse. -->
         <Style x:Key="SegmentRadio" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{StaticResource TextMuted}" />

@@ -91,6 +91,34 @@
                     <Button Content="UPDATE DATA" Command="{Binding CheckUpdatesCommand}"
                             Margin="0,0,12,0" VerticalAlignment="Center"
                             ToolTip="Checks whether a newer version of the game data (Data Dragon) is available" />
+
+                    <!-- OPTIONS: preferencias de la app. Se guardan solas en
+                         user-preferences.json (LocalAppData), así que sobreviven a la
+                         auto-actualización, que sí pisa el advisor-config.json empaquetado. -->
+                    <ToggleButton x:Name="OptionsButton" Content="OPTIONS  ▾" Margin="0,0,12,0"
+                                  VerticalAlignment="Center" Style="{StaticResource MenuToggleButton}"
+                                  ToolTip="App options" />
+                    <Popup PlacementTarget="{Binding ElementName=OptionsButton}" Placement="Bottom"
+                           VerticalOffset="4" StaysOpen="False" AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           IsOpen="{Binding IsChecked, ElementName=OptionsButton, Mode=TwoWay}">
+                        <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource CardBorderStrong}"
+                                BorderThickness="1" CornerRadius="2" Padding="14,12" MinWidth="260">
+                            <StackPanel>
+                                <TextBlock Text="ITEM OVERLAY" FontFamily="{StaticResource HudFont}"
+                                           FontSize="9" FontWeight="Bold" Margin="0,0,0,8"
+                                           Foreground="{StaticResource TextFaint}" />
+                                <CheckBox Content="Open on death" IsChecked="{Binding OverlayOnDeath, Mode=TwoWay}"
+                                          ToolTip="Pops the item overlay up by itself when you die (the ARAM buy window)" />
+                                <CheckBox Content="{Binding AutoCloseLabel}" Margin="0,8,0,0"
+                                          IsChecked="{Binding OverlayAutoCloseOnDeath, Mode=TwoWay}"
+                                          ToolTip="Closes that overlay by itself, unless you interact with it" />
+                                <TextBlock Text="Ctrl+X opens and closes it at any time."
+                                           Margin="0,10,0,0" FontFamily="{StaticResource HudFont}" FontSize="10"
+                                           Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </Popup>
                     <Border BorderBrush="{StaticResource CardBorderStrong}" BorderThickness="1"
                             CornerRadius="2" Padding="10,4">
                         <StackPanel Orientation="Horizontal">

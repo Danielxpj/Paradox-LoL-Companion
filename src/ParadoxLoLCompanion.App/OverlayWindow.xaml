@@ -63,6 +63,15 @@
                                FontSize="11" FontWeight="Bold" Foreground="{StaticResource Gold}" />
                 </DockPanel>
 
+                <!-- Ticket de autocierre: cuando el overlay se abre solo al morir, se cierra
+                     también solo pasados los segundos indicados. La cuenta se cancela si
+                     tocás el overlay (estás usándolo) o si lo cerrás vos con Ctrl+X.
+                     El estado se guarda en user-preferences.json. -->
+                <CheckBox Content="{Binding AutoCloseLabel}" Margin="2,0,2,8" FontSize="10"
+                          Foreground="{StaticResource TextMuted}"
+                          IsChecked="{Binding OverlayAutoCloseOnDeath, Mode=TwoWay}"
+                          ToolTip="Close this overlay by itself after the death window (it stays open if you interact with it)" />
+
                 <!-- Selector de rol/build: bindea BuildRoles del MainViewModel compartido;
                      cambiarlo recalcula items y botas al instante (OnBuildRoleSelected).
                      GroupName propio: los radios del overlay viven en otra ventana que los

@@ -56,7 +56,9 @@ public partial class MainWindow : Window
         _hotkey.Pressed += ToggleOverlay;
     }
 
-    private void ToggleOverlay()
+    private void ToggleOverlay() => EnsureOverlay().Toggle();
+
+    private OverlayWindow EnsureOverlay()
     {
         if (_overlay is null)
         {
@@ -65,7 +67,7 @@ public partial class MainWindow : Window
             _overlay = new OverlayWindow { DataContext = DataContext };
             _overlay.Closed += (_, _) => _overlay = null;
         }
-        _overlay.Toggle();
+        return _overlay;
     }
 
     protected override void OnClosed(EventArgs e)
@@ -83,12 +85,9 @@ public partial class MainWindow : Window
             vm.ConsoleLines.CollectionChanged += OnConsoleLinesChanged;
             vm.DataUpdateAvailable += info => OnUpdateAvailable(vm, info);
             vm.AugmentBadges.CollectionChanged += (_, _) => SyncBadgeWindow(vm);
-            // Muerto = ventana de compra: el overlay aparece solo (si no estaba ya).
-            vm.PlayerDied += () =>
-            {
-                if (_overlay is null || !_overlay.IsVisible)
-                    ToggleOverlay();
-            };
+            // Muerto = ventana de compra: el overlay aparece solo (si no estaba ya) y,
+            // con el ticket AUTO-CLOSE tildado, se va solo a los 5 s.
+            vm.PlayerDied += () => EnsureOverlay().ShowForDeath();
         }
     }
 
