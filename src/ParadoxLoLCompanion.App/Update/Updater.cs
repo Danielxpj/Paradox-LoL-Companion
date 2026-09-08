@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -206,6 +207,22 @@ public static class Updater
         }
     }
 
+    /// <summary>Bandera con la que la instancia relanzada sabe a qué proceso viejo esperar.</summary>
+    private const string RelaunchFlag = "--updated";
+
+    /// <summary>
+    /// PID de la instancia que nos relanzó tras actualizar, o <c>null</c> si es un arranque
+    /// normal. La app lo usa para esperar a que esa instancia muera antes de tomar el mutex
+    /// de instancia única.
+    /// </summary>
+    public static int? RelaunchedFromPid(string[] args)
+    {
+        for (var i = 0; i < args.Length - 1; i++)
+            if (args[i] == RelaunchFlag && int.TryParse(args[i + 1], out var pid))
+                return pid;
+        return null;
+    }
+
     private static void Relaunch(string exePath)
     {
         var psi = new ProcessStartInfo
@@ -214,7 +231,22 @@ public static class Updater
             UseShellExecute = true,
             WorkingDirectory = Path.GetDirectoryName(exePath) ?? Environment.CurrentDirectory,
         };
+        psi.ArgumentList.Add(RelaunchFlag);
+        psi.ArgumentList.Add(Environment.ProcessId.ToString(CultureInfo.InvariantCulture));
         Process.Start(psi);
+
         Application.Current.Shutdown();
+
+        // Red de seguridad: si el apagado limpio se traba, la instancia vieja quedaría viva
+        // junto con la nueva y todo se vería DUPLICADO (dos overlays, dos bucles de OCR).
+        // Nada que persistir a esta altura: la ventana principal ni siquiera se creó.
+        var watchdog = new Thread(() =>
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+            FileLog.Write("[Update] el apagado limpio no terminó: se fuerza la salida de la instancia vieja.");
+            Environment.Exit(0);
+        })
+        { IsBackground = true };
+        watchdog.Start();
     }
 }

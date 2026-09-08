@@ -30,7 +30,16 @@ public partial class MainWindow : Window
         };
         // Consola oculta de entrada (no guardar la altura del XAML como "elegida").
         SetConsoleCollapsed(true, remember: false);
+
+        // Un Popup de WPF es una ventana aparte: no sigue a la principal al moverla ni se va
+        // al cambiar de app, y queda flotando suelto sobre el escritorio. Se cierra a mano.
+        LocationChanged += (_, _) => CloseOptionsMenu();
+        SizeChanged += (_, _) => CloseOptionsMenu();
+        Deactivated += (_, _) => CloseOptionsMenu();
+        StateChanged += (_, _) => CloseOptionsMenu();
     }
+
+    private void CloseOptionsMenu() => OptionsButton.IsChecked = false;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);

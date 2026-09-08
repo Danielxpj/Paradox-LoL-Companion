@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using ParadoxLoLCompanion.App.Diagnostics;
+using ParadoxLoLCompanion.App.Interop;
 using ParadoxLoLCompanion.App.Update;
 using ParadoxLoLCompanion.App.ViewModels;
 using ParadoxLoLCompanion.Core.Config;
@@ -13,19 +14,32 @@ namespace ParadoxLoLCompanion.App;
 public partial class App : Application
 {
     private MainViewModel? _viewModel;
+    private SingleInstance? _instance;
     private bool _errorDialogShown;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        FileLog.Init();
-        WireGlobalExceptionHandlers();
-
         // Mientras corre el chequeo de update, el splash puede abrirse y cerrarse sin que
         // exista aún la ventana principal: sin esto, cerrarlo dispararía OnLastWindowClose
         // y la app se apagaría. Volvemos al modo normal recién con la ventana principal ya arriba.
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        // Una sola instancia. Dos a la vez duplican todo lo visible (dos overlays
+        // superpuestos al morir, dos bucles de OCR comiéndose la CPU, dos escrituras de
+        // páginas al cliente) y se siente como si la app estuviera rota.
+        // Va ANTES de FileLog.Init() a propósito: ese Init trunca session.log, y un segundo
+        // arranque no tiene por qué borrarle el log a la instancia que está trabajando.
+        if (!AcquireSingleInstance(e.Args))
+        {
+            SingleInstance.SignalExisting();
+            Shutdown();
+            return;
+        }
+
+        FileLog.Init();
+        WireGlobalExceptionHandlers();
 
         // Auto-actualización: primero limpiamos restos de un update previo y luego
         // revisamos si hay una versión más nueva. Si la hay, se descarga, se aplica y la
@@ -50,7 +64,37 @@ public partial class App : Application
         window.Show();
         ShutdownMode = ShutdownMode.OnMainWindowClose;
 
+        // Si abrís la app de nuevo (doble clic en el acceso directo), en vez de una
+        // segunda copia se trae ESTA ventana al frente.
+        _instance?.ListenForActivation(() => Dispatcher.Invoke(() => BringToFront(window)));
+
         _viewModel.Start();
+    }
+
+    /// <summary>
+    /// Titularidad de la instancia única. Si venimos de un auto-update
+    /// (<c>--updated &lt;pid&gt;</c>), primero se espera a que la instancia vieja termine
+    /// de apagarse: hasta entonces el mutex sigue siendo suyo.
+    /// </summary>
+    private bool AcquireSingleInstance(string[] args)
+    {
+        var wait = TimeSpan.Zero;
+        if (Updater.RelaunchedFromPid(args) is { } previousPid)
+        {
+            SingleInstance.WaitForProcessExit(previousPid, TimeSpan.FromSeconds(15));
+            wait = TimeSpan.FromSeconds(10);
+        }
+
+        _instance = SingleInstance.Acquire(wait);
+        return _instance is not null;
+    }
+
+    private static void BringToFront(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+            window.WindowState = WindowState.Normal;
+        window.Show();
+        window.Activate();
     }
 
     private void WireGlobalExceptionHandlers()
@@ -92,6 +136,7 @@ public partial class App : Application
     {
         if (_viewModel is not null)
             await _viewModel.DisposeAsync();
+        _instance?.Dispose();
         base.OnExit(e);
     }
 
