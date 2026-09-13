@@ -29,9 +29,9 @@ public class RecommendationV5Tests
     }
 
     [Fact]
-    public void ProjectedGold_WhileDeadInAram_MakesTheItemAffordable()
+    public void ProjectedGold_WhileDeadInAram_BoostsRankingWithoutMakingTheItemAffordable()
     {
-        // 2800 de oro + 200 s muertos ≈ 2800 + 660 → Zhonya (3250) se puede terminar YA.
+        // Respawn income boosts the ranking, but cannot pay for Zhonya (3250) yet.
         var dead = TestCatalog.AramState(2800, ("Ahri", "ORDER", 0, None), ("Zed", "CHAOS", 3, None));
         dead.AllPlayers[0].IsDead = true;
         dead.AllPlayers[0].RespawnTimer = 200;
@@ -39,8 +39,10 @@ public class RecommendationV5Tests
 
         var zhonyaDead = Wide().Advise(dead)!.Recommendations.First(r => r.Item.Id == 3157);
         var zhonyaAlive = Wide().Advise(alive)!.Recommendations.First(r => r.Item.Id == 3157);
-        Assert.True(zhonyaDead.Affordable);
+        Assert.False(zhonyaDead.Affordable);
         Assert.False(zhonyaAlive.Affordable);
+        Assert.Equal(450, zhonyaDead.MissingGold);
+        Assert.True(zhonyaDead.Score > zhonyaAlive.Score);
     }
 
     [Fact]

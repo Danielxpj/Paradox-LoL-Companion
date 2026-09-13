@@ -78,6 +78,8 @@ public sealed class ItemsConfig
     /// <summary>Id de las Botas básicas: "botas terminadas" = las que se construyen directo desde ellas.</summary>
     public int BasicBootsId { get; set; } = 1001;
     public int MaxRecommendations { get; set; } = 3;
+    /// <summary>Off-meta GW can compete at severe sustain (>=0.9); 4 restores the general counter gate.</summary>
+    public double SevereAntiHealCounterGate { get; set; } = 3.0;
 
     public List<string> SustainTags { get; set; } = new() { "LifeSteal", "SpellVamp", "Omnivamp" };
     public List<string> ExcludeItemTags { get; set; } = new() { "Boots", "Trinket", "GoldPer" };

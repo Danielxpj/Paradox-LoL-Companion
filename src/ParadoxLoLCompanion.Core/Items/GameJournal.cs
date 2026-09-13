@@ -32,7 +32,7 @@ public sealed class GameJournal
     /// <summary>Archivo de la partida en curso (null hasta el primer tick).</summary>
     public string? CurrentFile => _file;
 
-    public void Record(GameState state, ItemAdvicePlan? plan)
+    public void Record(GameState state, ItemAdvicePlan? plan, RecommendationReplayContext? replayContext = null)
     {
         try
         {
@@ -60,6 +60,9 @@ public sealed class GameJournal
                     kind = "tick", t, gold, level = me.Level, kda = me.Scores.Kda,
                     dead = me.IsDead, owned = owned.ToList(), top,
                     archetype = plan?.MyProfile.Archetype.ToString(),
+                    snapshot = replayContext is null ? null : new RecommendationSnapshot(state, replayContext,
+                        plan?.Recommendations.Select(r => new RecordedRecommendation(r.Item.Id, r.Score, r.ScoreBreakdown))
+                            .ToList() ?? new List<RecordedRecommendation>()),
                 });
                 _lastTick = t;
             }

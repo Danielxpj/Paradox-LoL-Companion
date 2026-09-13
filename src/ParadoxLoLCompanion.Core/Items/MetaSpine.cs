@@ -35,18 +35,19 @@ public sealed record MetaSpineSlot(
 public static class MetaSpine
 {
     /// <summary>
-    /// El espinazo para este campeón y mapa, en orden de compra: primero el core (en el
-    /// orden que lo lista op.gg), después los candidatos de 4.º, 5.º y 6.º item por pick
-    /// rate. Vacío si no hay estadísticas — el llamador cae al camino difuso de siempre.
+    /// El espinazo para este campeón y mapa: core al inicio; desde tres completos,
+    /// candidatos del próximo slot antes de alternativas anteriores. Dentro de cada
+    /// slot, ordena por pick rate ajustado por WR. Vacío si no hay estadísticas.
     /// </summary>
     /// <param name="ownedTree">
     /// Ids que ya llevás puestos, INCLUYENDO el árbol de construcción de cada uno: los
     /// slots ya comprados salen del espinazo y los rangos se compactan, de modo que
     /// <c>Rank 0</c> siempre es la próxima compra del meta.
     /// </param>
+    /// <param name="completedCount">Items completos poseídos, sin botas ni componentes.</param>
     public static IReadOnlyList<MetaSpineSlot> Build(
         IStaticData data, ItemsConfig config, ChampionBuildStats? stats, int mapNumber,
-        IReadOnlySet<int>? ownedTree = null)
+        IReadOnlySet<int>? ownedTree = null, int completedCount = 0)
     {
         if (stats is null)
             return Array.Empty<MetaSpineSlot>();
@@ -63,21 +64,26 @@ public static class MetaSpine
                     resolved.Add((item, label, set.PickRate, set.WinRate, set.Play));
         }
 
-        // El core primero y EN SU ORDEN: op.gg lista la build en orden de compra, y ese
-        // orden es la señal. Después los slots tardíos, cada lista por pick rate
-        // descendente (dentro de una lista el pick sí es comparable: item suelto vs item
-        // suelto; entre el core y una lista tardía NO lo es — el del core es la
-        // probabilidad de un combo de 3-4 items, ~0.08, contra ~0.29 de un item suelto).
-        AddSet(stats.CoreItems, "core");
-        foreach (var (sets, label) in new[]
-                 {
-                     (stats.FourthItems, "4th"), (stats.FifthItems, "5th"), (stats.SixthItems, "6th"),
-                 })
+        // Once the core slots are filled, lead with the next purchase slot.
+        // Earlier alternatives remain fallbacks instead of displacing the current
+        // slot. Insert current-slot occurrences first so deduplication keeps its stats.
+        var lateSlots = new[]
+        {
+            (Sets: stats.FourthItems, Label: "4th"),
+            (Sets: stats.FifthItems, Label: "5th"),
+            (Sets: stats.SixthItems, Label: "6th"),
+        };
+        var nextSlot = Math.Clamp(completedCount - 3, 0, 2);
+        if (completedCount < 3)
+            AddSet(stats.CoreItems, "core");
+        foreach (var (sets, label) in lateSlots.Skip(nextSlot).Concat(lateSlots.Take(nextSlot)))
             // Pick corregido por WR (contra el promedio del slot: quita el sesgo de "solo
             // compraste 4.º item porque ibas ganando"): el popular que pierde cede el puesto.
             foreach (var set in sets.OrderByDescending(s =>
                          s.PickRate * ChampionBuildStats.WinMultiplier(s.WinRate, s.Play, stats.LateWinRateBaseline)))
                 AddSet(set, label);
+        if (completedCount >= 3)
+            AddSet(stats.CoreItems, "core");
 
         // Componentes absorbidos: op.gg lista la Lágrima Y su evolución en el mismo core
         // (Nautilus: [Tear, Heartsteel, Fimbulwinter, Unending Despair], y Winter's

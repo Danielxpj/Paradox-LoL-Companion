@@ -856,8 +856,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         ItemRecos.Clear();
         var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats, _previousTopIds);
+        _journal.Record(state, plan, new RecommendationReplayContext(_catalog.Version,
+            _config.Items, _forcedArchetype, _championStats, _previousTopIds));
         _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
-        _journal.Record(state, plan);
         var dead = state.ActivePlayerEntry?.IsDead == true;
         if (dead && !_wasDead && plan is not null && OverlayOnDeath)
             PlayerDied?.Invoke();

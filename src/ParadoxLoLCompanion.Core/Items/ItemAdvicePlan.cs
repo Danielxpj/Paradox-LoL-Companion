@@ -25,6 +25,7 @@ public sealed record ItemRecommendation(
     PurchasePlan Purchase,
     int MissingGold)
 {
+    public ItemScoreBreakdown? ScoreBreakdown { get; init; }
     /// <summary>Fuerza relativa de la recomendación: 1.0 = la principal; el resto, su fracción.</summary>
     public double Priority { get; init; } = 1.0;
     /// <summary>Por qué está en este lugar del orden (coherencia de la priorización).</summary>
@@ -44,6 +45,13 @@ public sealed record ItemRecommendation(
 /// <summary>Consejo de botas (solo cuando aún no hay botas terminadas), con su plan de compra.</summary>
 /// <param name="MissingGold">Oro que falta juntar para terminarlas (0 si ya alcanza).</param>
 public sealed record BootsAdvice(StaticItem Boots, string Reason, PurchasePlan Purchase, int MissingGold);
+
+/// <summary>Score channels after caps and nudges; penalties are subtracted from the total.</summary>
+public sealed record ItemScoreBreakdown(double Core, double Offense, double Defense, double Prior, double Penalty,
+    double Affordability = 0, double Hysteresis = 0, double Meta = 0)
+{
+    public double Total => Core + Offense + Defense + Prior - Penalty + Affordability + Hysteresis + Meta;
+}
 
 /// <summary>Sugerencia de venta: un item ya comprado que dejó de ser coherente con la build.</summary>
 public sealed record SellSuggestion(StaticItem Item, int SellGold, string Reason);

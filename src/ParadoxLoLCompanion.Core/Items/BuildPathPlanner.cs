@@ -67,16 +67,30 @@ public static class BuildPathPlanner
     }
 
     /// <summary>Oro que falta para terminar <paramref name="item"/>, consumiendo componentes poseídos.</summary>
-    private static int RemainingCost(IStaticData data, StaticItem item, Dictionary<int, int> owned)
+    private static int RemainingCost(IStaticData data, StaticItem item, Dictionary<int, int> owned,
+        List<StaticItem>? consumed = null)
     {
         if (Consume(owned, item.Id))
+        {
+            consumed?.Add(item);
             return 0;
+        }
         if (item.From.Count == 0)
             return item.GoldTotal;
 
         var components = Components(data, item);
         var recipe = item.GoldTotal - components.Sum(c => c.GoldTotal);
-        return Math.Max(recipe, 0) + components.Sum(c => RemainingCost(data, c, owned));
+        return Math.Max(recipe, 0) + components.Sum(c => RemainingCost(data, c, owned, consumed));
+    }
+
+    /// <summary>Inventory items consumed by this recipe, counting each copy at most once.</summary>
+    public static IReadOnlyList<StaticItem> ConsumedComponents(
+        IStaticData data, StaticItem target, IEnumerable<int> ownedItemIds)
+    {
+        var owned = ownedItemIds.GroupBy(id => id).ToDictionary(g => g.Key, g => g.Count());
+        var consumed = new List<StaticItem>();
+        RemainingCost(data, target, owned, consumed);
+        return consumed;
     }
 
     /// <summary>

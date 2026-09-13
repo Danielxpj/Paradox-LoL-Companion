@@ -125,17 +125,18 @@ public sealed class ItemAdvisor
         // cambiás de build), las recomendaciones siguen a lo que estás comprando.
         // Salvo que el jugador lo haya forzado en la UI: la elección manual manda.
         var championProfile = _profiler.Profile(me);
-        // Champion-wide statistics describe the standard build, not a manually
-        // selected alternative. Drop all meta priors (including boots and starters)
-        // when the player explicitly chooses a different archetype.
-        if (forcedArchetype is { } selected && selected != championProfile.Archetype)
-            stats = null;
         var profile = forcedArchetype is { } forced
             ? championProfile with { Archetype = forced }
             : _profiler.ProfileWithInventory(me);
-        // Muerto en ARAM la tienda abre AHORA y el oro pasivo sigue entrando hasta reaparecer:
-        // "te alcanza" se evalúa contra el oro proyectado al respawn, no contra el de este tick.
-        var gold = (state.ActivePlayer?.CurrentGold ?? 0)
+        // Standard-build statistics must not override either a selected or a
+        // detected alternative (including its boots, starters and sell protection).
+        if (profile.Archetype != championProfile.Archetype)
+            stats = null;
+        var scoringProfile = ProfileForBuildDamage(profile);
+        // Future income can influence ranking, but immediate purchases, missing
+        // gold and shop messages must use money the player already has.
+        var gold = state.ActivePlayer?.CurrentGold ?? 0;
+        var projectedGold = gold
             + (isAram && me.IsDead ? me.RespawnTimer * _config.AramPassiveGoldPerSecond : 0);
         var ownedIds = me.Items
             .SelectMany(i => Enumerable.Repeat(i.ItemID, Math.Max(i.Count, 1)))
@@ -255,7 +256,7 @@ public sealed class ItemAdvisor
 
         // El espinazo meta: la build que los jugadores de este campeón realmente arman, ya
         // sin lo que llevás puesto. Vacío sin estadísticas → el camino difuso de siempre.
-        var spine = MetaSpine.Build(_data, _config, stats, mapNumber, owned);
+        var spine = MetaSpine.Build(_data, _config, stats, mapNumber, owned, completedCount);
         var spineBySlot = spine.ToDictionary(s => s.Item.Id);
         // El espinazo SIN descontar lo comprado: lo que la build meta quiere en total.
         // Es lo que mira la venta — un item del meta que ya tenés no se vende.
@@ -263,7 +264,7 @@ public sealed class ItemAdvisor
             MetaSpine.Build(_data, _config, stats, mapNumber).Select(s => s.Item.Id));
 
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons,
-            RecommendationCategory Category, double Situational)>();
+            RecommendationCategory Category, double Situational, ItemScoreBreakdown Breakdown)>();
 
         foreach (var item in _data.CompletedItemsFor(mapNumber))
         {
@@ -289,12 +290,14 @@ public sealed class ItemAdvisor
             if (!snowballing && _config.SnowballItemIds.Contains(item.Id))
                 continue;
 
-            var (score, reasons, category, situational) = ScoreItem(item, profile, threat, weights, teamHasGw,
-                defenseNeed, stats, champName, currentCrit, ahead, behind, completedCount);
+            var consumedCrit = item.CritChance > 0
+                ? BuildPathPlanner.ConsumedComponents(_data, item, ownedIds).Sum(c => c.CritChance) : 0;
+            var (score, reasons, category, situational, breakdown) = ScoreItem(item, scoringProfile, threat, weights, teamHasGw,
+                defenseNeed, stats, champName, Math.Max(0, currentCrit - consumedCrit), ahead, behind, completedCount);
             // Un slot del espinazo entra aunque su fit de arquetipo sea nulo: la build real
             // manda sobre la tabla de tags (Heartsteel puntúa 3.5 de fit y es el core del tanque).
             if (score > 0 || spineBySlot.ContainsKey(item.Id))
-                scored.Add((item, score, reasons, category, situational));
+                scored.Add((item, score, reasons, category, situational, breakdown));
         }
 
         // Alcanzable ya = empujón: ante puntajes parejos gana lo comprable ahora
@@ -306,7 +309,7 @@ public sealed class ItemAdvisor
                 // Empujón aditivo continuo en oro: entra gradual entre 0.5·faltante y el
                 // faltante, en vez del salto multiplicativo ×1.25 que flipeaba el orden al
                 // cruzar cada umbral de compra (la mayor discontinuidad que quedaba en v3).
-                var afford = affordMag * Fuzzy.Ramp(gold, 0.5 * plan.RemainingCost, plan.RemainingCost);
+                var afford = affordMag * Fuzzy.Ramp(projectedGold, 0.5 * plan.RemainingCost, plan.RemainingCost);
                 // Histéresis: un pequeño bono al que ya estaba en el top el tick anterior,
                 // para que dos items casi empatados no intercambien rank con cada twitch de
                 // input (la "lista que tiembla"). Muy por debajo de cualquier counter.
@@ -318,13 +321,16 @@ public sealed class ItemAdvisor
                 var spineBonus = 0.0;
                 if (spineBySlot.TryGetValue(c.Item.Id, out var slot))
                     spineBonus = SpineBaseMag + SpineSlotMag * (SpineDepth - Math.Min(slot.Rank, SpineDepth));
-                else if (spine.Count > 0 && c.Situational >= EvictionSituationalGate)
+                else if (spine.Count > 0 && (c.Situational >= EvictionSituationalGate
+                    || (c.Item.AppliesGrievousWounds && threat.Sustain >= 0.9
+                        && c.Situational >= _config.SevereAntiHealCounterGate)))
                     // Desplazo: un counter con amenaza severa disputa el ÚLTIMO slot mostrado
                     // (no se suma a la lista: le compite en mérito al slot meta más débil).
                     spineBonus = SpineBaseMag
                         + SpineSlotMag * (SpineDepth - Math.Min(_config.MaxRecommendations - 1, SpineDepth));
                 var score = c.Score + afford + incumbent + spineBonus;
-                return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan);
+                return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan,
+                    Breakdown: c.Breakdown with { Affordability = afford, Hysteresis = incumbent, Meta = spineBonus });
             })
             .OrderByDescending(c => c.Score)
             .ToList();
@@ -335,7 +341,7 @@ public sealed class ItemAdvisor
         var takenExclusiveGroups = new HashSet<int>();
         var gwTaken = false;
         var topScore = 0.0;
-        foreach (var (item, score, reasons, category, plan) in ranked)
+        foreach (var (item, score, reasons, category, plan, breakdown) in ranked)
         {
             if (recommendations.Count >= _config.MaxRecommendations)
                 break;
@@ -388,6 +394,7 @@ public sealed class ItemAdvisor
                 : category;
             recommendations.Add(new ItemRecommendation(item, score, reasons, plan, missing)
             {
+                ScoreBreakdown = breakdown,
                 Priority = topScore > 0 ? Fuzzy.Clamp01(score / topScore) : 1.0,
                 Category = finalCategory,
                 BlockedByFullInventory = inventoryFull
@@ -415,7 +422,8 @@ public sealed class ItemAdvisor
             InventoryFull = inventoryFull,
             LateTips = LateTips(profile, inventoryFull, mapNumber,
                 state.GameData.GameTime, gold, ownedIds),
-            UrgentPickup = UrgentAntiHealPickup(profile, threat, teamHasGw, owned, mapNumber, recommendations),
+            UrgentPickup = UrgentAntiHealPickup(scoringProfile, threat, teamHasGw, owned, mapNumber, recommendations,
+                ownedIds, gold, inventoryFull, slotItemIds),
         };
     }
 
@@ -425,7 +433,8 @@ public sealed class ItemAdvisor
     /// muerte. Se elige por perfil de daño (Orbe AP / Ejecutor AD / Bramble tanque).
     /// </summary>
     private UrgentPickup? UrgentAntiHealPickup(ChampionProfile me, TeamThreat threat, bool teamHasGw,
-        IReadOnlySet<int> owned, int mapNumber, IReadOnlyList<ItemRecommendation> recommendations)
+        IReadOnlySet<int> owned, int mapNumber, IReadOnlyList<ItemRecommendation> recommendations,
+        IReadOnlyList<int> ownedIds, double gold, bool inventoryFull, IReadOnlySet<int> slotItemIds)
     {
         if (threat.Sustain < 0.4 || teamHasGw)
             return null;
@@ -440,10 +449,15 @@ public sealed class ItemAdvisor
                 ?? (me.DealsPhysical ? components.FirstOrDefault(HasAd) : null)
                 ?? components.FirstOrDefault(c => c.HasTag("Armor"))
                 ?? components.FirstOrDefault();
-        return pick is null
-            ? null
-            : new UrgentPickup(pick,
-                $"buy the {GoldFmt(pick.GoldTotal)}g piece now, finish it later — {threat.TopSustainName} heals a lot");
+        if (pick is null)
+            return null;
+        var purchase = BuildPathPlanner.Plan(_data, pick, ownedIds, gold);
+        var blocked = inventoryFull && !MergesOwnedComponent(pick, slotItemIds);
+        var missing = (int)Math.Ceiling(Math.Max(0, purchase.RemainingCost - gold));
+        var action = blocked ? $"inventory full — free a slot for {pick.Name}"
+            : missing > 0 ? $"save {GoldFmt(missing)}g more for {pick.Name}"
+            : $"buy the {GoldFmt(purchase.RemainingCost)}g piece now, finish it later";
+        return new UrgentPickup(pick, $"{action} — {threat.TopSustainName} heals a lot");
     }
 
     /// <summary>
@@ -550,6 +564,8 @@ public sealed class ItemAdvisor
         if (!isAram || !me.IsDead || recommendations.Count == 0)
             return null;
         var top = recommendations[0];
+        if (top.BlockedByFullInventory)
+            return null;
         if (top.Purchase.CanFinishNow)
             return $"Shop open while dead — finish {top.Item.Name} now ({GoldFmt(top.Purchase.RemainingCost)}).";
         if (top.Purchase.NextComponent is { } component)
@@ -683,7 +699,8 @@ public sealed class ItemAdvisor
     /// las recomendaciones entran y salen de forma gradual y estable, no a saltos.
     /// Devuelve además la categoría que explica por qué el item está donde está.
     /// </summary>
-    private (double Score, List<string> Reasons, RecommendationCategory Category, double Situational) ScoreItem(
+    private (double Score, List<string> Reasons, RecommendationCategory Category, double Situational,
+        ItemScoreBreakdown Breakdown) ScoreItem(
         StaticItem item, ChampionProfile me, TeamThreat threat,
         IReadOnlyDictionary<string, double> weights, bool teamHasGw, Needs need,
         ChampionBuildStats? stats, string champName, double currentCrit = 0,
@@ -913,7 +930,21 @@ public sealed class ItemAdvisor
         var score = core + offense + defense + statBonus - penalty;
         // `situational` (limpio, pre-nudge) sale también hacia afuera: es el mérito con el
         // que un counter fuera del meta puede disputarle el último slot al espinazo.
-        return (score, reasons, category, situational);
+        return (score, reasons, category, situational,
+            new ItemScoreBreakdown(core, offense, defense, statBonus, penalty));
+    }
+
+    // Preserve the kit's damage while recognizing the additional damage channel
+    // selected by the build. Live AD/AP already scale penetration via NeedsFrom.
+    private static ChampionProfile ProfileForBuildDamage(ChampionProfile profile)
+    {
+        var physicalBuild = profile.Archetype is BuildArchetype.Marksman
+            or BuildArchetype.AdFighter or BuildArchetype.AdAssassin;
+        var magicalBuild = profile.Archetype is BuildArchetype.Mage
+            or BuildArchetype.ApFighter or BuildArchetype.Enchanter;
+        return (physicalBuild && !profile.DealsPhysical) || (magicalBuild && !profile.DealsMagical)
+            ? profile with { Damage = DamageProfile.Mixed }
+            : profile;
     }
 
     private static bool OffensiveMatch(StaticItem item, ChampionProfile me) =>
