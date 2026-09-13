@@ -124,8 +124,14 @@ public sealed class ItemAdvisor
         // El arquetipo sale del inventario real: si vas Garen tanque (o vendés todo y
         // cambiás de build), las recomendaciones siguen a lo que estás comprando.
         // Salvo que el jugador lo haya forzado en la UI: la elección manual manda.
+        var championProfile = _profiler.Profile(me);
+        // Champion-wide statistics describe the standard build, not a manually
+        // selected alternative. Drop all meta priors (including boots and starters)
+        // when the player explicitly chooses a different archetype.
+        if (forcedArchetype is { } selected && selected != championProfile.Archetype)
+            stats = null;
         var profile = forcedArchetype is { } forced
-            ? _profiler.Profile(me) with { Archetype = forced }
+            ? championProfile with { Archetype = forced }
             : _profiler.ProfileWithInventory(me);
         // Muerto en ARAM la tienda abre AHORA y el oro pasivo sigue entrando hasta reaparecer:
         // "te alcanza" se evalúa contra el oro proyectado al respawn, no contra el de este tick.
@@ -384,7 +390,8 @@ public sealed class ItemAdvisor
             {
                 Priority = topScore > 0 ? Fuzzy.Clamp01(score / topScore) : 1.0,
                 Category = finalCategory,
-                BlockedByFullInventory = inventoryFull && !MergesOwnedComponent(item, slotItemIds),
+                BlockedByFullInventory = inventoryFull
+                    && !MergesOwnedComponent(plan.NextComponent ?? item, slotItemIds),
             });
         }
 
@@ -687,13 +694,12 @@ public sealed class ItemAdvisor
         // uno típico (350 HP no es 800 HP), amplificado por el valor curado de la pasiva/activa
         // (Rabadon, Zhonya, Filo Infinito…) que ddragon no tasa. Multiplicativo a propósito: la
         // pasiva potencia un item que YA encaja; no convierte a Heartsteel en item de mago.
-        var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t) * Magnitude(item, t))
-                * (1 + 0.5 * _config.ItemPassiveValue.GetValueOrDefault(item.Id));
         // Crítico saturado: solo puntúa la fracción que NO desborda el cap de 100%
         // (a 75% un item de 25% entra entero; a 100% su crítico vale cero).
         var critWaste = CritWaste(item, currentCrit);
-        if (critWaste > 0)
-            fit = Math.Max(0, fit - weights.GetValueOrDefault("CriticalStrike") * critWaste);
+        var fit = item.Tags.Sum(t => weights.GetValueOrDefault(t) * Magnitude(item, t)
+                    * (string.Equals(t, "CriticalStrike", StringComparison.OrdinalIgnoreCase) ? 1 - critWaste : 1))
+                * (1 + 0.5 * _config.ItemPassiveValue.GetValueOrDefault(item.Id));
         // Raíz cuadrada: comprime el fit para que apilar tags no aplaste a los bonos
         // situacionales (un counter necesario debe poder ganarle a más stats crudos).
         var core = 3 * Math.Sqrt(fit) * (0.8 + 0.4 * Math.Min(Efficiency(item, critWaste), 1.2));

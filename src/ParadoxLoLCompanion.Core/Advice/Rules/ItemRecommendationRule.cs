@@ -63,7 +63,9 @@ public sealed class ItemRecommendationRule : IAdviceRule
         if (top is not null)
         {
             var line = $"Next item: {Describe(top.Item)} — {string.Join("; ", top.Reasons)}.";
-            if (!top.Affordable && top.Purchase.NextComponent is { } component)
+            if (top.BlockedByFullInventory)
+                line += " Inventory full: sell an item first.";
+            else if (!top.Affordable && top.Purchase.NextComponent is { } component)
                 line += $" Buy now: {component.Name} ({top.Purchase.NextComponentCost.ToString("N0", CultureInfo.InvariantCulture)}).";
             yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Info, "item-next", line);
         }
