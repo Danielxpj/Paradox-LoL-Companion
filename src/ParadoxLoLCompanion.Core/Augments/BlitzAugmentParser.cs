@@ -4,14 +4,14 @@ using System.Text.RegularExpressions;
 namespace ParadoxLoLCompanion.Core.Augments;
 
 /// <summary>
-/// Parser del HTML SSR de blitz.gg/lol/aram-mayhem-augments. Se ancla en la
-/// ESTRUCTURA estable (h3 de sección, div.augment con id numérico, alt="Tier N",
+/// Parser del HTML SSR de Blitz para ARAM Mayhem y Arena. Se ancla en la
+/// ESTRUCTURA estable (h3 de sección, div.augment con id numérico, alt del tier,
 /// h4.name) y nunca en los hashes de clase de Svelte, que cambian por deploy.
 /// </summary>
 public static class BlitzAugmentParser
 {
     private static readonly Regex SectionRx = new(
-        "<h3[^>]*>\\s*(Prismatic|Gold|Silver)\\s+ARAM\\s+Mayhem\\s+Augments\\s*</h3>",
+        "<h3[^>]*>\\s*(Unique|Prismatic|Gold|Silver)\\s+(?:ARAM\\s+Mayhem|Arena)\\s+Augments\\s*</h3>",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex CardRx = new(
         "<div class=\"augment card-container[^\"]*\"[^>]*\\bid=\"(?<id>\\d+)\"",
@@ -20,7 +20,8 @@ public static class BlitzAugmentParser
         "<h4 class=\"name[^\"]*\"[^>]*>(?<name>.*?)</h4>",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex TierRx = new(
-        "alt=\"Tier (?<tier>[1-5])\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        "\\balt\\s*=\\s*[\"'](?:Tier\\s+(?<number>[1-5])|(?<letter>[SABCD])\\s+Tier)[\"']",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex IconRx = new(
         "/augments/(?<slug>[a-z0-9_\\-]+\\.webp)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -28,7 +29,7 @@ public static class BlitzAugmentParser
         "<p class=\"rich-description[^\"]*\"[^>]*>(?<desc>.*?)</p>",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex ChampRx = new(
-        "/lol/champions/(?<key>[^/\"]+)/aram-mayhem",
+        "/lol/champions/(?<key>[^/\"]+)/(?:aram-mayhem|arena)(?=[/\"?#])",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex TagRx = new("<[^>]+>", RegexOptions.Compiled);
 
@@ -61,8 +62,7 @@ public static class BlitzAugmentParser
                     Id = id,
                     Name = Clean(name.Groups["name"].Value),
                     Rarity = rarity,
-                    Tier = TierRx.Match(card) is { Success: true } t
-                        ? int.Parse(t.Groups["tier"].Value) : null,
+                    Tier = ParseTier(card),
                     IconSlug = IconRx.Match(card) is { Success: true } i
                         ? i.Groups["slug"].Value.ToLowerInvariant() : "",
                     Description = DescRx.Match(card) is { Success: true } d
@@ -73,6 +73,19 @@ public static class BlitzAugmentParser
             }
         }
         return new AugmentTierList { Augments = augments };
+    }
+
+    private static int? ParseTier(string card)
+    {
+        var match = TierRx.Match(card);
+        if (!match.Success)
+            return null;
+        if (match.Groups["number"].Success)
+            return int.Parse(match.Groups["number"].Value);
+
+        // Blitz changed the badge alt text from "Tier 1" to "S Tier".
+        return match.Groups["letter"].Value.ToUpperInvariant() switch
+        { "S" => 1, "A" => 2, "B" => 3, "C" => 4, "D" => 5, _ => null };
     }
 
     /// <summary>Sin tags, entidades decodificadas y espacios colapsados.</summary>

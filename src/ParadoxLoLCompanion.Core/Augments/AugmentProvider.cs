@@ -32,10 +32,11 @@ public sealed class AugmentProvider
             return null;
 
         var list = BlitzAugmentParser.Parse(html);
-        if (list.Augments.Count < MinCredibleAugments)
+        if (list.Augments.Count < MinCredibleAugments || !list.HasRankings)
         {
             _log?.Invoke(
-                $"Blitz augments: parse produced {list.Augments.Count} augments — page layout changed? Ignoring.");
+                $"Blitz augments: parse produced {list.Augments.Count} augments " +
+                $"({list.Augments.Count(a => a.Tier is >= 1 and <= 5)} ranked) — page layout changed? Ignoring.");
             return null;
         }
         _cache.Write(patch, list);

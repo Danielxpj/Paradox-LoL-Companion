@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -25,12 +26,13 @@ public partial class OverlayWindow : Window
     private const uint SwpNoactivate = 0x0010;
 
     private bool _userMoved;
-    // Cuenta atrás del autocierre: solo corre cuando el overlay se abrió SOLO (al morir).
-    private readonly DispatcherTimer _autoClose = new();
+    private bool _openedForDeath;
+    private readonly DispatcherTimer _autoClose;
 
     public OverlayWindow()
     {
         InitializeComponent();
+        _autoClose = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher);
         SourceInitialized += OnSourceInitialized;
         _autoClose.Tick += (_, _) =>
         {
@@ -38,11 +40,22 @@ public partial class OverlayWindow : Window
             if (IsVisible)
                 Hide();
         };
-        // Tocar el overlay = lo estás usando: se cancela el cierre automático.
-        // Preview* porque los controles internos (radios, ticket) marcan el evento
-        // como manejado antes de que burbujee hasta la ventana.
-        PreviewMouseDown += (_, _) => CancelAutoClose();
-        PreviewKeyDown += (_, _) => CancelAutoClose();
+        // Input must not silently cancel a checked AUTO-CLOSE option.
+        DataContextChanged += OnDataContextChanged;
+        IsVisibleChanged += (_, _) =>
+        {
+            if (!IsVisible)
+            {
+                CancelAutoClose();
+                _openedForDeath = false;
+            }
+        };
+        Closed += (_, _) =>
+        {
+            CancelAutoClose();
+            if (DataContext is MainViewModel vm)
+                vm.PropertyChanged -= OnViewModelPropertyChanged;
+        };
 
         // Posición: pegado al borde derecho y arriba, por encima del minimapa, donde no
         // tapa ni el HUD de habilidades ni la tienda. Con SizeToContent el ancho recién
@@ -69,6 +82,7 @@ public partial class OverlayWindow : Window
     {
         // Un toggle manual (Ctrl+X) manda: cancela cualquier autocierre pendiente.
         CancelAutoClose();
+        _openedForDeath = false;
         if (IsVisible)
         {
             Hide();
@@ -80,15 +94,39 @@ public partial class OverlayWindow : Window
 
     /// <summary>
     /// Apertura automática por muerte: muestra el overlay y, si el ticket AUTO-CLOSE está
-    /// tildado, programa el cierre. Si ya estaba abierto no se toca nada (lo abriste vos).
+    /// tildado, programa el cierre. Una apertura manual se conserva hasta Ctrl+X.
     /// </summary>
     public void ShowForDeath()
     {
-        if (IsVisible)
+        if (IsVisible && !_openedForDeath)
             return;
 
+        _openedForDeath = true;
         ShowTopmost();
-        if (DataContext is MainViewModel vm && vm.OverlayAutoCloseOnDeath)
+        RestartAutoClose();
+    }
+
+    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is MainViewModel oldVm)
+            oldVm.PropertyChanged -= OnViewModelPropertyChanged;
+        if (e.NewValue is MainViewModel newVm)
+            newVm.PropertyChanged += OnViewModelPropertyChanged;
+        RestartAutoClose();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(MainViewModel.OverlayAutoCloseOnDeath)
+            or nameof(MainViewModel.AutoCloseSeconds))
+            RestartAutoClose();
+    }
+
+    private void RestartAutoClose()
+    {
+        CancelAutoClose();
+        if (_openedForDeath && IsVisible
+            && DataContext is MainViewModel { OverlayAutoCloseOnDeath: true } vm)
         {
             _autoClose.Interval = TimeSpan.FromSeconds(vm.AutoCloseSeconds);
             _autoClose.Start();

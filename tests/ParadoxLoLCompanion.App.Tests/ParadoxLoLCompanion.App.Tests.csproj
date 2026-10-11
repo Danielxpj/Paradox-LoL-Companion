@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <Using Include="Xunit" />
+    <ProjectReference Include="../../src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj" />
+    <None Include="../../src/ParadoxLoLCompanion.App/App.xaml"
+          Link="App.Resources.xaml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

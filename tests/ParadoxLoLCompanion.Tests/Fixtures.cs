@@ -13,4 +13,8 @@ internal static class Fixtures
 
     /// <summary>Página SSR real de blitz.gg/lol/aram-mayhem-augments (2026-07-17, scripts vaciados).</summary>
     public static string BlitzMayhemAugments() => File.ReadAllText(Path("blitz-aram-mayhem-augments.html"));
+
+    /// <summary>Representative cards from the live Blitz pages fetched 2026-10-11.</summary>
+    public static string BlitzCurrentAugments(string mode) =>
+        File.ReadAllText(Path($"blitz-{mode}-augments-current.html"));
 }

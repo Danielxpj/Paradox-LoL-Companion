@@ -51,4 +51,16 @@ public class AugmentCacheTests : IDisposable
         var cache = new AugmentCache(Path.Combine(_dir, "nope"));
         Assert.False(cache.TryRead("26.14", out _));
     }
+
+    [Fact]
+    public void EntryWithNoRanks_IsAMiss()
+    {
+        var cache = new AugmentCache(_dir);
+        cache.Write("26.14", new AugmentTierList
+        {
+            Augments = new[] { new AugmentInfo { Id = 1030, Name = "Eureka" } },
+        });
+
+        Assert.False(cache.TryRead("26.14", out _));
+    }
 }

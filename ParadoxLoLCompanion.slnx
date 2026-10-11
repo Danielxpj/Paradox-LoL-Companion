@@ -3,6 +3,7 @@
     <Project Path="src/ParadoxLoLCompanion.App/ParadoxLoLCompanion.App.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/ParadoxLoLCompanion.App.Tests/ParadoxLoLCompanion.App.Tests.csproj" />
     <Project Path="tests/ParadoxLoLCompanion.Tests/ParadoxLoLCompanion.Tests.csproj" />
   </Folder>
 </Solution>

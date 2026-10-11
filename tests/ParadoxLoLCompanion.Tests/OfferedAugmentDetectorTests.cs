@@ -88,4 +88,35 @@ public class OfferedAugmentDetectorTests
         Assert.True(offered[0].IsBest);
         Assert.Equal("Sin Rankear", offered[1].Name);
     }
+
+    [Fact]
+    public void AllChoicesUnranked_DoesNotInventABestPick()
+    {
+        var list = new AugmentTierList
+        {
+            Augments = new[]
+            {
+                new AugmentInfo { Id = 1, Name = "Eureka" },
+                new AugmentInfo { Id = 2, Name = "Goliath" },
+            },
+        };
+
+        var offered = new OfferedAugmentDetector(list).Detect(new[] { "Eureka", "Goliath" });
+
+        Assert.Equal(2, offered.Count);
+        Assert.All(offered, a => Assert.False(a.IsBest));
+    }
+
+    [Fact]
+    public void CurrentBlitzRanks_SelectBestOfferedCard()
+    {
+        var list = BlitzAugmentParser.Parse(Fixtures.BlitzCurrentAugments("aram-mayhem"));
+        var offered = new OfferedAugmentDetector(list).Detect(new[]
+        { "Blade Waltz", "Jeweled Gauntlet", "Back To Basics" });
+
+        Assert.Equal(3, offered.Count);
+        var best = Assert.Single(offered, a => a.IsBest);
+        Assert.Equal("Jeweled Gauntlet", best.Name);
+        Assert.Equal("S", best.TierLabel);
+    }
 }

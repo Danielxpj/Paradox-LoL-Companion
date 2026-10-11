@@ -63,4 +63,70 @@ public class BlitzAugmentParserTests
     {
         Assert.Empty(BlitzAugmentParser.Parse("<html><body>nothing here</body></html>").Augments);
     }
+
+    [Theory]
+    [InlineData("aram-mayhem", 17, 14)]
+    [InlineData("arena", 19, 15)]
+    public void CurrentPages_ParseLetterRanksAndRarities(string mode, int total, int ranked)
+    {
+        var list = BlitzAugmentParser.Parse(Fixtures.BlitzCurrentAugments(mode));
+
+        Assert.Equal(total, list.Augments.Count);
+        Assert.Equal(ranked, list.Augments.Count(a => a.Tier.HasValue));
+        foreach (var rarity in new[] { AugmentRarity.Prismatic, AugmentRarity.Gold, AugmentRarity.Silver })
+        {
+            var group = list.Augments.Where(a => a.Rarity == rarity).ToArray();
+            Assert.Contains(group, a => a.Tier is null);
+            foreach (var tier in new[] { 2, 3, 4, 5 })
+                Assert.Contains(group, a => a.Tier == tier);
+        }
+        Assert.Contains(list.Augments, a => a.Tier == 1);
+    }
+
+    [Fact]
+    public void CurrentMayhemPage_PreservesChampionLinksAndDescriptions()
+    {
+        var list = BlitzAugmentParser.Parse(Fixtures.BlitzCurrentAugments("aram-mayhem"));
+        var augment = Assert.Single(list.Augments, a => a.Name == "Jeweled Gauntlet");
+
+        Assert.Equal(1048, augment.Id);
+        Assert.Equal(1, augment.Tier);
+        Assert.Contains("Jayce", augment.TopChampions);
+        Assert.Contains("Critically Strike", augment.Description);
+        Assert.Equal("jeweledgauntlet_large.webp", augment.IconSlug);
+    }
+
+    [Fact]
+    public void CurrentArenaPage_PreservesUniqueAugmentsAndChampionLinks()
+    {
+        var list = BlitzAugmentParser.Parse(Fixtures.BlitzCurrentAugments("arena"));
+        var unique = Assert.Single(list.Augments, a => a.Name == "Abstain From Power");
+        Assert.Equal("Unique", unique.Rarity.ToString());
+        Assert.Null(unique.Tier);
+        var clown = Assert.Single(list.Augments, a => a.Name == "Clown College");
+        Assert.Equal(1, clown.Tier);
+        Assert.NotEmpty(clown.TopChampions);
+    }
+
+    [Theory]
+    [InlineData("S Tier", 1)]
+    [InlineData("A Tier", 2)]
+    [InlineData("B Tier", 3)]
+    [InlineData("C Tier", 4)]
+    [InlineData("D Tier", 5)]
+    [InlineData("Tier 1", 1)]
+    [InlineData("Tier 5", 5)]
+    [InlineData("s tier", 1)]
+    [InlineData("Unranked", null)]
+    public void TierLabels_MapToNumericRanks(string label, int? expected)
+    {
+        var html = $$"""
+            <h3>Gold ARAM Mayhem Augments</h3>
+            <div class="augment card-container" id="1">
+                <img alt="{{label}}" class="tier-icon" />
+                <h4 class="name">Example</h4>
+            </div>
+            """;
+        Assert.Equal(expected, Assert.Single(BlitzAugmentParser.Parse(html).Augments).Tier);
+    }
 }

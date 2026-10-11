@@ -1,8 +1,8 @@
 namespace ParadoxLoLCompanion.Core.Augments;
 
-public enum AugmentRarity { Silver = 0, Gold = 1, Prismatic = 2 }
+public enum AugmentRarity { Unique = -1, Silver = 0, Gold = 1, Prismatic = 2 }
 
-/// <summary>Un augment de ARAM: Mayhem según el tier list de Blitz.gg.</summary>
+/// <summary>Un augment de ARAM: Mayhem o Arena según el tier list de Blitz.gg.</summary>
 public sealed class AugmentInfo
 {
     /// <summary>Id del card de Blitz (coincide con el id de augment del juego).</summary>
@@ -30,6 +30,9 @@ public sealed class AugmentInfo
 public sealed class AugmentTierList
 {
     public IReadOnlyList<AugmentInfo> Augments { get; init; } = Array.Empty<AugmentInfo>();
+
+    // A complete loss of ranks indicates a broken parse, even if all names survived.
+    internal bool HasRankings => Augments.Any(a => a.Tier is >= 1 and <= 5);
 
     /// <summary>¿Blitz lista este augment entre los top para mi campeón?</summary>
     public bool FitsChampion(AugmentInfo augment, string? championKey) =>

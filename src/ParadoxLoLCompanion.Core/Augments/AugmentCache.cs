@@ -29,7 +29,9 @@ public sealed class AugmentCache
             if (DateTime.UtcNow - File.GetLastWriteTimeUtc(path) > MaxAge)
                 return false;
             list = JsonSerializer.Deserialize<AugmentTierList>(File.ReadAllText(path));
-            return list is { Augments.Count: > 0 };
+            // Old parser versions cached every augment with Tier = null after
+            // Blitz changed its badges. Treat those entries as misses immediately.
+            return list is { HasRankings: true };
         }
         catch
         {

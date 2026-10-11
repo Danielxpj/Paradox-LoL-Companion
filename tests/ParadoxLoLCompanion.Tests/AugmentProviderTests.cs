@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ParadoxLoLCompanion.Core.Augments;
 
 namespace ParadoxLoLCompanion.Tests;
@@ -44,5 +45,39 @@ public class AugmentProviderTests : IDisposable
 
         // Y el intento fallido no dejó nada cacheado.
         Assert.False(new AugmentCache(_dir).TryRead("26.14", out _));
+    }
+
+    [Fact]
+    public async Task PageWithoutRecognizableRanks_IsRejected_NotCached()
+    {
+        var html = Regex.Replace(Fixtures.BlitzMayhemAugments(), "Tier [1-5]", "Unknown rank");
+        var cache = new AugmentCache(_dir);
+        var provider = new AugmentProvider(new FakeSource(html), cache);
+
+        Assert.Null(await provider.GetAsync("26.14"));
+        Assert.Empty(Directory.GetFiles(_dir, "*.json", SearchOption.AllDirectories));
+    }
+
+    [Fact]
+    public async Task CacheWithMissingRanks_IsRefetchedAndRepaired()
+    {
+        var legacyHtml = Fixtures.BlitzMayhemAugments();
+        var brokenList = BlitzAugmentParser.Parse(Regex.Replace(legacyHtml, "Tier [1-5]", "Unknown rank"));
+        var cache = new AugmentCache(_dir);
+        cache.Write("26.14", brokenList);
+        var currentHtml = Regex.Replace(legacyHtml, "Tier ([1-5])",
+            m => $"{"SABCD"[int.Parse(m.Groups[1].Value) - 1]} Tier");
+        var source = new FakeSource(currentHtml);
+        var provider = new AugmentProvider(source, cache);
+
+        var list = await provider.GetAsync("26.14");
+
+        Assert.Equal(1, source.Calls);
+        Assert.NotNull(list);
+        Assert.Contains(list.Augments, a => a.Tier == 1);
+        Assert.True(cache.TryRead("26.14", out var repaired));
+        Assert.Contains(repaired!.Augments, a => a.Tier == 1);
+        await provider.GetAsync("26.14");
+        Assert.Equal(1, source.Calls);
     }
 }

@@ -34,7 +34,7 @@ public sealed class OfferedAugmentDetector(AugmentTierList list)
             .ThenByDescending(h => h.Info.Rarity)
             .Select((h, i) => new OfferedAugment(
                 h.Info.Id, h.Info.Name, h.Info.Rarity, h.Info.Tier, h.Info.TierLabel,
-                IsBest: i == 0, LineIndex: h.Line))
+                IsBest: i == 0 && h.Info.Tier is >= 1 and <= 5, LineIndex: h.Line))
             .ToArray();
     }
 }
