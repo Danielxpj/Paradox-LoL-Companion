@@ -51,6 +51,22 @@ public sealed class ItemRecommendationRule : IAdviceRule
         if (plan is null)
             yield break;
 
+        if (plan.FullBuild)
+        {
+            if (plan.Top is { Replacement: { } swap } replacement)
+            {
+                var action = replacement.Affordable
+                    ? $"In shop: sell {swap.SellItem.Name} (+{swap.SellGold}g) and buy {replacement.Item.Name} ({swap.NetCost}g net)."
+                    : $"Keep {swap.SellItem.Name}; save {replacement.MissingGold}g more before replacing it with {replacement.Item.Name} ({swap.NetCost}g net).";
+                yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Info, "item-replace",
+                    action + " " + string.Join("; ", replacement.Reasons));
+            }
+            else
+                yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Info, "item-hold",
+                    "Full build — keep your current items; no clear situational upgrade.");
+            yield break;
+        }
+
         var antiheal = plan.Recommendations.FirstOrDefault(r => r.Item.AppliesGrievousWounds);
         if (antiheal is not null)
             yield return new AdviceItem(AdviceCategory.Items, AdviceSeverity.Warning, "item-antiheal",

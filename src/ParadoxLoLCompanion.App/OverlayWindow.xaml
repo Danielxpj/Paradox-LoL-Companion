@@ -124,7 +124,7 @@
                                                 <TextBlock Text="{Binding BuyBarText}" Margin="0,2,0,0"
                                                            FontFamily="{StaticResource HudFont}" FontSize="10"
                                                            Foreground="{Binding AffordBrush}"
-                                                           TextTrimming="CharacterEllipsis" />
+                                                           TextWrapping="Wrap" />
                                             </StackPanel>
                                         </DockPanel>
                                         <!-- WHY: las razones, compactas debajo de cada item. -->
@@ -314,7 +314,7 @@
                     </ItemsControl>
                 </StackPanel>
 
-                <TextBlock Text="Waiting for a live match…" Margin="2,2,2,4"
+                <TextBlock Text="{Binding ItemPanelHint}" Margin="2,2,2,4" TextWrapping="Wrap"
                            FontFamily="{StaticResource HudFont}" FontSize="11"
                            Foreground="{StaticResource TextMuted}">
                     <TextBlock.Style>

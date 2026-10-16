@@ -25,6 +25,8 @@ public sealed record ItemRecommendation(
     PurchasePlan Purchase,
     int MissingGold)
 {
+    /// <summary>At full build, the exact item to sell before buying this replacement.</summary>
+    public ItemReplacement? Replacement { get; init; }
     public ItemScoreBreakdown? ScoreBreakdown { get; init; }
     /// <summary>Fuerza relativa de la recomendación: 1.0 = la principal; el resto, su fracción.</summary>
     public double Priority { get; init; } = 1.0;
@@ -41,6 +43,10 @@ public sealed record ItemRecommendation(
     /// </summary>
     public bool BlockedByFullInventory { get; init; }
 }
+
+/// <summary>A single swap, evaluated with the other five slots retained.</summary>
+public sealed record ItemReplacement(StaticItem SellItem, int SellSlot, int SellGold,
+    int NetCost, double ScoreGain, double SituationalGain);
 
 /// <summary>Consejo de botas (solo cuando aún no hay botas terminadas), con su plan de compra.</summary>
 /// <param name="MissingGold">Oro que falta juntar para terminarlas (0 si ya alcanza).</param>
@@ -90,6 +96,9 @@ public sealed record ItemAdvicePlan(
 
     /// <summary>Los 6 slots de items están ocupados: comprar exige vender o fusionar componentes.</summary>
     public bool InventoryFull { get; init; }
+
+    /// <summary>Six finished items (including boots), rather than six occupied component slots.</summary>
+    public bool FullBuild { get; init; }
 
     /// <summary>Consejos de late game (elixir con build completa, Control Ward en la Grieta).</summary>
     public IReadOnlyList<string> LateTips { get; init; } = Array.Empty<string>();

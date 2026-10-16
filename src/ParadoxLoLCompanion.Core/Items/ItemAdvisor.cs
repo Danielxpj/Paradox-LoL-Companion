@@ -12,7 +12,7 @@ namespace ParadoxLoLCompanion.Core.Items;
 /// catálogo estático para producir un <see cref="ItemAdvicePlan"/>: top de items con
 /// razones legibles, plan de compra por componentes y botas sugeridas.
 /// </summary>
-public sealed class ItemAdvisor
+public sealed partial class ItemAdvisor
 {
     private readonly IStaticData _data;
     private readonly ItemsConfig _config;
@@ -263,31 +263,29 @@ public sealed class ItemAdvisor
         var metaIds = new HashSet<int>(
             MetaSpine.Build(_data, _config, stats, mapNumber).Select(s => s.Item.Id));
 
+        // Shared champion/map gates. Inventory restrictions are checked again AFTER
+        // removing a sale candidate, so a swap within an exclusive group is possible.
+        var candidatePool = _data.CompletedItemsFor(mapNumber)
+            .Where(item => !(skipManaItems && (item.HasTag("Mana") || item.HasTag("ManaRegen")))
+                && !OffensiveMismatch(item, profile)
+                && !(item.HasTag("Aura") && item.PassiveNames.Overlaps(allyAuraPassives))
+                && (isSupport || !(supportOnlyNames.Contains(item.Name)
+                    || _config.SupportOnlyItemIds.Contains(item.Id)))
+                && (snowballing || !_config.SnowballItemIds.Contains(item.Id)))
+            .ToList();
+
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons,
             RecommendationCategory Category, double Situational, ItemScoreBreakdown Breakdown)>();
 
-        foreach (var item in _data.CompletedItemsFor(mapNumber))
+        foreach (var item in candidatePool)
         {
             if (owned.Contains(item.Id) || ownedNames.Contains(item.Name))
                 continue;
-            if (skipManaItems && (item.HasTag("Mana") || item.HasTag("ManaRegen")))
-                continue;
-            // Un item cuyo único stat ofensivo no existe ni en tu kit ni en tu build
-            // nunca es coherente (Morello para Darius): fuera del pool por completo.
-            if (OffensiveMismatch(item, profile))
-                continue;
             if (BlockedByOwnedPassive(item, ownedWithPassives))
-                continue;
-            if (item.HasTag("Aura") && item.PassiveNames.Overlaps(allyAuraPassives))
                 continue;
             // Ya tenés un item de su grupo excluyente ("límite de 1"): comprarlo es ilegal.
             if (ExclusiveGroupOf(item) is >= 0 and var itemGroup
                 && ownedExclusiveGroups.Contains(itemGroup))
-                continue;
-            if (!isSupport && (supportOnlyNames.Contains(item.Name)
-                || _config.SupportOnlyItemIds.Contains(item.Id)))
-                continue;
-            if (!snowballing && _config.SnowballItemIds.Contains(item.Id))
                 continue;
 
             var consumedCrit = item.CritChance > 0
@@ -402,11 +400,21 @@ public sealed class ItemAdvisor
             });
         }
 
+        var fullBuild = IsFullBuild(me);
+        if (fullBuild)
+            recommendations = ReplacementRecommendations(state, me, scoringProfile, threat,
+                candidatePool, stats, mapNumber, currentCrit, ahead, behind, completedCount);
+
         var summary = ThreatSummary(threat, isAram);
         if (forcedArchetype is not null)
             summary += $" | Build override: {ArchetypeLabel(profile.Archetype)}";
         else if (profile.InferredFromItems)
             summary += $" | Build detected from your items: {ArchetypeLabel(profile.Archetype)}";
+
+        var lateTips = LateTips(profile, inventoryFull, mapNumber,
+            state.GameData.GameTime, gold, ownedIds);
+        if (fullBuild && recommendations.Count == 0)
+            lateTips.Insert(0, "Full build — keep your current items; no clear situational upgrade.");
 
         return new ItemAdvicePlan(
             summary,
@@ -414,15 +422,15 @@ public sealed class ItemAdvisor
             threat,
             recommendations,
             BootsFor(me, profile, threat, mapNumber, stats, ownedIds, gold),
-            SellSuggestions(me, profile, threat, weights,
+            fullBuild ? Array.Empty<SellSuggestion>() : SellSuggestions(me, profile, threat, weights,
                 recommendations.Count > 0 ? recommendations[0] : null, inventoryFull, metaIds),
             StarterFor(me, profile, state.GameData.GameTime, isAram, weights, stats, gold),
             ShopAlertFor(me, isAram, recommendations))
         {
             InventoryFull = inventoryFull,
-            LateTips = LateTips(profile, inventoryFull, mapNumber,
-                state.GameData.GameTime, gold, ownedIds),
-            UrgentPickup = UrgentAntiHealPickup(scoringProfile, threat, teamHasGw, owned, mapNumber, recommendations,
+            FullBuild = fullBuild,
+            LateTips = lateTips,
+            UrgentPickup = fullBuild ? null : UrgentAntiHealPickup(scoringProfile, threat, teamHasGw, owned, mapNumber, recommendations,
                 ownedIds, gold, inventoryFull, slotItemIds),
         };
     }
@@ -564,6 +572,10 @@ public sealed class ItemAdvisor
         if (!isAram || !me.IsDead || recommendations.Count == 0)
             return null;
         var top = recommendations[0];
+        if (top.Replacement is { } swap)
+            return top.Affordable
+                ? $"Shop open while dead — sell {swap.SellItem.Name}, buy {top.Item.Name} ({GoldFmt(swap.NetCost)}g net)."
+                : $"Keep {swap.SellItem.Name} — save {GoldFmt(top.MissingGold)}g more before swapping to {top.Item.Name}.";
         if (top.BlockedByFullInventory)
             return null;
         if (top.Purchase.CanFinishNow)

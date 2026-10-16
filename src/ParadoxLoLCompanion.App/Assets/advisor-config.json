@@ -12,6 +12,11 @@
     "minCompletedItemGold": 1100,
     "minFinishedBootsGold": 900,
     "maxRecommendations": 3,
+    "replacementMinGain": 1.5,
+    "replacementMinSituationalGain": 0.75,
+    "replacementLossPenalty": 0.5,
+    "replacementCoreMargin": 1.0,
+    "replacementProtectedItemIds": [3031, 3089, 3124, 3084],
     "sustainTags": ["LifeSteal", "SpellVamp", "Omnivamp"],
     "excludeItemTags": ["Boots", "Trinket", "GoldPer"],
 

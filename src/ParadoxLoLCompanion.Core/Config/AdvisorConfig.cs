@@ -285,6 +285,16 @@ public sealed class ItemsConfig
     /// cual un item ya comprado se sugiere vender (si no cumple un rol situacional).
     /// </summary>
     public double SellFitRatioThreshold { get; set; } = 0.5;
+    /// <summary>Minimum score improvement before paying for a full-build replacement.</summary>
+    public double ReplacementMinGain { get; set; } = 1.5;
+    /// <summary>A swap must improve the response to current threats, not just raw tag fit.</summary>
+    public double ReplacementMinSituationalGain { get; set; } = 0.75;
+    /// <summary>Additional improvement required per 1000 gold lost when selling.</summary>
+    public double ReplacementLossPenalty { get; set; } = 0.5;
+    /// <summary>Extra margin before replacing a champion's meta core item.</summary>
+    public double ReplacementCoreMargin { get; set; } = 1.0;
+    /// <summary>Build-defining amplifiers and permanent stacks that live data cannot fully value.</summary>
+    public List<int> ReplacementProtectedItemIds { get; set; } = new() { 3031, 3089, 3124, 3084 };
     /// <summary>Peso relativo al promedio desde el cual un asesino se considera "fed".</summary>
     public double BurstThreshold { get; set; } = 1.6;
     /// <summary>Peso relativo del burst de un mago vs. un asesino: en ARAM el burst dominante suele ser un mago fed (Veigar/Syndra/Lux), invisible si solo miramos el tag Assassin.</summary>

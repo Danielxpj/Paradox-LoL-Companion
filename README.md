@@ -370,6 +370,21 @@ The same planner powers the boots advice and the "shop open while dead" ARAM ale
 - **Full inventory** — recommendations you literally have no slot for are flagged
   ("sell something first"), *unless* buying them merges components already occupying
   slots — the planner knows a purchase can free space.
+- **Full-build replacements** — with six finished items (including boots), compares
+  keeping each eligible item with replacing it against the current enemy threats.
+  Shows one concrete swap with the item to sell, the replacement, reasons, refund,
+  net cost and missing gold in the dashboard, overlay and advice feed. If gold is
+  short, it says to keep the current item until the entire replacement is affordable.
+  No clear improvement means "keep your current items".
+
+Replacement scoring removes the sale item's stats and counter coverage before evaluating
+both choices against the remaining inventory. It rechecks exclusive groups and passives,
+preserves necessary counter coverage, and requires a situational gain plus a margin for
+the gold lost on sale. Meta core items require an extra margin; purchase-order bonuses
+do not influence swaps. Boots, quest items, evolved/stacking items and configured build
+anchors are preserved. This is a conservative heuristic using the existing threat model;
+it does not estimate the value of active cooldowns or unreported stacks. Its thresholds
+and protected item IDs are editable through the `replacement*` settings in `items`.
 
 ### 8. ARAM bench advisor
 

@@ -97,14 +97,24 @@ public sealed class ItemRecoRowViewModel
     {
         Name = reco.Item.Name;
         IconUrl = DdragonImages.ItemIcon(catalogVersion, reco.Item.Id);
-        Cost = reco.Item.GoldTotal.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+        var cost = reco.Replacement?.NetCost ?? reco.Item.GoldTotal;
+        Cost = cost.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)
+            + (reco.Replacement is null ? "" : " NET");
 
         // Anillo radial: progreso del oro actual hacia el costo total del item.
-        GoldFraction = System.Math.Clamp(gold / System.Math.Max(reco.Item.GoldTotal, 1), 0, 1);
+        GoldFraction = cost == 0 ? 1 : System.Math.Clamp(gold / cost, 0, 1);
         GoldPercent = (int)System.Math.Round(GoldFraction * 100) + "%";
 
         // Barra de acción "BUY NOW ▸": qué compra procede AHORA con este oro.
-        if (reco.BlockedByFullInventory)
+        if (reco.Replacement is { } swap)
+        {
+            BuyBarText = reco.Affordable
+                ? $"SWAP IN SHOP ▸ SELL {swap.SellItem.Name}"
+                : $"KEEP {swap.SellItem.Name} ▸ SAVE {reco.MissingGold.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} MORE";
+            BuyBarCost = reco.Affordable ? Cost : "";
+            AffordBrush = reco.Affordable ? Palette.Green : Palette.Amber;
+        }
+        else if (reco.BlockedByFullInventory)
         {
             BuyBarText = "INVENTORY FULL ▸ SELL FIRST";
             BuyBarCost = "";
@@ -141,6 +151,8 @@ public sealed class ItemRecoRowViewModel
             RecommendationCategory.Spike => ("POWER SPIKE", Palette.Green),
             _ => ("CORE", Palette.Blue),
         };
+        if (reco.Replacement is not null)
+            CategoryLabel = "REPLACE";
         Priority = (int)System.Math.Round(reco.Priority * 100) + "%";
     }
 

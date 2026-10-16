@@ -773,11 +773,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// </summary>
     private void WriteLiveItemSet(GameState state, ItemAdvicePlan? plan)
     {
-        if (plan is null || plan.Recommendations.Count == 0
+        if (plan is null || (plan.Recommendations.Count == 0 && !plan.FullBuild)
             || state.ActivePlayerEntry is not { } me
             || _catalog.ResolveChampion(me.ChampionName, me.RawChampionName) is not { } champ)
             return;
-        var key = string.Join(",", plan.Recommendations.Select(r => r.Item.Id));
+        var key = plan.FullBuild && plan.Top is null
+            ? "hold:" + string.Join(",", me.Items.Select(i => i.ItemID))
+            : string.Join(",", plan.Recommendations.Select(r => $"{r.Replacement?.SellItem.Id}>{r.Item.Id}"));
         if (key == _liveSetKey)
             return;
         _liveSetKey = key;
@@ -786,7 +788,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             pages.AddRange(ItemSetBuilder.Build(stats, champ.Name, id => _catalog.ItemById(id)?.Name));
         var blocks = new List<ItemSetBlock>
         {
-            new("Recommended now", plan.Recommendations.Select(r => r.Item.Id).ToList()),
+            plan.Top?.Replacement is { } swap
+                ? new($"Replace {swap.SellItem.Name} ({swap.NetCost}g net)", new[] { plan.Top.Item.Id })
+                : plan.FullBuild
+                    ? new("Full build — keep current items", me.Items.Where(i => i.Slot is >= 0 and <= 5)
+                        .Select(i => i.ItemID).ToList())
+                    : new("Recommended now", plan.Recommendations.Select(r => r.Item.Id).ToList()),
         };
         if (plan.Boots is { } boots)
             blocks.Add(new("Boots", new[] { boots.Boots.Id }));
@@ -889,8 +896,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
 
-        ItemPanelHint = "";
-        ThreatSummary = plan.InventoryFull
+        ItemPanelHint = plan.FullBuild && plan.Top is null
+            ? "Full build — keep your current items; no clear situational upgrade."
+            : "";
+        ThreatSummary = plan.FullBuild
+            ? plan.ThreatSummary + "  |  Full build — evaluating replacements"
+            : plan.InventoryFull
             ? plan.ThreatSummary + "  |  Inventory FULL — sell before buying"
             : plan.ThreatSummary;
         var gold = state.ActivePlayer?.CurrentGold ?? 0;
