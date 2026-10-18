@@ -327,6 +327,66 @@ public sealed class ItemsConfig
     public double AramPassiveGoldPerSecond { get; set; } = 3.3;
     /// <summary>Mostrar el overlay de items solo al morir (la ventana de compra en ARAM).</summary>
     public bool OverlayOnDeath { get; set; } = true;
+
+    // --- Proyección de la build enemiga (v6) ---
+    /// <summary>
+    /// Cuántos slots pendientes de la build meta de cada enemigo se proyectan (lo que VAN a
+    /// comprar según op.gg). 0 desactiva la proyección.
+    /// </summary>
+    public int ProjectionDepth { get; set; } = 3;
+    /// <summary>Peso del slot proyectado por rango (1, decay, decay²…): el próximo item es casi seguro, el tercero no tanto.</summary>
+    public double ProjectionRankDecay { get; set; } = 0.7;
+    /// <summary>Cuánto vale una resistencia/anti-heal PROYECTADA frente a una ya comprada (la pen se pre-valúa, no se sobrevalúa).</summary>
+    public double ProjectionWeight { get; set; } = 0.6;
+
+    // --- Espinazo reactivo (v6) ---
+    /// <summary>
+    /// Peso EXTRA del componente situacional limpio para los items que compiten dentro del
+    /// espinazo meta. Un slot vale <c>SpineSlotMag</c> (4.0) y un muro completo contra un
+    /// equipo full-AP vale ~2.4: sin esto el meta nunca reordena sus defensivos por el tipo
+    /// de daño enemigo. Con 1.0, una amenaza clara (μ≈1) salta un puesto; una tibia, no.
+    /// </summary>
+    public double SpineSituationalWeight { get; set; } = 1.0;
+
+    // --- Cobertura del top (v6) ---
+    /// <summary>
+    /// Penalización al 2.º/3.er slot por repetir una dimensión defensiva/penetración que un
+    /// slot ya elegido cubre (dos muros de armadura contra un equipo mixto). Fracción del
+    /// bono situacional repetido que se descuenta.
+    /// </summary>
+    public double CoverageOverlapPenalty { get; set; } = 0.6;
+
+    // --- Reloj de partida (v6) ---
+    /// <summary>Duración esperada de una partida de ARAM / Grieta (s): base para "cuánto queda".</summary>
+    public double AramExpectedGameSeconds { get; set; } = 1200;
+    public double RiftExpectedGameSeconds { get; set; } = 1800;
+    /// <summary>Una partida desbalanceada termina antes: fracción de la duración que recorta ir muy adelante/atrás (μ=1).</summary>
+    public double LeadShortensGame { get; set; } = 0.3;
+    /// <summary>Nunca se asume menos tiempo restante que esto (s): una partida larga no está "a punto de terminar" por ser larga.</summary>
+    public double MinRemainingSeconds { get; set; } = 180;
+    /// <summary>Con un inhibidor caído hace poco, el final está cerca: tope del tiempo restante (s).</summary>
+    public double InhibitorRemainingSeconds { get; set; } = 240;
+    /// <summary>Un inhibidor caído hace más de esto (s) ya no cuenta (respawnea a los 5 min).</summary>
+    public double InhibitorRecencySeconds { get; set; } = 300;
+    /// <summary>Ingreso TOTAL esperado (pasivo + kills) por segundo, para estimar cuándo se alcanza un item.</summary>
+    public double AramIncomeGoldPerSecond { get; set; } = 5.0;
+    public double RiftIncomeGoldPerSecond { get; set; } = 6.5;
+    /// <summary>Items que se apilan (Lágrima, Mejai…): penalización máxima cuando no queda tiempo para que rindan.</summary>
+    public double StackingLateMag { get; set; } = 8.0;
+    /// <summary>Rampa del tiempo restante (s) bajo la cual apilar deja de rendir: μ=0 en foot (penalización plena), μ=1 en shoulder.</summary>
+    public double StackingPayoffFoot { get; set; } = 180;
+    public double StackingPayoffShoulder { get; set; } = 600;
+    /// <summary>Penalización máxima a un item que no se va a poder pagar antes del final (tiempo para juntarlo ≥ 2× el restante).</summary>
+    public double UnreachableMag { get; set; } = 4.0;
+
+    // --- Prior personal (v6) ---
+    /// <summary>Partidas mínimas con el campeón en el diario para que tu historial pese.</summary>
+    public int PersonalPriorMinGames { get; set; } = 3;
+    /// <summary>Bono máximo por "siempre lo comprás con este campeón": 1.5 puestos del espinazo.</summary>
+    public double PersonalPriorMag { get; set; } = 6.0;
+    /// <summary>Rampa sobre la fracción de tus partidas en que compraste el item.</summary>
+    public double PersonalPriorFoot { get; set; } = 0.3;
+    public double PersonalPriorShoulder { get; set; } = 0.8;
     /// <summary>
     /// Valor curado de la pasiva/activa por item (se SUMA al fit por tags, que ddragon tasa
     /// solo por stats): Rabadon, Zhonya, Filo Infinito… valen por lo que no está en sus stats.

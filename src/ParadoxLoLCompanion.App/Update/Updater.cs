@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using ParadoxLoLCompanion.App.Diagnostics;
+using ParadoxLoLCompanion.Core.Update;
 
 namespace ParadoxLoLCompanion.App.Update;
 
@@ -15,7 +16,9 @@ namespace ParadoxLoLCompanion.App.Update;
 /// Flujo:
 ///  1. Lee <c>version.txt</c> (texto plano con la última versión) desde raw.githubusercontent.
 ///  2. Compara con la versión del ensamblado actual.
-///  3. Si hay una más nueva, descarga el exe de la última Release y lo intercambia
+///  3. Si hay una más nueva, descarga el exe de la última Release, lo VERIFICA
+///     (tamaño = Content-Length, firma MZ y, si <c>version.txt</c> trae un SHA-256 como
+///     segundo token, el hash) y lo intercambia
 ///     "en caliente" (renombra el exe en ejecución a <c>.old</c> — permitido en Windows —,
 ///     deja el nuevo en su lugar, relanza y cierra la instancia actual).
 ///
@@ -72,11 +75,12 @@ public static class Updater
         try
         {
             var current = CurrentVersion();
-            var latest = await FetchLatestVersionAsync();
-            if (latest is null)
+            var manifest = await FetchManifestAsync();
+            if (manifest is null)
                 return false;
+            var latest = manifest.Version;
 
-            FileLog.Write($"[Update] actual={current} remota={latest}");
+            FileLog.Write($"[Update] actual={current} remota={latest} sha256={manifest.Sha256 ?? "(sin hash)"}");
             if (Normalize(latest) <= Normalize(current))
                 return false;
 
@@ -92,7 +96,18 @@ public static class Updater
             try
             {
                 var newPath = exePath + ".new";
-                await DownloadFileAsync(DownloadUrl, newPath, window);
+                var expectedLength = await DownloadFileAsync(DownloadUrl, newPath, window);
+
+                window.SetStatus("Verificando descarga…");
+                if (DownloadVerifier.Verify(newPath, expectedLength, manifest.Sha256) is { } problem)
+                {
+                    // Un exe roto en su lugar sería irreparable (ni arranca para re-actualizarse):
+                    // se descarta y seguimos con la versión actual.
+                    FileLog.Write($"[Update] descarga rechazada: {problem}");
+                    TryDelete(newPath);
+                    window.Close();
+                    return false;
+                }
 
                 window.SetStatus("Aplicando actualización…");
                 SwapExecutable(exePath, newPath);
@@ -104,6 +119,7 @@ public static class Updater
             catch (Exception ex)
             {
                 FileLog.WriteException("Updater.TryUpdateAsync/apply", ex);
+                TryDelete(exePath + ".new");
                 window.Close();
                 // fail-open: seguimos con la versión actual
                 return false;
@@ -119,15 +135,17 @@ public static class Updater
     private static Version CurrentVersion() =>
         Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
 
-    private static async Task<Version?> FetchLatestVersionAsync()
+    private static async Task<UpdateManifest?> FetchManifestAsync()
     {
         try
         {
             using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(6) };
             http.DefaultRequestHeaders.UserAgent.ParseAdd("ParadoxLoLCompanion-Updater");
             var text = await http.GetStringAsync(VersionUrl);
-            var token = FirstToken(text);
-            return token is not null && Version.TryParse(token, out var v) ? v : null;
+            var manifest = UpdateManifest.Parse(text);
+            if (manifest is null)
+                FileLog.Write("[Update] version.txt sin una versión válida; se omite.");
+            return manifest;
         }
         catch (Exception ex)
         {
@@ -137,25 +155,18 @@ public static class Updater
         }
     }
 
-    /// <summary>Primer token no vacío del texto (ignora comentarios '#' y espacios).</summary>
-    private static string? FirstToken(string text)
+    private static void TryDelete(string path)
     {
-        foreach (var raw in text.Split('\n'))
-        {
-            var line = raw.Trim();
-            if (line.Length == 0 || line.StartsWith('#'))
-                continue;
-            var space = line.IndexOfAny(new[] { ' ', '\t', '\r' });
-            return space > 0 ? line[..space] : line;
-        }
-        return null;
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch (Exception ex) { FileLog.Write($"[Update] no se pudo borrar {path}: {ex.Message}"); }
     }
 
     /// <summary>Normaliza a 4 componentes no negativos para comparar sin sorpresas (1.0 vs 1.0.0.0).</summary>
     private static Version Normalize(Version v) =>
         new(v.Major, v.Minor, Math.Max(0, v.Build), Math.Max(0, v.Revision));
 
-    private static async Task DownloadFileAsync(string url, string destPath, UpdateWindow window)
+    /// <summary>Descarga a <paramref name="destPath"/> y devuelve el Content-Length anunciado (si lo hubo).</summary>
+    private static async Task<long?> DownloadFileAsync(string url, string destPath, UpdateWindow window)
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("ParadoxLoLCompanion-Updater");
@@ -179,6 +190,7 @@ public static class Updater
             else
                 window.SetIndeterminate($"Descargando… {read / (1024 * 1024)} MB");
         }
+        return total;
     }
 
     /// <summary>

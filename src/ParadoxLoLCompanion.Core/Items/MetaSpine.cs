@@ -138,6 +138,23 @@ public static class MetaSpine
         return item;
     }
 
+    /// <summary>Ids poseídos más el árbol de construcción de cada uno (lo que "ya se tiene" a efectos del espinazo).</summary>
+    public static HashSet<int> OwnedTree(IStaticData data, IEnumerable<int> ownedIds)
+    {
+        var tree = new HashSet<int>();
+        foreach (var id in ownedIds)
+            AddTree(data, id, tree);
+        return tree;
+    }
+
+    private static void AddTree(IStaticData data, int itemId, HashSet<int> tree)
+    {
+        if (!tree.Add(itemId) || data.ItemById(itemId) is not { } item)
+            return;
+        foreach (var fromId in item.From)
+            AddTree(data, fromId, tree);
+    }
+
     /// <summary>El árbol de construcción de <paramref name="item"/> contiene <paramref name="componentId"/>.</summary>
     private static bool TreeContains(IStaticData data, StaticItem item, int componentId)
     {

@@ -28,11 +28,14 @@ public sealed class AdviceEngine
     /// </summary>
     public static AdviceEngine CreateWith(IStaticData staticData, AdvisorConfig? config = null,
         Func<BuildArchetype?>? forcedArchetype = null,
-        Func<ChampionBuildStats?>? statsProvider = null)
+        Func<ChampionBuildStats?>? statsProvider = null,
+        Func<IReadOnlyDictionary<string, ChampionBuildStats>?>? enemyStatsProvider = null,
+        Func<PersonalBuildPrior?>? personalProvider = null)
     {
         config ??= AdvisorConfig.Default;
         return new(DefaultRules(config)
-            .Append(new ItemRecommendationRule(staticData, config.Items, forcedArchetype, statsProvider)));
+            .Append(new ItemRecommendationRule(staticData, config.Items, forcedArchetype, statsProvider,
+                enemyStatsProvider, personalProvider)));
     }
 
     private static IEnumerable<IAdviceRule> DefaultRules(AdvisorConfig config) => new IAdviceRule[]

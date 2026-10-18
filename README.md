@@ -223,6 +223,15 @@ One honesty detail: with several enemies all at equal weight (game start, everyo
 there is no "biggest threat" — naming one would be invented noise, so the field is
 suppressed until someone actually pulls ahead.
 
+**Projection (v6).** Resistances and anti-heal are read from what enemies *own*, which at
+minute three is nothing. The app also fetches each enemy champion's OP.GG build and
+projects the slots they have not bought yet (`ProjectionDepth` ranks, decaying 1 → 0.7 →
+0.49): `ProjectedArmorStack`, `ProjectedMrStack`, `ProjectedEnemyAntiHeal`. The scorer uses a
+projected degree at `ProjectionWeight` (0.6) of a purchased one, only while the real
+signal is silent, and the card says who: *"Mundo and Sett will stack armor (their usual
+build)"*. As the enemy buys the build, the projection empties and the measured signal
+takes over.
+
 ### 3. Champion profiling & build detection from your inventory
 
 `ChampionProfiler` answers two independent questions:
@@ -334,6 +343,31 @@ Sample-size and win-rate ramps keep noisy low-game data from mattering. A config
 bridges item **evolutions** (OP.GG records Muramana; the shop sells Manamune) since Data
 Dragon doesn't link them. The reason string is data-honest: *"bought in 31% of Ahri
 builds (52% WR)"*.
+
+**v6 additions on top of the spine:**
+
+- **Reactive spine.** Adjacent spine ranks differ by 4 points; a full defensive wall
+  against a 100% magic team earns about 2.4, so the meta order never reacted to the enemy
+  damage type. Inside the spine arena the clean situational component now counts
+  `1 + SpineSituationalWeight` times: a clear threat (μ≈1) swaps a defensive slot, a
+  lukewarm one keeps OP.GG's order.
+- **Coverage-aware top-3.** Slots 2 and 3 are chosen by *marginal* value: a candidate that
+  repeats a defensive dimension (armor, magic resist, raw HP) or the same penetration
+  as a slot already picked loses `CoverageOverlapPenalty` (60%) of that bonus. Against a
+  mixed team the second card is the other resist, not a second armor item.
+- **Game clock.** `GameClock` estimates remaining time (expected length per mode,
+  shortened by a lopsided score and by an inhibitor down in the last five minutes).
+  Stacking items (Tear, Mejai's, evolutions) are discounted when there is no time left to
+  stack, and an item you cannot afford before the end is discounted too. Both say so on
+  the card.
+- **Personal prior.** Your own journals (`%LocalAppData%\ParadoxLoLCompanion\journal`)
+  become a per-champion prior after `PersonalPriorMinGames` games: an item you build in
+  80% of your Ahri games gets up to 1.5 spine ranks, with the reason *"you build it in 80%
+  of your Ahri games"*.
+- **Offline calibration.** `tools/RecommendationReplay` gained `sweep` (agreement@3 of
+  config variants against the item you actually bought next, over all journals) and
+  `threats` (did the threat announced at minute five materialise in the enemy's final
+  inventory, with and without projection). See its README.
 
 ### 6. Purchase planner
 
@@ -461,7 +495,11 @@ On launch, before the main window (skipped under a debugger):
 1. Fetch [`version.txt`](version.txt) from this repo's `main` (6 s timeout).
 2. If it's newer than the running assembly version → splash + download
    `ParadoxLoLCompanion.exe` from the latest GitHub Release.
-3. Hot-swap: rename the running exe to `.old` (Windows allows renaming a running
+3. Verify the download before touching anything: size must match `Content-Length`,
+   the file must carry the `MZ` executable signature, and if `version.txt` has a
+   second token it is treated as the asset's SHA-256 and must match. A captive
+   portal page or a truncated download is discarded, never installed.
+4. Hot-swap: rename the running exe to `.old` (Windows allows renaming a running
    executable), move the new one into place, relaunch, clean `.old` next start —
    with rollback if any step fails.
 

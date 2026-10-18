@@ -74,6 +74,19 @@ public sealed record TeamThreat
     /// <summary>Cuánto CC pesado apila el enemigo (wombo): tenacidad y limpieza suben para todos.</summary>
     public double CcThreat { get; init; }
 
+    // --- Proyección (v6): lo que el enemigo VA a comprar según su build meta (op.gg),
+    // descontando lo que ya lleva. Vacío (0) sin stats enemigas.
+    /// <summary>Armadura que el enemigo todavía va a apilar según su build habitual.</summary>
+    public double ProjectedArmorStack { get; init; }
+    public double ProjectedMrStack { get; init; }
+    /// <summary>Anti-curación que el enemigo todavía va a comprar según su build habitual.</summary>
+    public double ProjectedEnemyAntiHeal { get; init; }
+    /// <summary>Quiénes van a apilar armadura/RM ("Mundo, Sett"), para la razón.</summary>
+    public string? ProjectedArmorNames { get; init; }
+    public string? ProjectedMrNames { get; init; }
+    public double ProjectedBonusArmor { get; init; }
+    public double ProjectedBonusMr { get; init; }
+
     /// <summary>Peso promedio del equipo enemigo (escala relativa): base para ahead/behind.</summary>
     public double AvgEnemyWeight { get; init; }
     /// <summary>Peso del jugador activo en la MISMA escala relativa que los enemigos (comparable).</summary>

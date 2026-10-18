@@ -31,7 +31,9 @@ No requiere permisos de administrador porque el instalador coloca la app en
    - `installer/output/ParadoxLoLCompanion-Setup-<ver>.exe` — el instalador.
    - `publish/ParadoxLoLCompanion.exe` — el **asset** para la Release (nombre sin espacios).
 3. En GitHub, creá una **Release** nueva y subí `publish/ParadoxLoLCompanion.exe` como asset.
-4. **Commiteá y pusheá `version.txt`** a la rama `main`.
+4. **Commiteá y pusheá `version.txt`** a la rama `main`. Opcionalmente, en la misma línea
+   y separado por un espacio, poné el SHA-256 del asset que imprime `instalador.bat`
+   (`1.0.1 3f2a…`): la app verifica el hash antes de reemplazar el exe.
 
 Listo: cualquier app instalada detectará la nueva versión al abrirse y se actualizará sola.
 

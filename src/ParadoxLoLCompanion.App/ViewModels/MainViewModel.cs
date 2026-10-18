@@ -64,6 +64,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _wasDead;
     private string? _runesAppliedKey;      // "champKey|patch": una aplicación automática por campeón
     private ChampionBuildStats? _championStats;
+    /// <summary>Stats de op.gg de los ENEMIGOS por key de campeón: el analizador proyecta su build.</summary>
+    private readonly Dictionary<string, ChampionBuildStats> _enemyStats = new();
+    private readonly HashSet<string> _enemyStatsRequested = new();
+    /// <summary>Tu historial de compras por campeón (diarios): prior personal junto al meta.</summary>
+    private PersonalBuildPrior? _personalPrior;
     // Top de items del tick anterior: la histéresis del asesor lo usa para no "temblar".
     private IReadOnlyList<int>? _previousTopIds;
     private string? _statsFetchKey;   // "champKey|pos|map|patch": evita re-fetch por tick
@@ -491,7 +496,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         _catalog = catalog;
         // El provider lee el override vigente en cada tick: feed y panel siempre coinciden.
-        _engine = AdviceEngine.CreateWith(catalog, _config, () => _forcedArchetype, () => _championStats);
+        _engine = AdviceEngine.CreateWith(catalog, _config, () => _forcedArchetype, () => _championStats,
+            () => _enemyStats, () => _personalPrior);
         _itemAdvisor = new ItemAdvisor(catalog, _config.Items);
         _profilerForTiles = new ChampionProfiler(catalog, _config.Items);
         _benchAdvisor = new TeamBalanceAdvisor(catalog, _config.Items);
@@ -576,6 +582,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _gameMode = state.GameData.GameMode;
         UpdateContext();
         RequestStatsIfNeeded(state);
+        RequestEnemyStatsIfNeeded(state);
 
         _clockCard.Value = TimeFmt.Clock(state.GameData.GameTime);
         _goldCard.Value = ((int)(state.ActivePlayer?.CurrentGold ?? 0)).ToString("N0", CultureInfo.InvariantCulture);
@@ -665,8 +672,78 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _statsFetchKey = key;
         _championStats = null;
         _previousTopIds = null;   // cambió el campeón/contexto: reset de la histéresis
+        // Partida/contexto nuevo: la proyección enemiga y el prior personal se rearman.
+        _enemyStats.Clear();
+        _enemyStatsRequested.Clear();
+        ReloadPersonalPrior();
         RebuildRunesPanel();
         _ = FetchStatsAsync(champ.Key, me.Position, mapNumber, _catalog.Version, key);
+    }
+
+    /// <summary>
+    /// Lee los diarios en segundo plano (archivos chicos, pero con snapshots que no se
+    /// parsean): el prior personal entra al asesor cuando está listo, nunca bloquea.
+    /// </summary>
+    private void ReloadPersonalPrior()
+    {
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ParadoxLoLCompanion", "journal");
+        _ = Task.Run(() =>
+        {
+            var prior = PersonalBuildPrior.Load(dir);
+            OnUi(() =>
+            {
+                _personalPrior = prior;
+                if (prior.Champions.Count > 0)
+                    AppendConsole($"[journal] personal build history loaded for {prior.Champions.Count} champion(s).");
+            });
+        });
+    }
+
+    /// <summary>
+    /// Pide (una vez por enemigo y partida, cache-first) las stats de op.gg de cada
+    /// campeón ENEMIGO: con ellas el analizador proyecta lo que van a comprar — al minuto 3
+    /// el inventario enemigo no dice nada, su build meta sí. Sin reintentos: es un plus.
+    /// </summary>
+    private void RequestEnemyStatsIfNeeded(GameState state)
+    {
+        var me = state.ActivePlayerEntry;
+        if (me is null || !_catalog.IsLoaded || string.IsNullOrEmpty(me.Team))
+            return;
+        var mapNumber = state.GameData.MapNumber == 0 ? 11 : state.GameData.MapNumber;
+        foreach (var enemy in state.AllPlayers.Where(p => p.Team != me.Team))
+        {
+            var champ = _catalog.ResolveChampion(enemy.ChampionName, enemy.RawChampionName);
+            if (champ is null)
+                continue;
+            var key = $"{champ.Key}|{enemy.Position.ToUpperInvariant()}|{mapNumber}|{_catalog.Version}";
+            if (!_enemyStatsRequested.Add(key))
+                continue;
+            _ = FetchEnemyStatsAsync(champ.Key, enemy.Position, mapNumber, _catalog.Version);
+        }
+    }
+
+    private async Task FetchEnemyStatsAsync(string champKey, string position, int mapNumber, string patch)
+    {
+        ChampionBuildStats? stats = null;
+        try
+        {
+            stats = await _statsProvider.GetAsync(champKey, position, mapNumber, patch).ConfigureAwait(false);
+        }
+        catch
+        {
+            // El provider ya degrada a null; cinturón extra del hilo async.
+        }
+        if (stats is null)
+            return;
+        OnUi(() =>
+        {
+            _enemyStats[champKey] = stats;
+            AppendConsole($"[stats] enemy build loaded for {champKey} — projecting their resistances and anti-heal.");
+            if (_lastGameState is { } s)
+                RebuildItemPlan(s);
+        });
     }
 
     private async Task FetchStatsAsync(string champKey, string position, int mapNumber,
@@ -862,9 +939,14 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private void RebuildItemPlan(GameState state)
     {
         ItemRecos.Clear();
-        var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats, _previousTopIds);
+        var plan = _itemAdvisor?.Advise(state, _forcedArchetype, _championStats, _previousTopIds,
+            _enemyStats, _personalPrior);
         _journal.Record(state, plan, new RecommendationReplayContext(_catalog.Version,
-            _config.Items, _forcedArchetype, _championStats, _previousTopIds));
+            _config.Items, _forcedArchetype, _championStats, _previousTopIds)
+        {
+            EnemyStats = _enemyStats.Count > 0 ? new Dictionary<string, ChampionBuildStats>(_enemyStats) : null,
+            Personal = _personalPrior,
+        });
         _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
         var dead = state.ActivePlayerEntry?.IsDead == true;
         if (dead && !_wasDead && plan is not null && OverlayOnDeath)

@@ -10,7 +10,11 @@ namespace ParadoxLoLCompanion.Core.Items;
 public sealed record RecommendationReplayContext(string CatalogVersion, ItemsConfig Config,
     BuildArchetype? ForcedArchetype, ChampionBuildStats? Stats, IReadOnlyList<int>? PreviousTopIds)
 {
-    public string EngineVersion { get; init; } = "recommendations-v6";
+    public string EngineVersion { get; init; } = "recommendations-v7";
+    /// <summary>Stats de op.gg de los enemigos por key de campeón (proyección de su build). Null en diarios viejos.</summary>
+    public Dictionary<string, ChampionBuildStats>? EnemyStats { get; init; }
+    /// <summary>Prior personal vigente al grabar (para que el replay reproduzca la decisión). Null en diarios viejos.</summary>
+    public PersonalBuildPrior? Personal { get; init; }
 }
 
 public sealed record RecordedRecommendation(int ItemId, double Score, ItemScoreBreakdown? Breakdown);
@@ -56,7 +60,7 @@ public static class RecommendationReplay
             throw new InvalidOperationException("Replay requires the recorded Data Dragon catalog version.");
         var context = snapshot.Context;
         var plan = new ItemAdvisor(catalog, candidateConfig ?? context.Config).Advise(snapshot.State,
-            context.ForcedArchetype, context.Stats, context.PreviousTopIds);
+            context.ForcedArchetype, context.Stats, context.PreviousTopIds, context.EnemyStats, context.Personal);
         var recorded = snapshot.Recommendations.Select(r => r.ItemId).ToList();
         var replayed = plan?.Recommendations.Select(r => r.Item.Id).ToList() ?? new List<int>();
         var previousScores = snapshot.Recommendations.ToDictionary(r => r.ItemId, r => r.Score);

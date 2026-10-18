@@ -858,3 +858,34 @@ Todo en `Core` salvo tres ganchos en la app; 381 tests verdes (373 previos + 8 n
 | Doble conteo | Una limpieza (QSS/Mercurial) cobraba supervivencia por enganche Y anti-CC por el mismo Leona/Amumu: ahora máximo, no suma. | `ScoreItem` |
 
 Pendiente real: que el juego refresque las páginas de items DURANTE la partida no está confirmado (la LCU acepta la escritura; la tienda podría leerlas recién en la próxima). Si no lo hace, el costo es una llamada local por cambio de top.
+
+---
+
+## Addendum v6 (2026-10-18) — cerrar el lazo
+
+Seis frentes que la revisión de la v5 dejó abiertos. Todo en `Core` salvo el fetch de stats
+enemigas y la carga del prior personal en `MainViewModel`; 485 tests verdes (467 + 18
+nuevos: `RecommendationV6Tests`, `CalibrationToolsTests`). Los 23 escenarios dorados siguen
+de acuerdo.
+
+| Frente | Problema medido | Qué se hizo | Dónde |
+|---|---|---|---|
+| Espinazo rígido | Rangos adyacentes difieren 4.0; un muro completo vs. 100 % AP vale 2.0·1.2 = 2.4 → Thornmail quedaba antes que Spirit Visage contra tres magos. | Dentro de la arena del espinazo lo situacional limpio pesa `1 + SpineSituationalWeight` (1.0): amenaza clara salta un puesto, tibia no. | `ItemAdvisor` ranking, `ItemsConfig.SpineSituationalWeight` |
+| Amenaza ciega al futuro | `ThreatAnalyzer` solo leía lo que el enemigo YA compró: al minuto 3, nada. | Stats de op.gg de cada ENEMIGO → `MetaSpine` de lo que le falta → `ProjectedArmorStack/MrStack/EnemyAntiHeal` (decay por rango 0.7, peso 0.6 vs. comprado); razón "X and Y will stack armor (their usual build)". Se vacía a medida que compran. | `ThreatAnalyzer.Analyze(state, enemyStats)`, `TeamThreat.Projected*`, `MainViewModel.RequestEnemyStatsIfNeeded` |
+| Lazo abierto | El diario se escribía y nadie lo leía. | `PersonalBuildPrior` (frecuencia por campeón/item desde los diarios; ≥3 partidas; hasta 1.5 puestos). `CalibrationSweep`: agreement@3 de variantes de config contra la próxima compra completa real. `ThreatCalibration`: MAE/falsas alarmas/misses de cada grado difuso al minuto 5 vs. inventario final. | `Items/PersonalBuildPrior.cs`, `Items/CalibrationSweep.cs`, `Items/ThreatCalibration.cs`, `Items/JournalGame.cs`, `tools/RecommendationReplay` (`sweep`, `threats`) |
+| Top greedy | 2.º/3.er slot por puntaje aislado: dos muros de armadura contra comp mixta. | Selección marginal: `CoveragePenalty` descuenta el 60 % del bono situacional repetido (misma resistencia, mismo muro de HP, misma pen). | `ItemAdvisor.CoveragePenalty` |
+| Sin reloj | Lágrima a los 14 min; item de 3.000 a los 17. | `GameClock.RemainingSeconds` (duración por modo, −30 % con μ=1 de ventaja/desventaja, tope 240 s con inhibidor caído <5 min). Penalización `StackingLateMag` (8) a items que se apilan sin tiempo; `UnreachableMag` (4) si pagar tarda ≥2× lo que queda. | `Items/GameClock.cs`, canal `Timing` del breakdown |
+| Métrica más cerca del resultado | Golden = opinión del autor; adopción = persuasión. | `threats`: valida el analizador contra lo que el enemigo terminó comprando, sin depender de si el jugador compró bien. | `ThreatCalibration` |
+
+**Decidido, no hecho:**
+- La regla "un solo item de Heridas Graves en el top" NO contradice la segunda fuente: la
+  segunda fuente del scoring es la de un ALIADO (`allyGwDamp`), no dos GW propios. Se deja.
+- La tabla de balance ARAM sigue curada: Riot no la expone por API y raspar la wiki es
+  frágil. Rota por parche; el `threats` de la herramienta lo va a mostrar como sesgo.
+- El scorer de reemplazos (build completa) recorre el pool por cada uno de los 6 slots por
+  tick. Sigue siendo barato (<1 ms en pruebas); se optimiza si la proyección lo encarece.
+
+**Cómo calibrar con las partidas propias (el paso que faltaba):** jugar ~20 ARAM con la
+app → `RecommendationReplay sweep <journal> <ver> <ddragon> sweep.json` con los campos
+nuevos (`spineSituationalWeight`, `coverageOverlapPenalty`, `projectionWeight`,
+`stackingLateMag`) → tomar la variante con mayor agreement@3 que no empeore `threats`.

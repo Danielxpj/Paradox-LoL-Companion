@@ -642,10 +642,13 @@ public class ItemAdvisorTests
     {
         // Mismo tanque, mismo carry físico de crítico; solo cambia si su daño ignora
         // resistencias. Contra daño %HP/verdadero (Vayne) apilar un muro rinde menos.
+        // Se compara el CANAL defensivo: el puntaje total incluye la penalización de
+        // cobertura (v6), que depende de si otro muro de armadura quedó antes en el top.
         double ArmorScore(string carry) => new StaticItemScore(
-            new ItemAdvisor(TestCatalog.Catalog()).Advise(TestCatalog.State(9000,
-                ("Leona", "ORDER", 0, None),
-                (carry, "CHAOS", 5, None)), BuildArchetype.Tank)!).Of(3143); // Randuin's
+            new ItemAdvisor(TestCatalog.Catalog(), new ItemsConfig { MaxRecommendations = 30 })
+                .Advise(TestCatalog.State(9000,
+                    ("Leona", "ORDER", 0, None),
+                    (carry, "CHAOS", 5, None)), BuildArchetype.Tank)!).DefenseOf(3143); // Randuin's
 
         var vsPercentHp = ArmorScore("Vayne");  // % de vida / daño verdadero
         var vsRegular = ArmorScore("Jinx");     // crítico físico "normal"
@@ -881,5 +884,7 @@ public class ItemAdvisorTests
         public StaticItemScore(ItemAdvicePlan plan) => _plan = plan;
         public double Of(int itemId) =>
             _plan.Recommendations.FirstOrDefault(r => r.Item.Id == itemId)?.Score ?? 0;
+        public double DefenseOf(int itemId) =>
+            _plan.Recommendations.FirstOrDefault(r => r.Item.Id == itemId)?.ScoreBreakdown?.Defense ?? 0;
     }
 }

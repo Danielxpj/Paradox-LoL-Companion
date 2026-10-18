@@ -103,8 +103,15 @@ public sealed partial class ItemAdvisor
     /// UI; anula la detección por campeón e inventario (el perfil de daño no cambia:
     /// es del kit del campeón, no de la build).
     /// </summary>
+    /// <param name="enemyStats">
+    /// Stats de op.gg de los ENEMIGOS por <c>StaticChampion.Key</c>: el análisis de amenaza
+    /// proyecta lo que todavía van a comprar (ver <see cref="ThreatAnalyzer.Analyze"/>).
+    /// </param>
+    /// <param name="personal">Tu historial con el campeón (diarios): prior personal junto al meta.</param>
     public ItemAdvicePlan? Advise(GameState state, BuildArchetype? forcedArchetype = null,
-        ChampionBuildStats? stats = null, IReadOnlyList<int>? previousTopIds = null)
+        ChampionBuildStats? stats = null, IReadOnlyList<int>? previousTopIds = null,
+        IReadOnlyDictionary<string, ChampionBuildStats>? enemyStats = null,
+        PersonalBuildPrior? personal = null)
     {
         if (!_data.IsLoaded)
             return null;
@@ -112,7 +119,7 @@ public sealed partial class ItemAdvisor
         if (me is null)
             return null;
 
-        var threat = _threats.Analyze(state);
+        var threat = _threats.Analyze(state, enemyStats);
         if (!threat.HasEnemies)
             return null;
 
@@ -298,6 +305,11 @@ public sealed partial class ItemAdvisor
                 scored.Add((item, score, reasons, category, situational, breakdown));
         }
 
+        // Reloj: cuánto queda de partida, para descontar lo que no rinde a tiempo.
+        var remaining = GameClock.RemainingSeconds(state, _config, isAram, ahead, behind);
+        var income = isAram ? _config.AramIncomeGoldPerSecond : _config.RiftIncomeGoldPerSecond;
+        var personalGames = personal?.Games(me.ChampionName) ?? 0;
+
         // Alcanzable ya = empujón: ante puntajes parejos gana lo comprable ahora
         // (más fuerte en ARAM, donde se compra al reaparecer y no hay recall).
         var ranked = scored
@@ -317,18 +329,68 @@ public sealed partial class ItemAdvisor
                 // el orden por defecto. Lo difuso sigue vivo dentro del puntaje crudo, y un
                 // delta situacional mayor a un puesto (SpineSlotMag) REORDENA el espinazo.
                 var spineBonus = 0.0;
+                var arena = false;
                 if (spineBySlot.TryGetValue(c.Item.Id, out var slot))
+                {
                     spineBonus = SpineBaseMag + SpineSlotMag * (SpineDepth - Math.Min(slot.Rank, SpineDepth));
+                    arena = true;
+                }
                 else if (spine.Count > 0 && (c.Situational >= EvictionSituationalGate
                     || (c.Item.AppliesGrievousWounds && threat.Sustain >= 0.9
                         && c.Situational >= _config.SevereAntiHealCounterGate)))
+                {
                     // Desplazo: un counter con amenaza severa disputa el ÚLTIMO slot mostrado
                     // (no se suma a la lista: le compite en mérito al slot meta más débil).
                     spineBonus = SpineBaseMag
                         + SpineSlotMag * (SpineDepth - Math.Min(_config.MaxRecommendations - 1, SpineDepth));
-                var score = c.Score + afford + incumbent + spineBonus;
+                    arena = true;
+                }
+                // Espinazo REACTIVO: dentro de la arena del meta, lo situacional limpio pesa
+                // extra. Un puesto vale SpineSlotMag (4) y un muro completo contra un equipo
+                // full-AP vale ~2.4: sin esto Thornmail quedaría antes que Spirit Visage
+                // contra tres magos solo porque op.gg lo lista primero. Con una amenaza
+                // clara (μ≈1) el defensivo correcto salta un puesto; con una tibia, no.
+                var situationalBoost = arena ? _config.SpineSituationalWeight * c.Situational : 0;
+
+                // Prior personal: lo que VOS comprás con este campeón (diarios), al lado del meta.
+                var personalBonus = 0.0;
+                if (personal is not null && personalGames >= _config.PersonalPriorMinGames)
+                {
+                    var freq = personal.Frequency(me.ChampionName, c.Item.Id);
+                    personalBonus = _config.PersonalPriorMag
+                        * Fuzzy.Ramp(freq, _config.PersonalPriorFoot, _config.PersonalPriorShoulder);
+                    if (personalBonus > 0)
+                        c.Reasons.Add($"you build it in {Pct(freq)} of your {champName} games");
+                }
+
+                // Reloj: un item que se apila (Lágrima, Mejai…) no rinde si no queda partida;
+                // uno que no vas a poder pagar antes del final tampoco.
+                var timing = 0.0;
+                if (HasStackingInvestment(c.Item) || _config.SnowballItemIds.Contains(c.Item.Id))
+                {
+                    var late = 1 - Fuzzy.Ramp(remaining, _config.StackingPayoffFoot, _config.StackingPayoffShoulder);
+                    if (late > 0)
+                    {
+                        timing += _config.StackingLateMag * late;
+                        c.Reasons.Add("little game left for it to stack");
+                    }
+                }
+                var secondsToAfford = Math.Max(0, plan.RemainingCost - projectedGold) / Math.Max(income, 0.1);
+                var unreachable = Fuzzy.Ramp(secondsToAfford / Math.Max(remaining, 1), 1.0, 2.0);
+                if (unreachable > 0)
+                {
+                    timing += _config.UnreachableMag * unreachable;
+                    c.Reasons.Add("hard to afford before the game ends");
+                }
+
+                var score = c.Score + afford + incumbent + spineBonus + situationalBoost + personalBonus - timing;
                 return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan,
-                    Breakdown: c.Breakdown with { Affordability = afford, Hysteresis = incumbent, Meta = spineBonus });
+                    Breakdown: c.Breakdown with
+                    {
+                        Affordability = afford, Hysteresis = incumbent,
+                        Meta = spineBonus + situationalBoost, Personal = personalBonus, Timing = timing,
+                    },
+                    Arena: arena);
             })
             .OrderByDescending(c => c.Score)
             .ToList();
@@ -339,10 +401,35 @@ public sealed partial class ItemAdvisor
         var takenExclusiveGroups = new HashSet<int>();
         var gwTaken = false;
         var topScore = 0.0;
-        foreach (var (item, score, reasons, category, plan, breakdown) in ranked)
+        // Selección MARGINAL: el 2.º y 3.er slot se eligen por lo que agregan a los ya
+        // elegidos, no por su puntaje aislado — dos muros de armadura contra un equipo mixto
+        // dejan la RM sin cubrir aunque ambos puntúen alto. La penalización de cobertura
+        // descuenta la fracción del bono situacional que un slot elegido ya cubre.
+        var pool = ranked.ToList();
+        while (pool.Count > 0 && recommendations.Count < _config.MaxRecommendations)
         {
-            if (recommendations.Count >= _config.MaxRecommendations)
-                break;
+            var bestIdx = 0;
+            var bestAdjusted = double.NegativeInfinity;
+            var bestCoverage = 0.0;
+            for (var i = 0; i < pool.Count; i++)
+            {
+                var coverage = CoveragePenalty(pool[i].Item, pool[i].Breakdown, pool[i].Arena, recommendations);
+                var adjusted = pool[i].Score - coverage;
+                if (adjusted > bestAdjusted)
+                {
+                    bestAdjusted = adjusted;
+                    bestIdx = i;
+                    bestCoverage = coverage;
+                }
+            }
+            var (item, _, reasons, category, plan, rawBreakdown, _) = pool[bestIdx];
+            pool.RemoveAt(bestIdx);
+            var score = bestAdjusted;
+            var breakdown = bestCoverage > 0
+                ? rawBreakdown with { Penalty = rawBreakdown.Penalty + bestCoverage }
+                : rawBreakdown;
+            if (bestCoverage > 0.5)
+                reasons.Add("overlaps a slot above (less marginal value)");
             // Chequeos PUROS primero; el estado (nombre/grupo/pasivas/GW) se marca recién
             // cuando el item pasa TODAS las puertas — un item salteado (p.ej. un segundo
             // item de Heridas Graves) no debe envenenar el grupo excluyente de los que
@@ -702,6 +789,51 @@ public sealed partial class ItemAdvisor
                 AddBuildTree(componentId, owned);
     }
 
+    /// <summary>
+    /// Cuánto del bono situacional del candidato ya lo cubre un slot elegido: misma
+    /// resistencia (armadura/RM), mismo muro de vida pura o misma penetración. Fracción
+    /// configurable (<see cref="ItemsConfig.CoverageOverlapPenalty"/>); dentro de la arena
+    /// del espinazo el bono situacional pesa (1 + SpineSituationalWeight), así que la
+    /// penalización escala igual para descontar lo mismo que se acreditó.
+    /// </summary>
+    private double CoveragePenalty(StaticItem item, ItemScoreBreakdown breakdown, bool arena,
+        IReadOnlyList<ItemRecommendation> chosen)
+    {
+        if (chosen.Count == 0 || _config.CoverageOverlapPenalty <= 0)
+            return 0;
+        var mult = arena ? 1 + _config.SpineSituationalWeight : 1;
+        double penalty = 0;
+        if (breakdown.Defense > 0)
+        {
+            var dims = DefenseDims(item);
+            if (dims.Count > 0)
+            {
+                var covered = dims.Count(d => chosen.Any(r => DefenseDims(r.Item).Contains(d)));
+                penalty += _config.CoverageOverlapPenalty * breakdown.Defense * mult * covered / dims.Count;
+            }
+        }
+        if (breakdown.Offense > 0)
+        {
+            var pen = item.HasTag("ArmorPenetration") ? "ArmorPenetration"
+                : item.HasTag("MagicPenetration") ? "MagicPenetration" : null;
+            // La ofensa mezcla pen con anti-heal/anti-tank: se descuenta la mitad, no todo.
+            if (pen is not null && chosen.Any(r => r.Item.HasTag(pen)))
+                penalty += 0.5 * _config.CoverageOverlapPenalty * breakdown.Offense * mult;
+        }
+        return penalty;
+    }
+
+    /// <summary>Dimensiones defensivas que cubre un item: Armor, SpellBlock o vida pura (muro de HP).</summary>
+    private static List<string> DefenseDims(StaticItem item)
+    {
+        var dims = new List<string>(2);
+        if (item.HasTag("Armor")) dims.Add("Armor");
+        if (item.HasTag("SpellBlock")) dims.Add("SpellBlock");
+        if (dims.Count == 0 && item.HasTag("Health") && !HasAd(item) && !HasAp(item))
+            dims.Add("Health");
+        return dims;
+    }
+
     // --- Puntaje de un item ---
 
     /// <summary>
@@ -758,6 +890,8 @@ public sealed partial class ItemAdvisor
         // La letalidad NO responde a la armadura apilada (pen plana): solo el %pen.
         // La pen % es multiplicativa con tu daño crudo (need.Pen*): con poco AD/AP rinde menos.
         // Si el enemigo todavía no apiló, un equipo aliado casi mono-tipo la pre-valúa (lo van a hacer).
+        // Si todavía no apiló: lo que su build meta dice que VA a comprar (proyección, a peso
+        // reducido) o, sin stats enemigas, un equipo aliado casi mono-tipo. Gana el mayor.
         if (me.DealsPhysical && item.HasTag("ArmorPenetration") && !item.HasLethality)
         {
             if (threat.ArmorStack > MuGate)
@@ -765,10 +899,20 @@ public sealed partial class ItemAdvisor
                 offense += PenMag * threat.ArmorStack * need.PenPhysical;
                 reasons.Add($"enemies already bought {threat.EnemyBonusArmor:0} armor");
             }
-            else if (need.AllyPhysical > MuGate)
+            else
             {
-                offense += AllyPenMag * need.AllyPhysical * need.PenPhysical;
-                reasons.Add("your team is mostly AD: expect stacked armor");
+                var projected = PenMag * _config.ProjectionWeight * threat.ProjectedArmorStack * need.PenPhysical;
+                var ally = AllyPenMag * need.AllyPhysical * need.PenPhysical;
+                if (threat.ProjectedArmorStack > MuGate && projected >= ally)
+                {
+                    offense += projected;
+                    reasons.Add($"{threat.ProjectedArmorNames} will stack armor (their usual build)");
+                }
+                else if (need.AllyPhysical > MuGate)
+                {
+                    offense += ally;
+                    reasons.Add("your team is mostly AD: expect stacked armor");
+                }
             }
         }
         if (me.DealsMagical && item.HasTag("MagicPenetration"))
@@ -778,10 +922,20 @@ public sealed partial class ItemAdvisor
                 offense += PenMag * threat.MrStack * need.PenMagical;
                 reasons.Add($"enemies already bought {threat.EnemyBonusMr:0} magic resist");
             }
-            else if (need.AllyMagical > MuGate)
+            else
             {
-                offense += AllyPenMag * need.AllyMagical * need.PenMagical;
-                reasons.Add("your team is mostly AP: expect stacked magic resist");
+                var projected = PenMag * _config.ProjectionWeight * threat.ProjectedMrStack * need.PenMagical;
+                var ally = AllyPenMag * need.AllyMagical * need.PenMagical;
+                if (threat.ProjectedMrStack > MuGate && projected >= ally)
+                {
+                    offense += projected;
+                    reasons.Add($"{threat.ProjectedMrNames} will stack magic resist (their usual build)");
+                }
+                else if (need.AllyMagical > MuGate)
+                {
+                    offense += ally;
+                    reasons.Add("your team is mostly AP: expect stacked magic resist");
+                }
             }
         }
 
@@ -914,7 +1068,9 @@ public sealed partial class ItemAdvisor
 
         // Devaluaciones: robo de vida si el enemigo YA compró anti-curación, y
         // letalidad contra un equipo gordo (la pen plana se diluye contra armadura alta).
-        var penalty = LifestealDevalMag * threat.EnemyAntiHeal * SustainTagWeight(item, weights)
+        // Anti-heal enemigo: el que ya compró o, a peso reducido, el que su build meta trae.
+        var enemyAntiHeal = Math.Max(threat.EnemyAntiHeal, _config.ProjectionWeight * threat.ProjectedEnemyAntiHeal);
+        var penalty = LifestealDevalMag * enemyAntiHeal * SustainTagWeight(item, weights)
             + (item.HasLethality
                 ? LethalityDevalMag * threat.EnemyTankiness * weights.GetValueOrDefault("ArmorPenetration")
                 : 0);

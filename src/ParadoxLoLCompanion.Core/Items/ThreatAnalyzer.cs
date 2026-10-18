@@ -1,6 +1,7 @@
 using ParadoxLoLCompanion.Core.Config;
 using ParadoxLoLCompanion.Core.DataDragon;
 using ParadoxLoLCompanion.Core.Models;
+using ParadoxLoLCompanion.Core.Stats;
 
 namespace ParadoxLoLCompanion.Core.Items;
 
@@ -28,7 +29,13 @@ public sealed class ThreatAnalyzer
         _profiler = profiler ?? new ChampionProfiler(data, _config);
     }
 
-    public TeamThreat Analyze(GameState state)
+    /// <param name="enemyStats">
+    /// Stats de op.gg por <c>StaticChampion.Key</c> de cada enemigo (opcional). Con ellas,
+    /// el análisis PROYECTA lo que cada enemigo todavía va a comprar según su build habitual
+    /// (resistencias, anti-curación) en vez de esperar a que lo compre: al minuto 3 el
+    /// inventario enemigo no dice nada, su build meta sí.
+    /// </param>
+    public TeamThreat Analyze(GameState state, IReadOnlyDictionary<string, ChampionBuildStats>? enemyStats = null)
     {
         var me = state.ActivePlayerEntry;
         if (me is null || string.IsNullOrEmpty(me.Team))
@@ -45,6 +52,7 @@ public sealed class ThreatAnalyzer
         var sustainThr = isAram
             ? _config.SustainThreshold * _config.AramSustainThresholdFactor
             : _config.SustainThreshold;
+        var mapNumber = isAram ? 12 : state.GameData.MapNumber == 0 ? 11 : state.GameData.MapNumber;
 
         // Línea base del equipo enemigo: los pesos se miden RELATIVOS a su nivel/CS
         // promedio, para que el crecimiento compartido de late game no infle todos los
@@ -75,6 +83,9 @@ public sealed class ThreatAnalyzer
         double bonusArmor = 0, bonusMr = 0, bonusHealth = 0;
         double critSum = 0, gwHolderW = 0, pctHpTrueW = 0, hardEngageW = 0, heavyCcW = 0;
         double suppressorW = 0, shieldW = 0;
+        double projArmor = 0, projMr = 0, projGwW = 0;
+        var projArmorBy = new List<(string Name, double Armor)>();
+        var projMrBy = new List<(string Name, double Mr)>();
         double topW = 0, minW = double.MaxValue, topPhysW = 0, topMagW = 0, topSustainW = 0, topBurstW = 0;
         string? topName = null, topPhys = null, topMag = null, topSustain = null, topBurst = null;
         var burstDamage = DamageProfile.Mixed;
@@ -119,6 +130,35 @@ public sealed class ThreatAnalyzer
             var gwDeg = Math.Max(holdsGw ? 1.0 : 0.0, HasSpell(enemy, "SummonerDot") ? 0.5 : 0.0);
             if (gwDeg > 0)
                 gwHolderW += w * gwDeg;
+
+            // Proyección: los próximos slots de SU build meta que todavía no compró. El
+            // rango decae (el próximo item es casi seguro; el tercero, menos). Solo suma lo
+            // que no tiene: a medida que compra, la proyección se vacía y manda lo real.
+            if (champ is not null && _config.ProjectionDepth > 0 && enemyStats is not null
+                && enemyStats.TryGetValue(champ.Key, out var enemyBuild) && enemyBuild is not null)
+            {
+                var ownedIds = enemy.Items.Select(i => i.ItemID).ToList();
+                var completed = ownedIds.Select(_data.ItemById)
+                    .Count(i => i is { BuildsIntoSomething: false, IsBoots: false }
+                                && i.GoldTotal >= _config.MinCompletedItemGold);
+                var spine = MetaSpine.Build(_data, _config, enemyBuild, mapNumber,
+                    MetaSpine.OwnedTree(_data, ownedIds), completed);
+                double ea = 0, em = 0, gwProj = 0;
+                foreach (var slot in spine.Take(_config.ProjectionDepth))
+                {
+                    var rankW = Math.Pow(_config.ProjectionRankDecay, slot.Rank);
+                    ea += slot.Item.Armor * rankW;
+                    em += slot.Item.SpellBlock * rankW;
+                    if (slot.Item.AppliesGrievousWounds)
+                        gwProj = Math.Max(gwProj, rankW);
+                }
+                projArmor += ea;
+                projMr += em;
+                if (ea > 0) projArmorBy.Add((enemy.ChampionName, ea));
+                if (em > 0) projMrBy.Add((enemy.ChampionName, em));
+                if (!holdsGw && gwProj > 0)
+                    projGwW += w * gwProj;
+            }
 
             // Split de daño: prior del kit mezclado con lo que REALMENTE compró. Un "Mixed"
             // que fue full-AP deja de contar 50/50; un kit sesgado se corrige menos (tope 0.5
@@ -276,7 +316,25 @@ public sealed class ThreatAnalyzer
             ShieldThreat = Ratio(shieldW, totalW, 0.15, 0.5),
             AvgEnemyWeight = avgW,
             MyWeight = Weight(me, avgLevel, avgCs),
+
+            // --- Proyección de la build enemiga (mismas rampas que lo comprado) ---
+            ProjectedBonusArmor = projArmor,
+            ProjectedBonusMr = projMr,
+            ProjectedArmorStack = Fuzzy.Ramp(projArmor,
+                _config.ArmorStackThreshold * 0.5, _config.ArmorStackThreshold * 1.5),
+            ProjectedMrStack = Fuzzy.Ramp(projMr,
+                _config.MrStackThreshold * 0.5, _config.MrStackThreshold * 1.5),
+            ProjectedEnemyAntiHeal = Ratio(projGwW, totalW, 0.05, 0.35),
+            ProjectedArmorNames = TopNames(projArmorBy.Select(x => (x.Name, x.Armor))),
+            ProjectedMrNames = TopNames(projMrBy.Select(x => (x.Name, x.Mr))),
         };
+    }
+
+    /// <summary>Los dos mayores aportantes, "A and B" (o "A"), para una razón legible.</summary>
+    private static string? TopNames(IEnumerable<(string Name, double Value)> by)
+    {
+        var top = by.OrderByDescending(x => x.Value).Select(x => x.Name).Take(2).ToList();
+        return top.Count == 0 ? null : string.Join(" and ", top);
     }
 
     /// <summary>Rampa sobre la fracción de la amenaza ponderada que cumple una condición.</summary>

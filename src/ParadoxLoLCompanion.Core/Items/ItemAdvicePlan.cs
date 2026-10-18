@@ -54,9 +54,11 @@ public sealed record BootsAdvice(StaticItem Boots, string Reason, PurchasePlan P
 
 /// <summary>Score channels after caps and nudges; penalties are subtracted from the total.</summary>
 public sealed record ItemScoreBreakdown(double Core, double Offense, double Defense, double Prior, double Penalty,
-    double Affordability = 0, double Hysteresis = 0, double Meta = 0)
+    double Affordability = 0, double Hysteresis = 0, double Meta = 0, double Personal = 0, double Timing = 0)
 {
-    public double Total => Core + Offense + Defense + Prior - Penalty + Affordability + Hysteresis + Meta;
+    /// <param name="Personal">Bono por tu propio historial con el campeón (diario).</param>
+    /// <param name="Timing">Penalización por reloj: no queda tiempo para apilar / para pagarlo.</param>
+    public double Total => Core + Offense + Defense + Prior - Penalty + Affordability + Hysteresis + Meta + Personal - Timing;
 }
 
 /// <summary>Sugerencia de venta: un item ya comprado que dejó de ser coherente con la build.</summary>

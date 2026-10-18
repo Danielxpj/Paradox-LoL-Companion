@@ -18,12 +18,16 @@ public sealed class ItemRecommendationRule : IAdviceRule
     private readonly ItemAdvisor _advisor;
     private readonly Func<BuildArchetype?>? _forcedArchetype;
     private readonly Func<ChampionBuildStats?>? _statsProvider;
+    private readonly Func<IReadOnlyDictionary<string, ChampionBuildStats>?>? _enemyStatsProvider;
+    private readonly Func<PersonalBuildPrior?>? _personalProvider;
     private IReadOnlyList<int>? _previousTopIds;
 
     public ItemRecommendationRule(IStaticData data, ItemsConfig? config = null,
         Func<BuildArchetype?>? forcedArchetype = null,
-        Func<ChampionBuildStats?>? statsProvider = null)
-        : this(new ItemAdvisor(data, config), forcedArchetype, statsProvider)
+        Func<ChampionBuildStats?>? statsProvider = null,
+        Func<IReadOnlyDictionary<string, ChampionBuildStats>?>? enemyStatsProvider = null,
+        Func<PersonalBuildPrior?>? personalProvider = null)
+        : this(new ItemAdvisor(data, config), forcedArchetype, statsProvider, enemyStatsProvider, personalProvider)
     {
     }
 
@@ -35,18 +39,25 @@ public sealed class ItemRecommendationRule : IAdviceRule
     /// Provider de las stats de op.gg cacheadas (se lee en cada tick): sin esto el feed
     /// pierde el prior estadístico y la regla "las botas meta mandan" no rige en el feed.
     /// </param>
+    /// <param name="enemyStatsProvider">Stats de op.gg de los enemigos (por key de campeón): proyección de su build.</param>
+    /// <param name="personalProvider">Tu historial de compras por campeón (diarios).</param>
     public ItemRecommendationRule(ItemAdvisor advisor,
         Func<BuildArchetype?>? forcedArchetype = null,
-        Func<ChampionBuildStats?>? statsProvider = null)
+        Func<ChampionBuildStats?>? statsProvider = null,
+        Func<IReadOnlyDictionary<string, ChampionBuildStats>?>? enemyStatsProvider = null,
+        Func<PersonalBuildPrior?>? personalProvider = null)
     {
         _advisor = advisor;
         _forcedArchetype = forcedArchetype;
         _statsProvider = statsProvider;
+        _enemyStatsProvider = enemyStatsProvider;
+        _personalProvider = personalProvider;
     }
 
     public IEnumerable<AdviceItem> Evaluate(GameState state)
     {
-        var plan = _advisor.Advise(state, _forcedArchetype?.Invoke(), _statsProvider?.Invoke(), _previousTopIds);
+        var plan = _advisor.Advise(state, _forcedArchetype?.Invoke(), _statsProvider?.Invoke(), _previousTopIds,
+            _enemyStatsProvider?.Invoke(), _personalProvider?.Invoke());
         _previousTopIds = plan?.Recommendations.Select(r => r.Item.Id).ToList();
         if (plan is null)
             yield break;

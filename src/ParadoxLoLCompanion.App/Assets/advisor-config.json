@@ -17,6 +17,34 @@
     "replacementLossPenalty": 0.5,
     "replacementCoreMargin": 1.0,
     "replacementProtectedItemIds": [3031, 3089, 3124, 3084],
+
+    // v6 — enemy build projection (what each enemy WILL buy, from their OP.GG core build).
+    "projectionDepth": 3,
+    "projectionRankDecay": 0.7,
+    "projectionWeight": 0.6,
+    // v6 — reactive spine: extra weight of the clean situational bonus inside the meta spine,
+    // so a clear damage skew reorders the meta's defensive items (1.0 = one full wall jumps a rank).
+    "spineSituationalWeight": 1.0,
+    // v6 — coverage: fraction of a repeated defensive/penetration bonus discounted on slots 2-3.
+    "coverageOverlapPenalty": 0.6,
+    // v6 — game clock: expected length, lead/inhibitor shortening, income, stacking/unreachable discounts.
+    "aramExpectedGameSeconds": 1200,
+    "riftExpectedGameSeconds": 1800,
+    "leadShortensGame": 0.3,
+    "minRemainingSeconds": 180,
+    "inhibitorRemainingSeconds": 240,
+    "inhibitorRecencySeconds": 300,
+    "aramIncomeGoldPerSecond": 5.0,
+    "riftIncomeGoldPerSecond": 6.5,
+    "stackingLateMag": 8.0,
+    "stackingPayoffFoot": 180,
+    "stackingPayoffShoulder": 600,
+    "unreachableMag": 4.0,
+    // v6 — personal prior from your own journals (%LocalAppData%\ParadoxLoLCompanion\journal).
+    "personalPriorMinGames": 3,
+    "personalPriorMag": 6.0,
+    "personalPriorFoot": 0.3,
+    "personalPriorShoulder": 0.8,
     "sustainTags": ["LifeSteal", "SpellVamp", "Omnivamp"],
     "excludeItemTags": ["Boots", "Trinket", "GoldPer"],
 
