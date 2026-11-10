@@ -46,6 +46,20 @@ public sealed partial class ItemAdvisor
             .Select(i => MetaSpine.NormalizedName(i.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var boughtCrit = originalIds.Sum(id => _data.ItemById(id)?.CritChance ?? 0);
         var critMultiplier = boughtCrit > 0 ? Math.Max(1, currentCrit / boughtCrit) : 1;
+        // Gates that do not depend on which slot is sold: evaluated once per candidate
+        // instead of once per (slot, candidate) pair. Pool order is kept for tie-breaks.
+        var eligible = candidates.Where(candidate =>
+                !originalTree.Contains(candidate.Id)
+                && !originalNames.Contains(MetaSpine.NormalizedName(candidate.Name))
+                && candidate.Purchasable && !candidate.IsBoots && !candidate.Consumable
+                && !HasStackingInvestment(candidate) && !_config.SnowballItemIds.Contains(candidate.Id))
+            .ToList();
+        var exclusiveGroups = _config.ExclusiveItemGroups
+            .Select(group => (Ids: (IReadOnlyCollection<int>)group,
+                Names: group.Select(_data.ItemById).OfType<StaticItem>()
+                    .Select(i => MetaSpine.NormalizedName(i.Name))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase)))
+            .ToList();
         ItemRecommendation? best = null;
 
         foreach (var slot in me.Items.Where(i => i.Slot is >= 0 and <= 5))
@@ -75,13 +89,9 @@ public sealed partial class ItemAdvisor
             var margin = saleLoss / 1000.0 * _config.ReplacementLossPenalty
                 + (coreNames.Contains(MetaSpine.NormalizedName(old.Name)) ? _config.ReplacementCoreMargin : 0);
 
-            foreach (var candidate in candidates)
+            foreach (var candidate in eligible)
             {
-                if (originalTree.Contains(candidate.Id)
-                    || originalNames.Contains(MetaSpine.NormalizedName(candidate.Name))
-                    || !candidate.Purchasable || candidate.IsBoots || candidate.Consumable
-                    || HasStackingInvestment(candidate) || _config.SnowballItemIds.Contains(candidate.Id)
-                    || !ReplacementFitsInventory(candidate, retained)
+                if (!ReplacementFitsInventory(candidate, retained, exclusiveGroups)
                     || LosesRequiredCoverage(old, candidate, retained, threat, profile))
                     continue;
 
@@ -136,16 +146,15 @@ public sealed partial class ItemAdvisor
             || _config.ItemEvolutions.ContainsValue(item.Id);
     }
 
-    private bool ReplacementFitsInventory(StaticItem candidate, IReadOnlyList<StaticItem> retained)
+    private bool ReplacementFitsInventory(StaticItem candidate, IReadOnlyList<StaticItem> retained,
+        IReadOnlyList<(IReadOnlyCollection<int> Ids, HashSet<string> Names)> exclusiveGroups)
     {
         if (BlockedByOwnedPassive(candidate, retained)
             || (candidate.AppliesGrievousWounds && retained.Any(i => i.AppliesGrievousWounds)))
             return false;
-        foreach (var group in _config.ExclusiveItemGroups)
+        foreach (var (ids, names) in exclusiveGroups)
         {
-            var names = group.Select(_data.ItemById).OfType<StaticItem>()
-                .Select(i => MetaSpine.NormalizedName(i.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            bool InGroup(StaticItem item) => group.Contains(item.Id)
+            bool InGroup(StaticItem item) => ids.Contains(item.Id)
                 || names.Contains(MetaSpine.NormalizedName(item.Name));
             if (InGroup(candidate) && retained.Any(InGroup))
                 return false;

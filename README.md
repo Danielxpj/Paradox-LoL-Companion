@@ -307,10 +307,15 @@ Two dampeners make the defense math honest:
 **Category & priority.** The score decomposition explains itself: if situational bonuses
 are under 20% of the score, the item is **Core** (recommended for fit); otherwise the
 dominant component labels it **Defense** or **Counter**. A Core item you can afford *right
-now* upgrades to **Spike**. Priority = `score / topScore`, shown as a % match. Finally,
-affordable items get a ranking boost (×1.15 on the Rift, stronger in ARAM where you buy
-on respawn), only one Grievous Wounds item may appear (the effect doesn't stack), and
-duplicate catalog ids are deduped by name.
+now* upgrades to **Spike**. The **% match** on each card is its score relative to the top
+card, never higher than the card above it. When the meta spine (§5) is seeding the order,
+the percentage is read on its own scale — a meta slot keeps only its buy-order credit and
+a non-meta item queues right behind the remaining meta slots — so it still reflects
+buy-order distance plus live merit instead of flattening to ~99%. Finally, affordable
+items get an additive ranking boost that eases in as your gold approaches the remaining
+cost (stronger in ARAM, where you buy on respawn), only one Grievous Wounds item may
+appear (the effect doesn't stack), and duplicate catalog ids are deduped by name
+("The Black Cleaver" and "Black Cleaver" count as the same item).
 
 **Ownership that understands upgrades.** "Already owned" walks the whole build tree: if
 you hold a transformed or Masterwork item whose id differs from its base (Muramana, Ornn
@@ -343,6 +348,16 @@ Sample-size and win-rate ramps keep noisy low-game data from mattering. A config
 bridges item **evolutions** (OP.GG records Muramana; the shop sells Manamune) since Data
 Dragon doesn't link them. The reason string is data-honest: *"bought in 31% of Ahri
 builds (52% WR)"*.
+
+**The meta spine.** The additive prior alone could not lift a real core item whose tags
+undersell it (Heartsteel is the tank core and scores a low tag fit), so when stats exist
+`MetaSpine` turns them into an ordered list of buyable slots — core first, then the
+4th/5th/6th candidates — and that list **seeds the ranking**: every remaining meta slot
+ranks ahead of non-meta items, in meta buy order. The fuzzy score still acts inside it: a
+situational difference larger than one slot reorders the spine, and a non-meta counter
+whose situational merit clears a high gate (a full defensive wall, a needed cleanse, or
+anti-heal against extreme sustain) competes for the last card shown. Without stats the
+spine is empty and the ranking is the pure fuzzy score.
 
 **v6 additions on top of the spine:**
 
@@ -394,11 +409,13 @@ The same planner powers the boots advice and the "shop open while dead" ARAM ale
 - **Sell suggestions** (max 2): finished items whose fit for *your* archetype is below
   50% of their fit for the archetype that best explains them ("mage item — doesn't fit
   your tank build") — with situational keep-guards so it never tells you to sell active
-  anti-heal, cleanse, shield-break or a needed resistance. If selling funds your top
-  recommendation, it says so.
+  anti-heal, cleanse, tenacity, shield-break, anti-crit or a needed resistance. The
+  guards read the same fuzzy threat degrees as the scorer, so an item is never scored up
+  and suggested for sale at once. If selling funds your top recommendation, it says so.
 - **ARAM starter** — in the opening window with an empty inventory, the best-fitting
   starter from the map's actual starter pool (Data Dragon tag `Lane`), stats-informed.
-- **Late tips** — build complete + spare gold → your archetype's elixir; Rift past 8 min
+- **Late tips** — build complete (six *finished* items, not just six occupied slots) +
+  spare gold → your archetype's elixir; Rift past 8 min
   without a Control Ward in inventory → reminder. Small things every coach nags about
   and no companion app tracks.
 - **Full inventory** — recommendations you literally have no slot for are flagged
@@ -407,7 +424,7 @@ The same planner powers the boots advice and the "shop open while dead" ARAM ale
 - **Full-build replacements** — with six finished items (including boots), compares
   keeping each eligible item with replacing it against the current enemy threats.
   Shows one concrete swap with the item to sell, the replacement, reasons, refund,
-  net cost and missing gold in the dashboard, overlay and advice feed. If gold is
+  net cost and missing gold in the dashboard, the overlay and the shop item set. If gold is
   short, it says to keep the current item until the entire replacement is affordable.
   No clear improvement means "keep your current items".
 
@@ -543,6 +560,7 @@ and descriptions on your machine (it soft-skips if you have no cache yet).
   API — the tracker reads them from the screen (Windows OCR) instead, best-effort:
   needs Borderless/Windowed, ≥ 2 recognized names, and degrades to the Blitz
   cheat-sheet when it can't see the cards.
-- OP.GG stats are a *prior*, never a verdict: low-sample data is ramped toward zero, and
-  live-game counters can always outscore the meta pick.
+- OP.GG stats lead the build order when they exist (the meta spine, §5): low-sample data
+  is ramped toward zero, live threats reorder the meta slots, and a severe enough counter
+  can take the last card — but a mild counter will not displace a meta core item.
 - Design documents for each engine iteration live in [`docs/superpowers/specs/`](docs/superpowers/specs/).

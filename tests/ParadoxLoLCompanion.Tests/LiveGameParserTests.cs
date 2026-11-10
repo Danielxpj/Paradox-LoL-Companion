@@ -129,4 +129,27 @@ public class LiveGameParserTests
         Assert.NotNull(state.ActivePlayerEntry);
         Assert.Equal("Ahri", state.ActivePlayerEntry!.ChampionName);
     }
+
+    [Fact]
+    public void Parse_NormalizesNullChampionStatsAndNullListEntries()
+    {
+        // The item advisor dereferences the live stats and walks both lists every tick:
+        // an explicit null in any of them must not reach it.
+        const string json = """
+        {
+          "activePlayer": { "riotId": "Faker#KR1", "championStats": null },
+          "allPlayers": [
+            null,
+            { "riotId": "Faker#KR1", "championName": "Ahri", "items": [ null, { "itemID": 1056, "slot": 0 } ] }
+          ],
+          "gameData": { "gameTime": 60.0 }
+        }
+        """;
+        var state = LiveGameParser.Parse(json);
+
+        Assert.NotNull(state.ActivePlayer!.ChampionStats);
+        var player = Assert.Single(state.AllPlayers);
+        var item = Assert.Single(player.Items);
+        Assert.Equal(1056, item.ItemID);
+    }
 }

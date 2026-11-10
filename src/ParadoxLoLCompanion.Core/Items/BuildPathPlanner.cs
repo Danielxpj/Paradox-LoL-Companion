@@ -23,10 +23,7 @@ public static class BuildPathPlanner
     public static PurchasePlan Plan(IStaticData data, StaticItem target, IEnumerable<int> ownedItemIds, double gold,
         IReadOnlyCollection<int>? stackingComponentIds = null)
     {
-        // Multiconjunto: cada item del inventario solo puede descontar una vez.
-        var owned = new Dictionary<int, int>();
-        foreach (var id in ownedItemIds)
-            owned[id] = owned.GetValueOrDefault(id) + 1;
+        var owned = OwnedCounts(ownedItemIds);
 
         // RemainingCost consume del multiconjunto: se sondea sobre una copia.
         var remaining = RemainingCost(data, target, new Dictionary<int, int>(owned));
@@ -44,6 +41,27 @@ public static class BuildPathPlanner
         var next = BestAffordable(data, target, owned, gold);
         return new PurchasePlan(target, remaining, next?.Item, next?.Cost ?? 0);
     }
+
+    /// <summary>
+    /// The inventory as a multiset (item id → copies): each owned copy can discount a
+    /// recipe only once. Build it once and reuse it across <see cref="RemainingCostFor"/>.
+    /// </summary>
+    public static Dictionary<int, int> OwnedCounts(IEnumerable<int> ownedItemIds)
+    {
+        var owned = new Dictionary<int, int>();
+        foreach (var id in ownedItemIds)
+            owned[id] = owned.GetValueOrDefault(id) + 1;
+        return owned;
+    }
+
+    /// <summary>
+    /// Gold still to spend to finish <paramref name="target"/> — the same figure as
+    /// <see cref="PurchasePlan.RemainingCost"/>, without working out what to buy next.
+    /// Ranking a whole item pool only needs this; <paramref name="ownedCounts"/> is not modified.
+    /// </summary>
+    public static int RemainingCostFor(IStaticData data, StaticItem target,
+        IReadOnlyDictionary<int, int> ownedCounts) =>
+        RemainingCost(data, target, new Dictionary<int, int>(ownedCounts));
 
     /// <summary>
     /// El primer componente que acumula del árbol de <paramref name="item"/> que todavía no

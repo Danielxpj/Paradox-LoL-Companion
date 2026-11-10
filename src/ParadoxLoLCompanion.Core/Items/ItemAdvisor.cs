@@ -154,6 +154,9 @@ public sealed partial class ItemAdvisor
         var slotItemIds = new HashSet<int>(me.Items
             .Where(i => i.Slot is >= 0 and <= 5)
             .Select(i => i.ItemID));
+        // Six FINISHED items, not merely six occupied slots: only then do the swap
+        // analysis and the "build complete" tips apply.
+        var fullBuild = IsFullBuild(me);
 
         // "Ya lo tengo" incluye el árbol de construcción de lo que llevo: si tengo una
         // mejora/transformación (Muramana, item Obra Maestra de Ornn…), su item base y
@@ -163,11 +166,12 @@ public sealed partial class ItemAdvisor
             AddBuildTree(id, owned);
 
         // El catálogo trae items duplicados con distinto id (variantes por modo/época):
-        // también se excluye por NOMBRE lo que ya llevas puesto.
+        // también se excluye por NOMBRE lo que ya llevas puesto. Normalized, so the
+        // "The Black Cleaver" / "Black Cleaver" twins count as the same item.
         var ownedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var id in ownedIds)
             if (_data.ItemById(id) is { } ownedItem)
-                ownedNames.Add(ownedItem.Name);
+                ownedNames.Add(MetaSpine.NormalizedName(ownedItem.Name));
 
         // Grupos "límite de 1" que ddragon no expone (el trío de pen mágica del Vacío no
         // comparte ni pasiva ni componente): vienen explícitos de la config. La membresía
@@ -175,14 +179,15 @@ public sealed partial class ItemAdvisor
         var exclusiveGroups = _config.ExclusiveItemGroups
             .Select(g => (Ids: new HashSet<int>(g),
                 Names: new HashSet<string>(
-                    g.Select(id => _data.ItemById(id)?.Name).OfType<string>(),
+                    g.Select(id => _data.ItemById(id)?.Name).OfType<string>()
+                        .Select(MetaSpine.NormalizedName),
                     StringComparer.OrdinalIgnoreCase)))
             .ToList();
         int ExclusiveGroupOf(StaticItem item)
         {
             for (var g = 0; g < exclusiveGroups.Count; g++)
                 if (exclusiveGroups[g].Ids.Contains(item.Id)
-                    || exclusiveGroups[g].Names.Contains(item.Name))
+                    || exclusiveGroups[g].Names.Contains(MetaSpine.NormalizedName(item.Name)))
                     return g;
             return -1;
         }
@@ -215,7 +220,7 @@ public sealed partial class ItemAdvisor
 
         // Crítico actual: el dato vivo del juego si está (incluye pasivas tipo Yasuo
         // y runas); si falta (replays/datos viejos), la suma del crítico comprado.
-        var liveCrit = state.ActivePlayer?.ChampionStats.CritChance ?? 0;
+        var liveCrit = state.ActivePlayer?.ChampionStats?.CritChance ?? 0;
         if (liveCrit > 1)
             liveCrit /= 100;
         var currentCrit = Math.Max(liveCrit,
@@ -284,9 +289,16 @@ public sealed partial class ItemAdvisor
         var scored = new List<(StaticItem Item, double Score, List<string> Reasons,
             RecommendationCategory Category, double Situational, ItemScoreBreakdown Breakdown)>();
 
-        foreach (var item in candidatePool)
+        // A full build is answered by the swap analysis below, which replaces this
+        // ranking entirely: do not score and plan the whole pool just to discard it.
+        var purchasePool = fullBuild ? Array.Empty<StaticItem>() : (IReadOnlyList<StaticItem>)candidatePool;
+        // Owned multiset built once: every candidate only needs its remaining cost to be
+        // ranked; the full purchase plan is built later, for the cards actually shown.
+        var ownedCounts = BuildPathPlanner.OwnedCounts(ownedIds);
+
+        foreach (var item in purchasePool)
         {
-            if (owned.Contains(item.Id) || ownedNames.Contains(item.Name))
+            if (owned.Contains(item.Id) || ownedNames.Contains(MetaSpine.NormalizedName(item.Name)))
                 continue;
             if (BlockedByOwnedPassive(item, ownedWithPassives))
                 continue;
@@ -315,11 +327,11 @@ public sealed partial class ItemAdvisor
         var ranked = scored
             .Select(c =>
             {
-                var plan = BuildPathPlanner.Plan(_data, c.Item, ownedIds, gold, _config.StackingComponentIds);
+                var remainingCost = BuildPathPlanner.RemainingCostFor(_data, c.Item, ownedCounts);
                 // Empujón aditivo continuo en oro: entra gradual entre 0.5·faltante y el
                 // faltante, en vez del salto multiplicativo ×1.25 que flipeaba el orden al
                 // cruzar cada umbral de compra (la mayor discontinuidad que quedaba en v3).
-                var afford = affordMag * Fuzzy.Ramp(projectedGold, 0.5 * plan.RemainingCost, plan.RemainingCost);
+                var afford = affordMag * Fuzzy.Ramp(projectedGold, 0.5 * remainingCost, remainingCost);
                 // Histéresis: un pequeño bono al que ya estaba en el top el tick anterior,
                 // para que dos items casi empatados no intercambien rank con cada twitch de
                 // input (la "lista que tiembla"). Muy por debajo de cualquier counter.
@@ -375,7 +387,7 @@ public sealed partial class ItemAdvisor
                         c.Reasons.Add("little game left for it to stack");
                     }
                 }
-                var secondsToAfford = Math.Max(0, plan.RemainingCost - projectedGold) / Math.Max(income, 0.1);
+                var secondsToAfford = Math.Max(0, remainingCost - projectedGold) / Math.Max(income, 0.1);
                 var unreachable = Fuzzy.Ramp(secondsToAfford / Math.Max(remaining, 1), 1.0, 2.0);
                 if (unreachable > 0)
                 {
@@ -383,8 +395,20 @@ public sealed partial class ItemAdvisor
                     c.Reasons.Add("hard to afford before the game ends");
                 }
 
-                var score = c.Score + afford + incumbent + spineBonus + situationalBoost + personalBonus - timing;
-                return (c.Item, Score: score, c.Reasons, c.Category, Plan: plan,
+                // Everything except the meta seed: live merit, affordability, hysteresis,
+                // the reactive-spine boost, the personal prior and the game-clock discount.
+                var unseeded = c.Score + afford + incumbent + situationalBoost + personalBonus - timing;
+                var score = unseeded + spineBonus;
+                // The "% match" is read on a separate scale. SpineBaseMag exists only to
+                // seed the ORDER (meta slots ahead of everything else); left inside a ratio
+                // it flattens every card to ~99 % and drops a non-meta card to ~20 %. Here
+                // a meta slot keeps just its rank credit, and a non-meta item queues right
+                // behind the remaining meta slots. Without stats this equals the score.
+                var matchCredit = spineBonus > 0 ? spineBonus - SpineBaseMag
+                    : spine.Count > 0 ? SpineSlotMag * (SpineDepth - Math.Min(spine.Count, SpineDepth))
+                    : 0;
+                return (c.Item, Score: score, c.Reasons, c.Category,
+                    Match: unseeded + matchCredit,
                     Breakdown: c.Breakdown with
                     {
                         Affordability = afford, Hysteresis = incumbent,
@@ -400,7 +424,8 @@ public sealed partial class ItemAdvisor
         var takenPassives = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var takenExclusiveGroups = new HashSet<int>();
         var gwTaken = false;
-        var topScore = 0.0;
+        var topMatch = 0.0;
+        var previousPriority = 1.0;
         // Selección MARGINAL: el 2.º y 3.er slot se eligen por lo que agregan a los ya
         // elegidos, no por su puntaje aislado — dos muros de armadura contra un equipo mixto
         // dejan la RM sin cubrir aunque ambos puntúen alto. La penalización de cobertura
@@ -422,20 +447,23 @@ public sealed partial class ItemAdvisor
                     bestCoverage = coverage;
                 }
             }
-            var (item, _, reasons, category, plan, rawBreakdown, _) = pool[bestIdx];
+            var (item, _, reasons, category, rawMatch, rawBreakdown, _) = pool[bestIdx];
             pool.RemoveAt(bestIdx);
             var score = bestAdjusted;
+            // The coverage discount lowers the "% match" exactly as it lowers the score.
+            var match = rawMatch - bestCoverage;
             var breakdown = bestCoverage > 0
                 ? rawBreakdown with { Penalty = rawBreakdown.Penalty + bestCoverage }
                 : rawBreakdown;
             if (bestCoverage > 0.5)
                 reasons.Add("overlaps a slot above (less marginal value)");
+            var normalizedName = MetaSpine.NormalizedName(item.Name);
             // Chequeos PUROS primero; el estado (nombre/grupo/pasivas/GW) se marca recién
             // cuando el item pasa TODAS las puertas — un item salteado (p.ej. un segundo
             // item de Heridas Graves) no debe envenenar el grupo excluyente de los que
             // vienen detrás y bloquear una recomendación válida (Lord Dominik's).
             // Nunca dos recomendaciones con el mismo nombre (ids duplicados del catálogo).
-            if (recommendedNames.Contains(item.Name))
+            if (recommendedNames.Contains(normalizedName))
                 continue;
             // Ni dos items del mismo grupo excluyente (misma pasiva con nombre): dos
             // Hidras, dos Lifeline, dos Immolate… no pueden convivir en una build.
@@ -454,7 +482,7 @@ public sealed partial class ItemAdvisor
                     continue;
                 gwTaken = true;
             }
-            recommendedNames.Add(item.Name);
+            recommendedNames.Add(normalizedName);
             if (rankedGroup >= 0)
                 takenExclusiveGroups.Add(rankedGroup);
             takenPassives.UnionWith(item.PassiveNames);
@@ -469,10 +497,19 @@ public sealed partial class ItemAdvisor
             }
             if (reasons.Count == 0)
                 reasons.Add(FitReason(item, profile.Archetype, weights));
-            var missing = (int)Math.Max(0, plan.RemainingCost - gold);
+            // Only the cards that are shown get a full purchase plan.
+            var plan = BuildPathPlanner.Plan(_data, item, ownedIds, gold, _config.StackingComponentIds);
+            // Rounded UP, like every other "gold missing" figure: truncating 0.4 g short
+            // to 0 produced "missing 0" on an item that is not yet affordable.
+            var missing = (int)Math.Ceiling(Math.Max(0, plan.RemainingCost - gold));
             // La primera recomendación fija el 100 %: la prioridad del resto es su fracción.
             if (recommendations.Count == 0)
-                topScore = score;
+                topMatch = match;
+            // Never above the card before it: the list is read top to bottom.
+            var priority = topMatch > 0
+                ? Math.Min(previousPriority, Fuzzy.Clamp01(match / topMatch))
+                : 1.0;
+            previousPriority = priority;
             // Un item que ya alcanzás y que domina por fit (no por un counter) es un power spike.
             var finalCategory = plan.CanFinishNow && category == RecommendationCategory.Core
                 ? RecommendationCategory.Spike
@@ -480,14 +517,13 @@ public sealed partial class ItemAdvisor
             recommendations.Add(new ItemRecommendation(item, score, reasons, plan, missing)
             {
                 ScoreBreakdown = breakdown,
-                Priority = topScore > 0 ? Fuzzy.Clamp01(score / topScore) : 1.0,
+                Priority = priority,
                 Category = finalCategory,
                 BlockedByFullInventory = inventoryFull
                     && !MergesOwnedComponent(plan.NextComponent ?? item, slotItemIds),
             });
         }
 
-        var fullBuild = IsFullBuild(me);
         if (fullBuild)
             recommendations = ReplacementRecommendations(state, me, scoringProfile, threat,
                 candidatePool, stats, mapNumber, currentCrit, ahead, behind, completedCount);
@@ -498,7 +534,7 @@ public sealed partial class ItemAdvisor
         else if (profile.InferredFromItems)
             summary += $" | Build detected from your items: {ArchetypeLabel(profile.Archetype)}";
 
-        var lateTips = LateTips(profile, inventoryFull, mapNumber,
+        var lateTips = LateTips(profile, fullBuild, mapNumber,
             state.GameData.GameTime, gold, ownedIds);
         if (fullBuild && recommendations.Count == 0)
             lateTips.Insert(0, "Full build — keep your current items; no clear situational upgrade.");
@@ -559,12 +595,14 @@ public sealed partial class ItemAdvisor
     /// Consejos de late game que ninguna app da: con la build completa, el oro
     /// sobrante va a elixires; y en la Grieta, jugar sin Control Ward regala visión.
     /// </summary>
-    private List<string> LateTips(ChampionProfile profile, bool inventoryFull,
+    private List<string> LateTips(ChampionProfile profile, bool fullBuild,
         int mapNumber, double gameTime, double gold, IReadOnlyList<int> ownedIds)
     {
         var tips = new List<string>();
 
-        if (inventoryFull)
+        // Six finished items, not six occupied slots: with components still to upgrade
+        // the gold belongs in the build, not in an elixir.
+        if (fullBuild)
         {
             var elixirId = profile.Archetype == BuildArchetype.Tank
                 ? _config.ElixirOfIronId
@@ -753,15 +791,25 @@ public sealed partial class ItemAdvisor
             // Salvaguardas: aunque no pegue con la build, cumple un rol situacional.
             // Mismo cruce difuso que el lado de compra (S1): no vender un anti-heal mientras
             // el grado de sustain esté activo, para que comprar/mantener no se contradigan.
+            // Every guard uses the same fuzzy degree (and the same MuGate) that makes the
+            // scorer add a bonus for the item: the crisp thresholds left a band (e.g. 51–62 %
+            // physical damage) where armor was scored UP and suggested for sale at once.
             if (item.AppliesGrievousWounds && threat.Sustain > MuGate)
                 continue;
-            if (item.RemovesCc && threat.HasSuppression)
+            if (item.RemovesCc && (threat.HasSuppression || threat.Suppression > MuGate
+                    || threat.CcThreat > MuGate))
                 continue;
-            if (item.BreaksShields && threat.HasShields)
+            if (item.GrantsTenacity && threat.CcThreat > MuGate)
                 continue;
-            if (item.HasTag("Armor") && threat.PhysicalShare >= _config.SkewedDamageShare)
+            if (item.BreaksShields && (threat.HasShields || threat.ShieldThreat > MuGate))
                 continue;
-            if (item.HasTag("SpellBlock") && threat.MagicalShare >= _config.SkewedDamageShare)
+            if (item.ReducesCritDamage && threat.CritThreat > MuGate)
+                continue;
+            if (item.HasTag("Armor") && (threat.PhysicalSkew > MuGate
+                    || threat.PhysicalShare >= _config.SkewedDamageShare))
+                continue;
+            if (item.HasTag("SpellBlock") && (threat.MagicalSkew > MuGate
+                    || threat.MagicalShare >= _config.SkewedDamageShare))
                 continue;
 
             candidates.Add(new SellSuggestion(item, item.SellGold,
@@ -863,7 +911,9 @@ public sealed partial class ItemAdvisor
                 * (1 + 0.5 * _config.ItemPassiveValue.GetValueOrDefault(item.Id));
         // Raíz cuadrada: comprime el fit para que apilar tags no aplaste a los bonos
         // situacionales (un counter necesario debe poder ganarle a más stats crudos).
-        var core = 3 * Math.Sqrt(fit) * (0.8 + 0.4 * Math.Min(Efficiency(item, critWaste), 1.2));
+        // Floored at zero: a negative weight in a custom config would otherwise make this
+        // NaN, and the item would silently vanish from the ranking.
+        var core = 3 * Math.Sqrt(Math.Max(0, fit)) * (0.8 + 0.4 * Math.Min(Efficiency(item, critWaste), 1.2));
         // Único frontline del equipo: la defensa propia vale más (nadie más absorbe).
         var df = DefenseFactor(me) * (need.SoloFrontline ? SoloFrontlineDefense : 1);
         double offense = 0, defense = 0;
@@ -1360,7 +1410,7 @@ public sealed partial class ItemAdvisor
         {
             var plan = BuildPathPlanner.Plan(_data, boots, ownedIds, gold);
             return new BootsAdvice(boots, reason, plan,
-                (int)Math.Max(0, plan.RemainingCost - gold));
+                (int)Math.Ceiling(Math.Max(0, plan.RemainingCost - gold)));
         }
 
         // La amenaza ya no decide sola: queda como candidata, y si la meta

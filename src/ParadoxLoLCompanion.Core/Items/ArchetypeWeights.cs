@@ -37,9 +37,22 @@ internal static class ArchetypeWeights
     /// <summary>Pesos del arquetipo, con override opcional desde la config.</summary>
     public static IReadOnlyDictionary<string, double> For(BuildArchetype archetype, ItemsConfig config)
     {
-        if (config.ArchetypeTagWeights is not null
-            && config.ArchetypeTagWeights.TryGetValue(archetype.ToString(), out var custom))
-            return new Dictionary<string, double>(custom, StringComparer.OrdinalIgnoreCase);
+        if (config.ArchetypeTagWeights is { Count: > 0 } overrides)
+        {
+            // Hand-edited JSON: the archetype key matches in any casing, a null table is
+            // ignored, and two tags differing only by case merge (last one wins) instead
+            // of throwing on every tick.
+            var name = archetype.ToString();
+            foreach (var (key, custom) in overrides)
+            {
+                if (custom is null || !string.Equals(key, name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var table = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                foreach (var (tag, weight) in custom)
+                    table[tag] = weight;
+                return table;
+            }
+        }
         return Defaults[archetype];
     }
 

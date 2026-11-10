@@ -107,12 +107,30 @@ public class ItemAdvisorCoherenceTests
     public void Full_build_suggests_the_archetype_elixir()
     {
         var advisor = new ItemAdvisor(Catalog());
+        // Six FINISHED items (five legendaries + tier-2 boots): the build is complete.
         var state = State(gold: 1000,
-            Slot(0, 9001), Slot(1, 9002), Slot(2, 9003),
-            Slot(3, 9004), Slot(4, 9005), Slot(5, 9006));
+            Slot(0, 4002), Slot(1, 4005), Slot(2, 3020),
+            Slot(3, 4002), Slot(4, 4005), Slot(5, 4002));
 
         var plan = advisor.Advise(state, BuildArchetype.Mage)!;
+        Assert.True(plan.FullBuild);
         Assert.Contains(plan.LateTips, t => t.Contains("Elixir of Sorcery"));
+    }
+
+    [Fact]
+    public void Six_slots_of_components_are_not_a_complete_build()
+    {
+        var advisor = new ItemAdvisor(Catalog());
+        // Inventory full, but every slot is a component still to be upgraded: the gold
+        // belongs in the build, so "Build complete — drink an elixir" must not fire.
+        var state = State(gold: 1000,
+            Slot(0, 1026), Slot(1, 1026), Slot(2, 1026),
+            Slot(3, 1026), Slot(4, 1026), Slot(5, 1026));
+
+        var plan = advisor.Advise(state, BuildArchetype.Mage)!;
+        Assert.True(plan.InventoryFull);
+        Assert.False(plan.FullBuild);
+        Assert.DoesNotContain(plan.LateTips, t => t.Contains("Elixir"));
     }
 
     [Fact]

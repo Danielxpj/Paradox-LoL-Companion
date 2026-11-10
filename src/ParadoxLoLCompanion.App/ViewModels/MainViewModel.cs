@@ -44,7 +44,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly AdvisorConfig _config;
     private readonly UserPreferences _prefs;
     private readonly string _prefsPath;
-    private AdviceEngine _engine;
+    private readonly AdviceEngine _engine;
     private readonly LcuConnector _lcu = new();
     private readonly DataDragonClient _ddragon;
     private IStaticData _catalog = DataDragonCatalog.Empty;
@@ -495,9 +495,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private void ApplyCatalog(IStaticData catalog, string logLine)
     {
         _catalog = catalog;
-        // El provider lee el override vigente en cada tick: feed y panel siempre coinciden.
-        _engine = AdviceEngine.CreateWith(catalog, _config, () => _forcedArchetype, () => _championStats,
-            () => _enemyStats, () => _personalPrior);
+        // The feed engine stays the default one (gold, CS). Item advice lives in the
+        // advisor cards, fed by the single ItemAdvisor.Advise call in RebuildItemPlan:
+        // adding ItemRecommendationRule here ran the whole advisor a second time per tick
+        // only to have its entries filtered out of the feed.
         _itemAdvisor = new ItemAdvisor(catalog, _config.Items);
         _profilerForTiles = new ChampionProfiler(catalog, _config.Items);
         _benchAdvisor = new TeamBalanceAdvisor(catalog, _config.Items);
@@ -620,7 +621,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         Advice.Clear();
         foreach (var item in _engine.Evaluate(state))
         {
-            // Los consejos de Items duplican las tarjetas del asesor: fuera del feed.
+            // Los consejos de Items duplican las tarjetas del asesor: fuera del feed
+            // (the engine no longer produces them; the guard keeps that true by contract).
             if (item.Category != AdviceCategory.Items)
                 Advice.Add(new AdviceRowViewModel(item));
         }

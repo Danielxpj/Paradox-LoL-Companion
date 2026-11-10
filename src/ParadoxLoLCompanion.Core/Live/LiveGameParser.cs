@@ -31,9 +31,15 @@ public static class LiveGameParser
         state.Events ??= new();
         state.Events.Events ??= new();
         state.GameData ??= new();
+        // The item advisor reads the live stats of the active player on every tick.
+        if (state.ActivePlayer is { } active)
+            active.ChampionStats ??= new();
+        // Null entries inside the lists would break every consumer that walks them.
+        state.AllPlayers.RemoveAll(p => p is null);
         foreach (var p in state.AllPlayers)
         {
             p.Items ??= new();
+            p.Items.RemoveAll(i => i is null);
             p.Scores ??= new();
             p.SummonerSpells ??= new();
             p.SummonerSpells.SummonerSpellOne ??= new();

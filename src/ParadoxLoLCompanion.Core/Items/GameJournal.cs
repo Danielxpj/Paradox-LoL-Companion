@@ -22,6 +22,7 @@ public sealed class GameJournal
     private double _lastTime = double.NegativeInfinity;
     private HashSet<int> _owned = new();
     private List<int> _lastTop = new();
+    private List<HashSet<int>> _lastTopParts = new();
     private bool _ended;
 
     public GameJournal(string? dir = null) =>
@@ -49,10 +50,35 @@ public sealed class GameJournal
             var gold = (int)(state.ActivePlayer?.CurrentGold ?? 0);
             var owned = me.Items.Select(i => i.ItemID).ToHashSet();
             foreach (var id in owned.Except(_owned))
-                Write(new { kind = "buy", t, item = id, rank = _lastTop.IndexOf(id), top = _lastTop, gold });
+            {
+                // Following a card usually means buying a PIECE of it (the card itself
+                // says "buy now: <component>"): that is adoption too. Counting only the
+                // finished item reported ~10 % adoption when about half the purchases
+                // were steps toward a shown card. `via` keeps the two cases apart.
+                var rank = _lastTop.IndexOf(id);
+                var via = rank >= 0 ? "item" : null;
+                if (rank < 0)
+                {
+                    rank = _lastTopParts.FindIndex(parts => parts.Contains(id));
+                    if (rank >= 0)
+                        via = "component";
+                }
+                Write(new { kind = "buy", t, item = id, rank, via, top = _lastTop, gold });
+            }
             _owned = owned;
 
             var top = plan?.Recommendations.Select(r => r.Item.Id).ToList() ?? new List<int>();
+            // Per shown card: its direct components plus the piece the card told the
+            // player to buy next (which may sit deeper in the build tree).
+            _lastTopParts = plan?.Recommendations
+                .Select(r =>
+                {
+                    var parts = new HashSet<int>(r.Item.From);
+                    if (r.Purchase.NextComponent is { } next)
+                        parts.Add(next.Id);
+                    return parts;
+                })
+                .ToList() ?? new List<HashSet<int>>();
             if (t - _lastTick >= TickSeconds || !top.SequenceEqual(_lastTop))
             {
                 Write(new
@@ -92,10 +118,20 @@ public sealed class GameJournal
             {
                 if (!line.Contains("\"buy\""))
                     continue;
-                using var doc = JsonDocument.Parse(line);
-                buys++;
-                if (doc.RootElement.GetProperty("rank").GetInt32() >= 0)
-                    fromTop++;
+                try
+                {
+                    using var doc = JsonDocument.Parse(line);
+                    if (!doc.RootElement.TryGetProperty("rank", out var rank)
+                        || rank.ValueKind != JsonValueKind.Number)
+                        continue;
+                    buys++;
+                    if (rank.GetInt32() >= 0)
+                        fromTop++;
+                }
+                catch (JsonException)
+                {
+                    // A line cut short by a crash mid-write: skip it, keep counting.
+                }
             }
         return (buys, fromTop);
     }
@@ -108,6 +144,7 @@ public sealed class GameJournal
         _lastTick = double.NegativeInfinity;
         _owned = new HashSet<int>();
         _lastTop = new List<int>();
+        _lastTopParts = new List<HashSet<int>>();
         _ended = false;
         Write(new
         {
